@@ -110,13 +110,11 @@ function saveSettings(): void {
         apiSettings.value?.save();
     }
 
-    isOpen.value = false;
 }
 
 function cancelSettings(): void {
     journeySettings.value?.cancel();
     apiSettings.value?.cancel();
-    isOpen.value = false;
 }
 
 function closeSettings(): void {

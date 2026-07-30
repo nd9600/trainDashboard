@@ -88,11 +88,11 @@
     }
 
     .appInput {
-        @apply w-full rounded border border-line-strong bg-paper px-2 py-1.5 text-ink;
+        @apply w-full h-9 rounded border border-line-strong bg-paper px-2 py-0 text-ink;
     }
 
     .appInput:focus {
-        @apply border-primary outline-2 outline-offset-1 outline-primary;
+            @apply border-primary outline-2 outline-primary;
     }
 
     .appInput:disabled {
@@ -105,7 +105,7 @@
     }
 
     .sentenceField {
-        @apply flex flex-wrap items-baseline gap-x-2 gap-y-1 leading-relaxed;
+        @apply flex flex-wrap items-center gap-x-2 gap-y-1 leading-relaxed;
     }
 
     .sentenceField__control {
