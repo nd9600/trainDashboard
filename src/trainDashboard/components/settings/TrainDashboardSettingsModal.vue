@@ -31,9 +31,8 @@
             >
                 <JourneySettings
                     ref="journeySettings"
-                    v-model:hasUnsavedChanges="hasUnsavedChanges"
+                    v-model:hasUnsavedChanges="hasUnsavedJourneyConfiguration"
                     class="p-5"
-                    @saved="isOpen = false"
                     @valid-change="isConfigurationValid = $event"
                 />
             </div>
@@ -43,7 +42,11 @@
                 aria-labelledby="settings-tab-api"
                 role="tabpanel"
             >
-                <ApiSettings class="p-5" />
+                <ApiSettings
+                    ref="apiSettings"
+                    v-model:hasUnsavedChanges="hasUnsavedApiSettings"
+                    class="p-5"
+                />
             </div>
 
             <template #footer>
@@ -52,7 +55,7 @@
                         class="appButton appButton--secondary px-4"
                         type="button"
                         :disabled="!hasUnsavedChanges"
-                        @click="cancelConfiguration"
+                        @click="cancelSettings"
                     >
                         Cancel
                     </button>
@@ -60,7 +63,7 @@
                         class="appButton appButton--primary px-4"
                         type="button"
                         :disabled="!hasUnsavedChanges || !isConfigurationValid"
-                        @click="journeySettings?.save()"
+                        @click="saveSettings"
                     >
                         Save configuration
                     </button>
@@ -71,35 +74,54 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import AppTabs from "@/components/AppTabs.vue";
 import Modal from "@/components/Modal/Modal.vue";
 import ApiSettings from "./api/ApiSettings.vue";
 import JourneySettings from "./JourneySettings.vue";
 
-interface JourneySettingsHandle {
+interface SettingsHandle {
     cancel: () => void;
     save: () => void;
 }
 
 const isOpen = ref(false);
-const hasUnsavedChanges = ref(false);
+const hasUnsavedJourneyConfiguration = ref(false);
+const hasUnsavedApiSettings = ref(false);
 const isConfigurationValid = ref(true);
-const journeySettings = ref<JourneySettingsHandle | null>(null);
+const journeySettings = ref<SettingsHandle | null>(null);
+const apiSettings = ref<SettingsHandle | null>(null);
 const activeSection = ref("journeys");
+const hasUnsavedChanges = computed(
+    () => hasUnsavedJourneyConfiguration.value || hasUnsavedApiSettings.value
+);
 const sections = [
     {value: "journeys", label: "Journeys", icon: "train" as const},
     {value: "api", label: "API", icon: "key" as const},
 ];
 
-function cancelConfiguration(): void {
+function saveSettings(): void {
+    if (hasUnsavedJourneyConfiguration.value) {
+        journeySettings.value?.save();
+    }
+
+    if (hasUnsavedApiSettings.value) {
+        apiSettings.value?.save();
+    }
+
+    isOpen.value = false;
+}
+
+function cancelSettings(): void {
     journeySettings.value?.cancel();
+    apiSettings.value?.cancel();
     isOpen.value = false;
 }
 
 function closeSettings(): void {
     journeySettings.value?.cancel();
+    apiSettings.value?.cancel();
     isOpen.value = false;
 }
 </script>

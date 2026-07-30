@@ -18,7 +18,7 @@
                         class="font-semibold"
                         :style="{color: stationColour(journey.origin)}"
                     >
-                        {{ journey.label }}
+                        <JourneyRouteLabel :journey="journey" />
                     </p>
                     <p class="mt-1 text-sm text-ink-muted">
                         {{
@@ -38,12 +38,16 @@
                         </span>
                     </p>
                     <p
-                        v-if="journey.recommended"
+                        v-if="
+                            journey.recommended ||
+                            journey.id === mustLeaveJourneyId
+                        "
                         class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
                     >
                         <AppIcon class="size-3.5" name="clock" />
                         {{ mustLeaveText(journey, now) }}
                     </p>
+                    <JourneyNationalRailLink class="mt-1" :journey="journey" />
                 </div>
             </div>
         </article>
@@ -55,9 +59,12 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {Journey} from "../../dto/journey.dto";
 import {mustLeaveText} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
+import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
+import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 defineProps<{
     journeys: Journey[];
     now: number;
+    mustLeaveJourneyId?: string;
 }>();
 </script>

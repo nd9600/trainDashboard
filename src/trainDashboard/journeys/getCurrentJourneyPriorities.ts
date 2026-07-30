@@ -7,6 +7,7 @@ import {
     type StationGroup,
     type StationPair,
 } from "../dto/dashboardConfig.dto";
+import {stationPairName} from "../presentation/settingsPresentation";
 
 export interface ClockContext {
     day: Day;
@@ -22,8 +23,10 @@ export interface ResolvedEndpoint {
 export interface ResolvedStationPair {
     id: string;
     pairId: string;
+    contextLabel: string;
     origin: ResolvedEndpoint;
     destination: ResolvedEndpoint;
+    viaCrs?: string;
 }
 
 export interface CurrentJourneyPriorities {
@@ -89,11 +92,19 @@ export function expandStationPairs(
         return origins.flatMap((origin) =>
             destinations
                 .filter((destination) => destination.crs !== origin.crs)
+                .filter(
+                    (destination) =>
+                        pair.viaCrs === undefined ||
+                        (origin.crs !== pair.viaCrs &&
+                            destination.crs !== pair.viaCrs)
+                )
                 .map((destination) => ({
                     id: `${pair.id}:${origin.crs}-${destination.crs}`,
                     pairId: pair.id,
+                    contextLabel: stationPairName(pair, groups),
                     origin,
                     destination,
+                    viaCrs: pair.viaCrs,
                 }))
         );
     });

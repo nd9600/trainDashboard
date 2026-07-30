@@ -64,6 +64,7 @@ export const stationPairSchema = z.object({
     id: idSchema,
     origin: locationReferenceSchema,
     destination: locationReferenceSchema,
+    viaCrs: crsCodeSchema.optional(),
 });
 
 export const displayScheduleSchema = z

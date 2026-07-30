@@ -31,109 +31,68 @@
                 </p>
             </header>
 
-            <section v-if="primaryJourneys.length" class="mt-5">
-                <JourneyTimeline
-                    :journeys="primaryJourneys"
-                    :now="now"
-                    :windowStart="windowStart"
-                    :windowEnd="windowEnd"
-                />
-            </section>
             <p
-                v-else
+                v-if="isLoadingJourneys"
                 class="mt-8 rounded-lg border border-line bg-surface p-4 text-ink-muted"
             >
-                No sample timetable is available for these station pairs yet.
+                Loading journeys…
             </p>
-
-            <details
-                v-if="secondaryJourneys.length"
-                class="group mt-8 rounded-lg border border-line bg-surface overflow-auto"
-            >
-                <summary
-                    class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-semibold text-ink-muted"
+            <section v-else class="mt-5 space-y-4">
+                <p
+                    v-if="journeyLoadingError"
+                    class="rounded-lg border border-line bg-surface p-4 text-ink-muted"
                 >
-                    <AppIcon
-                        class="size-4 transition-transform group-open:rotate-90"
-                        name="chevron"
-                    />
-                    <AppIcon class="size-4" name="train" />
-                    Other journeys
-                </summary>
-                <div class="space-y-6 border-t border-line bg-canvas p-4">
-                    <section
-                        v-for="journeyGroup in secondaryJourneyGroups"
-                        :key="journeyGroup.label"
-                    >
-                        <h2 class="mb-2 font-display text-lg">
-                            {{ journeyGroup.label }}
-                        </h2>
-                        <JourneyTimeline
-                            :journeys="journeyGroup.journeys"
-                            :now="now"
-                            :windowStart="windowStart"
-                            :windowEnd="windowEnd"
-                        />
-                    </section>
-                </div>
-            </details>
+                    {{ journeyLoadingError }}
+                </p>
+                <JourneyTimeline
+                    v-if="primaryJourneys.length"
+                    :journeys="primaryJourneys"
+                    :now="now"
+                />
+                <NationalRailRouteLinks
+                    v-if="primaryPairsWithoutJourneys.length"
+                    :pairs="primaryPairsWithoutJourneys"
+                    :departureMinutes="now"
+                />
+            </section>
+
+            <OtherJourneys
+                :pairs="currentJourneyPriorities.secondaryPairs"
+                :journeys="secondaryJourneys"
+                :now="now"
+            />
         </div>
     </main>
 </template>
 
 <script setup lang="ts">
+import {storeToRefs} from "pinia";
 import {computed, defineAsyncComponent} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
+import NationalRailRouteLinks from "./journeys/NationalRailRouteLinks.vue";
 import JourneyTimeline from "./journeys/JourneyTimeline.vue";
-import {
-    clockContextFromDate,
-    getCurrentJourneyPriorities,
-} from "../journeys/getCurrentJourneyPriorities";
-import {createMockJourneys} from "../journeys/mockJourneys";
+import OtherJourneys from "./journeys/OtherJourneys.vue";
 import {stationColour} from "../stations/stationColours";
 import {stationName} from "../stations/stations";
-import {useTrainDashboardStore} from "../store/trainDashboard.store";
+import {useTrainServicesStore} from "../store/trainServices.store";
 
 const TrainDashboardSettingsModal = defineAsyncComponent(
     () => import("./settings/TrainDashboardSettingsModal.vue")
 );
-const configStore = useTrainDashboardStore();
-const currentDate = new Date();
-const clock = clockContextFromDate(currentDate);
-const now = clock.minutes;
-const windowStart = now - 5;
-const windowEnd = now + 80;
-
-const currentJourneyPriorities = computed(() =>
-    getCurrentJourneyPriorities(configStore.config, clock)
-);
-const primaryJourneys = computed(() =>
-    createMockJourneys(currentJourneyPriorities.value.primaryPairs, now, true)
-);
-const secondaryJourneys = computed(() =>
-    createMockJourneys(
-        currentJourneyPriorities.value.secondaryPairs,
-        now,
-        false
-    )
-);
-const secondaryJourneyGroups = computed(() => {
-    const groups = new Map<string, typeof secondaryJourneys.value>();
-
-    for (const journey of secondaryJourneys.value) {
-        const journeys = groups.get(journey.contextLabel) ?? [];
-        journeys.push(journey);
-        groups.set(journey.contextLabel, journeys);
-    }
-
-    return Array.from(groups, ([label, journeys]) => ({label, journeys}));
-});
-const recommendedJourney = computed(() =>
-    primaryJourneys.value.find((journey) => journey.recommended)
-);
+const trainServicesStore = useTrainServicesStore();
+const {
+    currentJourneyPriorities,
+    isLoadingJourneys,
+    journeyLoadingError,
+    now,
+    primaryJourneys,
+    primaryPairsWithoutJourneys,
+    recommendedJourney,
+    secondaryJourneys,
+} = storeToRefs(trainServicesStore);
 const leaveIn = computed(() => {
     const journey = recommendedJourney.value;
-    return journey ? journey.segments.at(0)!.start - now : undefined;
+    return journey ? journey.segments.at(0)!.start - now.value : undefined;
 });
 const heading = computed(() => {
     if (leaveIn.value === undefined) {

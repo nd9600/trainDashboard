@@ -22,6 +22,34 @@
                 :groups="groups"
                 label="Finish the journey at"
             />
+            <label v-if="pair.viaCrs !== undefined" class="sentenceField">
+                Change trains at
+                <StationInput
+                    v-model="pair.viaCrs"
+                    class="sentenceField__control min-w-52 grow"
+                />
+                <button
+                    class="appButton appButton--danger appButton--icon"
+                    type="button"
+                    aria-label="Remove connecting station"
+                    @click="removeConnectingStation"
+                >
+                    <AppIcon class="size-4" name="trash" />
+                </button>
+            </label>
+            <p v-if="pair.viaCrs !== undefined" class="text-xs text-ink-subtle">
+                The dashboard allows at least 3 minutes to change trains. It
+                cannot check the station’s official minimum connection time.
+            </p>
+            <button
+                v-else
+                class="appButton appButton--secondary py-1.5"
+                type="button"
+                @click="addConnectingStation"
+            >
+                <AppIcon class="size-4" name="plus" />
+                Add connecting station
+            </button>
         </div>
     </div>
 </template>
@@ -31,6 +59,7 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {StationGroup, StationPair} from "../../../dto/dashboardConfig.dto";
 import {stationPairName} from "../../../presentation/settingsPresentation";
 import LocationReferenceInput from "./LocationReferenceInput.vue";
+import StationInput from "../stationGroups/StationInput.vue";
 
 defineProps<{
     groups: StationGroup[];
@@ -39,6 +68,17 @@ defineProps<{
 const pair = defineModel<StationPair>("pair", {required: true});
 
 const emit = defineEmits<{
+    changed: [];
     remove: [];
 }>();
+
+function addConnectingStation(): void {
+    pair.value.viaCrs = "";
+    emit("changed");
+}
+
+function removeConnectingStation(): void {
+    delete pair.value.viaCrs;
+    emit("changed");
+}
 </script>

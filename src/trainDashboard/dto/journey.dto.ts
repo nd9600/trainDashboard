@@ -1,5 +1,5 @@
 // Components use this shared model for both mobile cards and desktop charts.
-export type SegmentKind = "walk" | "train";
+export type SegmentKind = "wait" | "walk" | "train";
 
 export interface Segment {
     kind: SegmentKind;
@@ -7,12 +7,18 @@ export interface Segment {
     end: number;
 }
 
+export interface TrainLeg {
+    origin: string;
+    destination: string;
+    departure: number;
+    arrival: number;
+}
+
 export interface Journey {
     id: string;
     origin: string;
     destination: string;
     contextLabel: string;
-    label: string;
     railArrivalTime: string;
     arrivalLabel?: string;
     arrivalTime?: string;
@@ -20,4 +26,5 @@ export interface Journey {
     walkingTimesKnown: boolean;
     recommended?: boolean;
     segments: Segment[];
+    trainLegs: TrainLeg[];
 }

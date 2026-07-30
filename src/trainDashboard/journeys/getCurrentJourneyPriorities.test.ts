@@ -48,6 +48,50 @@ describe("getCurrentJourneyPriorities", () => {
         ).toEqual(new Set(["glasgow-to-home"]));
     });
 
+    it("uses selected stations for other journeys", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        config.pairs[2]!.origin = {
+            type: "station",
+            groupId: "home",
+            crs: "ANL",
+        };
+        config.pairs[2]!.destination = {
+            type: "station",
+            groupId: "glasgow",
+            crs: "GLQ",
+        };
+
+        const resolved = getCurrentJourneyPriorities(config, {
+            day: 1,
+            minutes: 8 * 60,
+        });
+
+        expect(
+            resolved.secondaryPairs.map(
+                (pair) => `${pair.origin.crs}-${pair.destination.crs}`
+            )
+        ).toEqual(["ANL-GLQ"]);
+    });
+
+    it("preserves the configured route name on resolved pairs", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        config.pairs[0]!.viaCrs = "GLQ";
+
+        const resolved = getCurrentJourneyPriorities(config, {
+            day: 1,
+            minutes: 8 * 60,
+        });
+
+        expect(resolved.primaryPairs).toHaveLength(2);
+        expect(resolved.primaryPairs.map((pair) => pair.viaCrs)).toEqual([
+            "GLQ",
+            "GLQ",
+        ]);
+        expect(resolved.primaryPairs[0]?.contextLabel).toBe(
+            "Home, through Anniesland (ANL) → Work, changing at Glasgow Queen Street (GLQ)"
+        );
+    });
+
     it("prioritises travel from home to Glasgow at weekends", () => {
         const resolved = getCurrentJourneyPriorities(defaultDashboardConfig, {
             day: 6,

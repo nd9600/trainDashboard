@@ -22,5 +22,9 @@ export function stationPairName(
     pair: StationPair,
     groups: StationGroup[]
 ): string {
-    return `${locationReferenceName(pair.origin, groups)} → ${locationReferenceName(pair.destination, groups)}`;
+    const route = `${locationReferenceName(pair.origin, groups)} → ${locationReferenceName(pair.destination, groups)}`;
+
+    return pair.viaCrs
+        ? `${route}, changing at ${stationDisplayName(pair.viaCrs)}`
+        : route;
 }

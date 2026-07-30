@@ -18,6 +18,7 @@
             :key="pair.id"
             v-model:pair="pairs[pairIndex]!"
             :groups="groups"
+            @changed="emit('changed')"
             @remove="emit('remove', pairIndex)"
         />
 

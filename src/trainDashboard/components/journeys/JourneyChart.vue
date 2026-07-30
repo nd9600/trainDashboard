@@ -8,8 +8,8 @@
             class="pointer-events-none absolute inset-x-0 rounded-lg bg-highlight"
             :class="journey.recommended ? 'block' : 'hidden'"
             :style="{
-                top: `${rowStart + index * rowGap - 26}px`,
-                height: '52px',
+                top: `${rowStart + index * rowGap - 32}px`,
+                height: '64px',
             }"
         />
 
@@ -30,16 +30,20 @@
                         backgroundColor: stationColour(journey.origin),
                     }"
                 />
-                <span class="leading-tight">
-                    <span class="block">{{ journey.label }}</span>
+                <div class="leading-tight">
+                    <JourneyRouteLabel :journey="journey" />
                     <span
-                        v-if="journey.recommended"
+                        v-if="
+                            journey.recommended ||
+                            journey.id === mustLeaveJourneyId
+                        "
                         class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
                     >
                         <AppIcon class="size-3.5" name="clock" />
                         {{ mustLeaveText(journey, now) }}
                     </span>
-                </span>
+                    <JourneyNationalRailLink class="mt-1" :journey="journey" />
+                </div>
             </div>
         </div>
 
@@ -95,14 +99,50 @@
                     y2="0"
                     stroke-linecap="round"
                 />
+            </g>
 
+            <line
+                class="stroke-danger [stroke-width:2]"
+                :x1="xAt(now)"
+                y1="45"
+                :x2="xAt(now)"
+                :y2="chartBottom"
+            />
+
+            <g
+                v-for="(journey, index) in journeys"
+                :key="`labels-${journey.id}`"
+                :transform="`translate(0 ${rowStart + index * rowGap})`"
+            >
+                <template
+                    v-for="(leg, legIndex) in journey.trainLegs.slice(0, -1)"
+                    :key="`connection-${legIndex}`"
+                >
+                    <text
+                        :class="timelineLabelClasses(journey)"
+                        :x="xAt(leg.arrival)"
+                        dx="-6"
+                        y="-12"
+                        text-anchor="end"
+                    >
+                        {{ formatTime(leg.arrival) }}a
+                    </text>
+                    <text
+                        :class="timelineLabelClasses(journey)"
+                        :x="xAt(journey.trainLegs[legIndex + 1]!.departure)"
+                        dx="6"
+                        y="-12"
+                        text-anchor="start"
+                    >
+                        d{{
+                            formatTime(
+                                journey.trainLegs[legIndex + 1]!.departure
+                            )
+                        }}
+                    </text>
+                </template>
                 <text
-                    :class="[
-                        'fill-ink text-xs font-medium [paint-order:stroke] [stroke-linejoin:round] [stroke-width:6]',
-                        journey.recommended
-                            ? 'stroke-highlight'
-                            : 'stroke-canvas',
-                    ]"
+                    :class="timelineLabelClasses(journey)"
                     :x="xAt(journey.segments.at(-1)!.end)"
                     dx="10"
                     y="5"
@@ -123,13 +163,6 @@
                 </text>
             </g>
 
-            <line
-                class="stroke-danger [stroke-width:2]"
-                :x1="xAt(now)"
-                y1="45"
-                :x2="xAt(now)"
-                :y2="chartBottom"
-            />
             <text
                 class="fill-danger text-xs"
                 :x="xAt(now)"
@@ -148,33 +181,45 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {Journey, SegmentKind} from "../../dto/journey.dto";
 import {mustLeaveText} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
+import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
+import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 const props = defineProps<{
     journeys: Journey[];
     now: number;
+    mustLeaveJourneyId?: string;
     windowStart: number;
     windowEnd: number;
 }>();
 
 const rowStart = 85;
-const rowGap = 60;
+const rowGap = 72;
 
 const chartBottom = computed(
     () => rowStart + (props.journeys.length - 1) * rowGap + 35
 );
 const chartHeight = computed(() => chartBottom.value + 30);
+const tickInterval = computed(() => {
+    const targetInterval = (props.windowEnd - props.windowStart) / 8;
 
+    return (
+        [5, 10, 15, 30, 60].find((interval) => interval >= targetInterval) ?? 60
+    );
+});
 const ticks = computed(() => {
-    const firstTick = Math.ceil(props.windowStart / 10) * 10;
-    const numberOfTicks = Math.floor((props.windowEnd - firstTick) / 10) + 1;
+    const interval = tickInterval.value;
+    const firstTick = Math.ceil(props.windowStart / interval) * interval;
+    const numberOfTicks =
+        Math.floor((props.windowEnd - firstTick) / interval) + 1;
 
     return Array.from(
         {length: numberOfTicks},
-        (_, index) => firstTick + index * 10
+        (_, index) => firstTick + index * interval
     );
 });
 
 const segmentClasses: Record<SegmentKind, string> = {
+    wait: "[stroke-width:3] [stroke-dasharray:4_5]",
     walk: "[stroke-width:5] [stroke-dasharray:1_7]",
     train: "[stroke-width:9]",
 };
@@ -194,9 +239,17 @@ function formatTime(minutes: number): string {
     return `${hours}:${remainingMinutes.toString().padStart(2, "0")}`;
 }
 
+function timelineLabelClasses(journey: Journey): string[] {
+    return [
+        "fill-ink text-xs font-medium [paint-order:stroke] [stroke-linejoin:round] [stroke-width:6]",
+        journey.recommended ? "stroke-highlight" : "stroke-canvas",
+    ];
+}
+
 function orderedSegments(journey: Journey): Journey["segments"] {
     return [
         ...journey.segments.filter((segment) => segment.kind === "walk"),
+        ...journey.segments.filter((segment) => segment.kind === "wait"),
         ...journey.segments.filter((segment) => segment.kind === "train"),
     ];
 }
