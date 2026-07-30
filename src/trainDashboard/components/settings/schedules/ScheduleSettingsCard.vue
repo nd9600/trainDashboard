@@ -57,8 +57,23 @@
         </fieldset>
 
         <fieldset class="mt-12 space-y-3">
-            <legend class="mb-1">Set how each journey appears</legend>
-            <label v-for="pair in pairs" :key="pair.id" class="sentenceField">
+            <legend class="mb-1 font-semibold">Set how each journey appears</legend>
+            <label
+                v-for="pair in pairs"
+                :key="pair.id"
+                class="sentenceField"
+                :class="pairPriority(pair.id) === 'hidden' ? 'opacity-50' : ''"
+            >
+                <span
+                    class="size-6  text-white rounded-full flex justify-center items-center font-bold"
+                    :class="{
+                        'bg-japonica': pairPriority(pair.id) === 'primary',
+                        'bg-saffron': pairPriority(pair.id) === 'secondary',
+                        'bg-casa': pairPriority(pair.id) === 'hidden',
+                    }"
+                >
+                    {{ pairPriority(pair.id) === 'primary' ? 1 : pairPriority(pair.id) === 'secondary' ? 2 : '' }}
+                </span>
                 <span class="font-medium">
                     {{ stationPairName(pair, groups) }}
                 </span>
@@ -112,13 +127,13 @@ const emit = defineEmits<{
 type PairPriority = "hidden" | "primary" | "secondary";
 
 const days: Array<{value: Day; label: string}> = [
-    {value: 1, label: "Mon"},
-    {value: 2, label: "Tue"},
-    {value: 3, label: "Wed"},
-    {value: 4, label: "Thu"},
-    {value: 5, label: "Fri"},
-    {value: 6, label: "Sat"},
-    {value: 0, label: "Sun"},
+    {value: 1, label: "Monday"},
+    {value: 2, label: "Tuesday"},
+    {value: 3, label: "Wednesday"},
+    {value: 4, label: "Thursday"},
+    {value: 5, label: "Friday"},
+    {value: 6, label: "Saturday"},
+    {value: 0, label: "Sunday"},
 ];
 
 function pairPriority(pairId: string): PairPriority {
