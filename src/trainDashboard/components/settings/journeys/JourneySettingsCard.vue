@@ -12,20 +12,16 @@
             </button>
         </div>
         <div class="space-y-3">
-            <fieldset>
-                <legend class="mb-1 text-sm font-semibold">From</legend>
-                <LocationReferenceInput
-                    v-model="pair.origin"
-                    :groups="groups"
-                />
-            </fieldset>
-            <fieldset>
-                <legend class="mb-1 text-sm font-semibold">To</legend>
-                <LocationReferenceInput
-                    v-model="pair.destination"
-                    :groups="groups"
-                />
-            </fieldset>
+            <LocationReferenceInput
+                v-model="pair.origin"
+                :groups="groups"
+                label="Start the journey from"
+            />
+            <LocationReferenceInput
+                v-model="pair.destination"
+                :groups="groups"
+                label="Finish the journey at"
+            />
         </div>
     </div>
 </template>

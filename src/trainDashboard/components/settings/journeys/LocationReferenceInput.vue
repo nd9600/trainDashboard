@@ -1,53 +1,24 @@
 <template>
-    <div class="grid gap-2 sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]">
-        <label>
-            <span class="mb-1 block text-xs text-ink-subtle">Type</span>
-            <select
-                class="appInput"
-                :value="modelValue.type"
-                @change="changeType"
+    <label class="sentenceField">
+        {{ label }}
+        <select
+            class="appInput sentenceField__control min-w-52 grow"
+            :value="selectedKey"
+            required
+            @change="updateLocation"
+        >
+            <option v-if="locationOptions.length === 0" disabled value="">
+                Add a station group first
+            </option>
+            <option
+                v-for="option in locationOptions"
+                :key="option.key"
+                :value="option.key"
             >
-                <option value="station">Station</option>
-                <option value="group">Station group</option>
-            </select>
-        </label>
-
-        <label>
-            <span class="mb-1 block text-xs text-ink-subtle">Place</span>
-            <select
-                class="appInput"
-                :value="modelValue.groupId"
-                required
-                @change="updateGroup"
-            >
-                <option
-                    v-for="group in groups"
-                    :key="group.id"
-                    :value="group.id"
-                >
-                    {{ group.name }}
-                </option>
-            </select>
-        </label>
-
-        <label v-if="modelValue.type === 'station'">
-            <span class="mb-1 block text-xs text-ink-subtle">Station</span>
-            <select
-                class="appInput"
-                :value="modelValue.crs"
-                required
-                @change="updateStation"
-            >
-                <option
-                    v-for="station in selectedGroup?.stations ?? []"
-                    :key="station.crs"
-                    :value="station.crs"
-                >
-                    {{ stationDisplayName(station.crs) }}
-                </option>
-            </select>
-        </label>
-    </div>
+                {{ option.label }}
+            </option>
+        </select>
+    </label>
 </template>
 
 <script setup lang="ts">
@@ -61,61 +32,63 @@ import {stationDisplayName} from "../../../stations/stations";
 const props = defineProps<{
     modelValue: LocationReference;
     groups: StationGroup[];
+    label: string;
 }>();
 
 const emit = defineEmits<{
     "update:modelValue": [value: LocationReference];
 }>();
 
-const selectedGroup = computed(() =>
-    props.groups.find((group) => group.id === props.modelValue.groupId)
+interface LocationOption {
+    key: string;
+    label: string;
+    value: LocationReference;
+}
+
+const locationOptions = computed<LocationOption[]>(() =>
+    props.groups.flatMap((group) => [
+        {
+            key: locationKey({type: "group", groupId: group.id}),
+            label: `${group.name} — any station`,
+            value: {type: "group", groupId: group.id},
+        },
+        ...group.stations.map((station) => ({
+            key: locationKey({
+                type: "station",
+                groupId: group.id,
+                crs: station.crs,
+            }),
+            label: `${group.name} — ${stationDisplayName(station.crs)}`,
+            value: {
+                type: "station" as const,
+                groupId: group.id,
+                crs: station.crs,
+            },
+        })),
+    ])
 );
 
-function changeType(event: Event): void {
-    const type = inputValue(event);
-    const group = selectedGroup.value ?? props.groups.at(0);
-    const groupId = group?.id ?? "";
+const selectedKey = computed(() => locationKey(props.modelValue));
 
-    if (type === "group") {
-        emit("update:modelValue", {type: "group", groupId});
+function updateLocation(event: Event): void {
+    const selectedOption = locationOptions.value.find(
+        (option) => option.key === inputValue(event)
+    );
+
+    if (!selectedOption) {
         return;
     }
 
-    emit("update:modelValue", {
-        type: "station",
-        groupId,
-        crs: group?.stations.at(0)?.crs ?? "",
-    });
-}
-
-function updateGroup(event: Event): void {
-    const groupId = inputValue(event);
-
-    if (props.modelValue.type === "group") {
-        emit("update:modelValue", {type: "group", groupId});
-        return;
-    }
-
-    const group = props.groups.find((candidate) => candidate.id === groupId);
-    emit("update:modelValue", {
-        type: "station",
-        groupId,
-        crs: group?.stations.at(0)?.crs ?? "",
-    });
-}
-
-function updateStation(event: Event): void {
-    if (props.modelValue.type !== "station") {
-        return;
-    }
-
-    emit("update:modelValue", {
-        ...props.modelValue,
-        crs: inputValue(event),
-    });
+    emit("update:modelValue", selectedOption.value);
 }
 
 function inputValue(event: Event): string {
-    return (event.target as HTMLInputElement).value;
+    return (event.target as HTMLSelectElement).value;
+}
+
+function locationKey(location: LocationReference): string {
+    return location.type === "group"
+        ? `group:${location.groupId}`
+        : `station:${location.groupId}:${location.crs}`;
 }
 </script>

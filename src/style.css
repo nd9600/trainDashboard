@@ -91,4 +91,12 @@
     .appInput[aria-invalid="true"] {
         @apply border-2 border-danger;
     }
+
+    .sentenceField {
+        @apply flex flex-wrap items-baseline gap-x-2 gap-y-1 leading-relaxed;
+    }
+
+    .sentenceField__control {
+        @apply inline-block max-w-full align-baseline;
+    }
 }
