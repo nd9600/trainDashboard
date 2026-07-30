@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import type {ResolvedStationPair} from "./config/resolveDashboardConfig";
+import type {ResolvedStationPair} from "./getCurrentJourneyPriorities";
 import {createMockJourneys} from "./mockJourneys";
 
 describe("createMockJourneys", () => {
@@ -13,8 +13,9 @@ describe("createMockJourneys", () => {
         expect(journeys[0]).toMatchObject({
             origin: "ANL",
             destination: "CHC",
-            arrivalLabel: "work",
+            arrivalLabel: "Work",
             arrivalTime: "8:44",
+            walkingTimesKnown: true,
             segments: [
                 {kind: "walk", start: 8 * 60 + 5, end: 8 * 60 + 20},
                 {kind: "train", start: 8 * 60 + 20, end: 8 * 60 + 36},
@@ -50,13 +51,30 @@ describe("createMockJourneys", () => {
 
         expect(journeys).toEqual([]);
     });
+
+    it("shows rail segments without personalised times when walking times are unknown", () => {
+        const journeys = createMockJourneys(
+            [resolvedPair("ANL", "CHC", undefined, undefined)],
+            8 * 60,
+            true
+        );
+
+        expect(journeys[0]).toMatchObject({
+            arrivalLabel: undefined,
+            arrivalTime: undefined,
+            railArrivalTime: "8:36",
+            recommended: false,
+            walkingTimesKnown: false,
+            segments: [{kind: "train", start: 8 * 60 + 20, end: 8 * 60 + 36}],
+        });
+    });
 });
 
 function resolvedPair(
     origin: string,
     destination: string,
-    originWalkMinutes: number,
-    destinationWalkMinutes: number
+    originWalkMinutes: number | undefined,
+    destinationWalkMinutes: number | undefined
 ): ResolvedStationPair {
     return {
         id: `pair:${origin}-${destination}`,

@@ -1,14 +1,14 @@
 import {describe, expect, it} from "vitest";
-import {defaultDashboardConfig} from "./defaultDashboardConfig";
-import {dashboardConfigSchema} from "./dashboardConfig";
+import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
+import {dashboardConfigSchema, timeSchema} from "../dto/dashboardConfig.dto";
 import {
     expandStationPairs,
-    resolveDashboardConfig,
-} from "./resolveDashboardConfig";
+    getCurrentJourneyPriorities,
+} from "./getCurrentJourneyPriorities";
 
-describe("resolveDashboardConfig", () => {
+describe("getCurrentJourneyPriorities", () => {
     it("prioritises travel from home to work on weekday mornings", () => {
-        const resolved = resolveDashboardConfig(defaultDashboardConfig, {
+        const resolved = getCurrentJourneyPriorities(defaultDashboardConfig, {
             day: 1,
             minutes: 8 * 60,
         });
@@ -27,7 +27,7 @@ describe("resolveDashboardConfig", () => {
     });
 
     it("reverses weekday travel after noon", () => {
-        const resolved = resolveDashboardConfig(defaultDashboardConfig, {
+        const resolved = getCurrentJourneyPriorities(defaultDashboardConfig, {
             day: 3,
             minutes: 12 * 60,
         });
@@ -37,12 +37,19 @@ describe("resolveDashboardConfig", () => {
             new Set(resolved.primaryPairs.map((pair) => pair.pairId))
         ).toEqual(new Set(["work-to-home"]));
         expect(
+            new Set(
+                resolved.primaryPairs.map(
+                    (pair) => pair.destination.locationName
+                )
+            )
+        ).toEqual(new Set(["Home"]));
+        expect(
             new Set(resolved.secondaryPairs.map((pair) => pair.pairId))
         ).toEqual(new Set(["glasgow-to-home"]));
     });
 
     it("prioritises travel from home to Glasgow at weekends", () => {
-        const resolved = resolveDashboardConfig(defaultDashboardConfig, {
+        const resolved = getCurrentJourneyPriorities(defaultDashboardConfig, {
             day: 6,
             minutes: 14 * 60,
         });
@@ -54,7 +61,7 @@ describe("resolveDashboardConfig", () => {
         expect(resolved.secondaryPairs).toEqual([]);
     });
 
-    it("keeps walking times when it expands a station group", () => {
+    it("preserves unknown walking times when it expands a station group", () => {
         const [pair] = expandStationPairs(
             [defaultDashboardConfig.pairs[2]!],
             defaultDashboardConfig.groups
@@ -68,10 +75,36 @@ describe("resolveDashboardConfig", () => {
             },
             destination: {
                 crs: "GLQ",
-                walkMinutes: 0,
+                walkMinutes: undefined,
                 locationName: "Glasgow",
             },
         });
+    });
+
+    it("uses the selected group name for an individual station", () => {
+        const [pair] = expandStationPairs(
+            [defaultDashboardConfig.pairs[0]!],
+            defaultDashboardConfig.groups
+        );
+
+        expect(pair?.origin).toMatchObject({
+            crs: "ANL",
+            locationName: "Home",
+            walkMinutes: 15,
+        });
+    });
+
+    it("rejects an individual station outside its selected group", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        const origin = config.pairs[0]!.origin;
+
+        if (origin.type !== "station") {
+            throw new Error("Expected an individual station.");
+        }
+
+        origin.crs = "CHC";
+
+        expect(dashboardConfigSchema.safeParse(config).success).toBe(false);
     });
 
     it("rejects overlapping schedules", () => {
@@ -88,4 +121,18 @@ describe("resolveDashboardConfig", () => {
 
         expect(dashboardConfigSchema.safeParse(config).success).toBe(false);
     });
+
+    it("rejects an invalid schedule time", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        config.schedules[0]!.startsAt = "a1:22";
+
+        expect(dashboardConfigSchema.safeParse(config).success).toBe(false);
+    });
+
+    it.each(["00:00", "23:59", "24:00"])(
+        "accepts the supported time %s",
+        (time) => {
+            expect(timeSchema.safeParse(time).success).toBe(true);
+        }
+    );
 });

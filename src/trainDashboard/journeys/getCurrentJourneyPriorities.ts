@@ -1,4 +1,3 @@
-import {stationName} from "../stations";
 import {
     timeToMinutes,
     type DashboardConfig,
@@ -7,7 +6,7 @@ import {
     type LocationReference,
     type StationGroup,
     type StationPair,
-} from "./dashboardConfig";
+} from "../dto/dashboardConfig.dto";
 
 export interface ClockContext {
     day: Day;
@@ -16,7 +15,7 @@ export interface ClockContext {
 
 export interface ResolvedEndpoint {
     crs: string;
-    walkMinutes: number;
+    walkMinutes?: number;
     locationName: string;
 }
 
@@ -27,7 +26,7 @@ export interface ResolvedStationPair {
     destination: ResolvedEndpoint;
 }
 
-export interface ResolvedDashboardConfig {
+export interface CurrentJourneyPriorities {
     schedule: DisplaySchedule | undefined;
     primaryPairs: ResolvedStationPair[];
     secondaryPairs: ResolvedStationPair[];
@@ -40,10 +39,10 @@ export function clockContextFromDate(date: Date): ClockContext {
     };
 }
 
-export function resolveDashboardConfig(
+export function getCurrentJourneyPriorities(
     config: DashboardConfig,
     clock: ClockContext
-): ResolvedDashboardConfig {
+): CurrentJourneyPriorities {
     const schedule = config.schedules.find((candidate) =>
         scheduleMatches(candidate, clock)
     );
@@ -115,25 +114,20 @@ function resolveLocation(
     location: LocationReference,
     groupsById: Map<string, StationGroup>
 ): ResolvedEndpoint[] {
-    if (location.type === "station") {
-        return [
-            {
-                crs: location.crs,
-                walkMinutes: location.walkMinutes ?? 0,
-                locationName: stationName(location.crs),
-            },
-        ];
-    }
-
     const group = groupsById.get(location.groupId);
 
     if (!group) {
         return [];
     }
 
-    return group.stations.map((station) => ({
+    const stations =
+        location.type === "station"
+            ? group.stations.filter((station) => station.crs === location.crs)
+            : group.stations;
+
+    return stations.map((station) => ({
         crs: station.crs,
-        walkMinutes: station.walkMinutes ?? 0,
+        walkMinutes: station.walkMinutes,
         locationName: group.name,
     }));
 }

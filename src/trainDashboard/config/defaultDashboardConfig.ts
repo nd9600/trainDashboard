@@ -1,4 +1,7 @@
-import {dashboardConfigSchema, type DashboardConfig} from "./dashboardConfig";
+import {
+    dashboardConfigSchema,
+    type DashboardConfig,
+} from "../dto/dashboardConfig.dto";
 
 export const defaultDashboardConfig: DashboardConfig =
     dashboardConfigSchema.parse({
@@ -31,8 +34,8 @@ export const defaultDashboardConfig: DashboardConfig =
                 id: "home-to-work",
                 origin: {
                     type: "station",
+                    groupId: "home",
                     crs: "ANL",
-                    walkMinutes: 15,
                 },
                 destination: {type: "group", groupId: "work"},
             },
@@ -41,8 +44,8 @@ export const defaultDashboardConfig: DashboardConfig =
                 origin: {type: "group", groupId: "work"},
                 destination: {
                     type: "station",
+                    groupId: "home",
                     crs: "ANL",
-                    walkMinutes: 15,
                 },
             },
             {

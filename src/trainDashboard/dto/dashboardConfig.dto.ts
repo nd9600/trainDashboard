@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {stationNames} from "../stations";
+import {stationNames} from "../stations/stationNames";
 
 export const daySchema = z.union([
     z.literal(0),
@@ -14,7 +14,7 @@ export const daySchema = z.union([
 export const timeSchema = z
     .string()
     .regex(
-        /^(?:[01]\d|2[0-3]):[0-5]\d$|^24:00$/,
+        /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/,
         "Enter a time from 00:00 to 24:00."
     );
 
@@ -51,8 +51,8 @@ export const stationGroupSchema = z.object({
 export const locationReferenceSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.literal("station"),
+        groupId: idSchema,
         crs: crsCodeSchema,
-        walkMinutes: z.number().int().min(0).optional(),
     }),
     z.object({
         type: z.literal("group"),
@@ -115,7 +115,9 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
             context
         );
 
-        const groupIds = new Set(config.groups.map((group) => group.id));
+        const groupsById = new Map(
+            config.groups.map((group) => [group.id, group])
+        );
         const pairIds = new Set(config.pairs.map((pair) => pair.id));
 
         config.pairs.forEach((pair, pairIndex) => {
@@ -123,14 +125,27 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
                 ["origin", pair.origin],
                 ["destination", pair.destination],
             ] as const) {
-                if (
-                    endpoint.type === "group" &&
-                    !groupIds.has(endpoint.groupId)
-                ) {
+                const group = groupsById.get(endpoint.groupId);
+
+                if (!group) {
                     context.addIssue({
                         code: "custom",
                         message: `Group "${endpoint.groupId}" does not exist.`,
                         path: ["pairs", pairIndex, endpointName],
+                    });
+                    continue;
+                }
+
+                if (
+                    endpoint.type === "station" &&
+                    !group.stations.some(
+                        (station) => station.crs === endpoint.crs
+                    )
+                ) {
+                    context.addIssue({
+                        code: "custom",
+                        message: `Station "${endpoint.crs}" is not in group "${group.name}".`,
+                        path: ["pairs", pairIndex, endpointName, "crs"],
                     });
                 }
             }
@@ -190,6 +205,13 @@ export type LocationReference = z.output<typeof locationReferenceSchema>;
 export type StationPair = z.output<typeof stationPairSchema>;
 export type DisplaySchedule = z.output<typeof displayScheduleSchema>;
 export type DashboardConfig = z.output<typeof dashboardConfigSchema>;
+
+export function dashboardConfigErrorMessages(error: z.ZodError): string[] {
+    return error.issues.map((issue) => {
+        const location = issue.path.join(".");
+        return location ? `${location}: ${issue.message}` : issue.message;
+    });
+}
 
 export function timeToMinutes(time: string): number {
     const [hours, minutes] = time.split(":").map(Number);

@@ -1,6 +1,6 @@
 import {createApp} from "vue";
 import {createPinia} from "pinia";
-import App from "./App.vue";
+import TrainDashboard from "@/trainDashboard/components/TrainDashboard.vue";
 import "./style.css";
 
-createApp(App).use(createPinia()).mount("#app");
+createApp(TrainDashboard).use(createPinia()).mount("#app");

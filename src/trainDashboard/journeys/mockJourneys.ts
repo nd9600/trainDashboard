@@ -1,6 +1,6 @@
-import type {ResolvedStationPair} from "./config/resolveDashboardConfig";
-import type {Journey} from "./journeys";
-import {stationName} from "./stations";
+import type {Journey} from "../dto/journey.dto";
+import type {ResolvedStationPair} from "./getCurrentJourneyPriorities";
+import {stationName} from "../stations/stations";
 
 interface MockRoute {
     firstDepartureAfter: number;
@@ -37,7 +37,11 @@ export function createMockJourneys(
     }
 
     const recommendedJourney = [...journeys]
-        .filter((journey) => journey.segments.at(0)!.start >= now)
+        .filter(
+            (journey) =>
+                journey.walkingTimesKnown &&
+                journey.segments.at(0)!.start >= now
+        )
         .sort((first, second) => {
             const arrivalDifference =
                 first.segments.at(-1)!.end - second.segments.at(-1)!.end;
@@ -67,10 +71,19 @@ function createPairJourneys(pair: ResolvedStationPair, now: number): Journey[] {
         (departureAfter) => {
             const departure = now + departureAfter;
             const arrival = departure + route.duration;
-            const finish = arrival + pair.destination.walkMinutes;
+            const walkingTimesKnown =
+                pair.origin.walkMinutes !== undefined &&
+                pair.destination.walkMinutes !== undefined;
+            const finish =
+                pair.destination.walkMinutes === undefined
+                    ? arrival
+                    : arrival + pair.destination.walkMinutes;
             const segments: Journey["segments"] = [];
 
-            if (pair.origin.walkMinutes > 0) {
+            if (
+                pair.origin.walkMinutes !== undefined &&
+                pair.origin.walkMinutes > 0
+            ) {
                 segments.push({
                     kind: "walk",
                     start: departure - pair.origin.walkMinutes,
@@ -84,7 +97,10 @@ function createPairJourneys(pair: ResolvedStationPair, now: number): Journey[] {
                 end: arrival,
             });
 
-            if (pair.destination.walkMinutes > 0) {
+            if (
+                pair.destination.walkMinutes !== undefined &&
+                pair.destination.walkMinutes > 0
+            ) {
                 segments.push({
                     kind: "walk",
                     start: arrival,
@@ -97,13 +113,19 @@ function createPairJourneys(pair: ResolvedStationPair, now: number): Journey[] {
                 origin: pair.origin.crs,
                 destination: pair.destination.crs,
                 label: `${stationName(pair.origin.crs)} → ${stationName(pair.destination.crs)} · ${formatTime(departure)}`,
+                railArrivalTime: formatTime(arrival),
                 arrivalLabel:
-                    pair.destination.walkMinutes > 0
-                        ? pair.destination.locationName.toLowerCase()
-                        : stationName(pair.destination.crs),
-                arrivalTime: formatTime(finish),
+                    pair.destination.walkMinutes === undefined
+                        ? undefined
+                        : pair.destination.locationName,
+                arrivalTime:
+                    pair.destination.walkMinutes === undefined
+                        ? undefined
+                        : formatTime(finish),
                 boldArrivalTime:
+                    pair.destination.walkMinutes !== undefined &&
                     pair.destination.locationName.toLowerCase() === "home",
+                walkingTimesKnown,
                 segments,
             };
         }

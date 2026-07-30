@@ -1,49 +1,48 @@
 <template>
-    <section>
-        <h2 class="text-lg font-semibold">API</h2>
-        <p class="mt-1 text-sm text-[#687477]">
+    <section aria-labelledby="api-settings-heading">
+        <h2 id="api-settings-heading" class="text-lg font-semibold">API</h2>
+        <p class="mt-1 text-sm text-ink-subtle">
             API access is not connected yet. These fields show where the
             timetable credentials will go.
         </p>
 
-        <fieldset
-            class="mt-5 grid gap-4 rounded-lg border border-[#cbc8c0] bg-[#ebe8df] p-4 sm:grid-cols-2"
-            disabled
-        >
+        <fieldset class="mt-5 grid gap-4 sm:grid-cols-2" disabled>
             <label>
-                <span class="mb-1 block text-xs text-[#687477]">
+                <span class="mb-1 block text-xs text-ink-subtle">
                     API base URL
                 </span>
                 <input
-                    class="w-full rounded border border-[#b9b6ae] bg-white px-2 py-1.5 disabled:bg-[#dedbd3]"
+                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
                     placeholder="https://…"
                 />
             </label>
             <label>
-                <span class="mb-1 block text-xs text-[#687477]"> API key </span>
+                <span class="mb-1 block text-xs text-ink-subtle">
+                    API key
+                </span>
                 <input
-                    class="w-full rounded border border-[#b9b6ae] bg-white px-2 py-1.5 disabled:bg-[#dedbd3]"
+                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
                     autocomplete="off"
                     placeholder="Not connected"
                     type="password"
                 />
             </label>
             <label>
-                <span class="mb-1 block text-xs text-[#687477]">
+                <span class="mb-1 block text-xs text-ink-subtle">
                     Client ID
                 </span>
                 <input
-                    class="w-full rounded border border-[#b9b6ae] bg-white px-2 py-1.5 disabled:bg-[#dedbd3]"
+                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
                     autocomplete="off"
                     placeholder="Not connected"
                 />
             </label>
             <label>
-                <span class="mb-1 block text-xs text-[#687477]">
+                <span class="mb-1 block text-xs text-ink-subtle">
                     Client secret
                 </span>
                 <input
-                    class="w-full rounded border border-[#b9b6ae] bg-white px-2 py-1.5 disabled:bg-[#dedbd3]"
+                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
                     autocomplete="new-password"
                     placeholder="Not connected"
                     type="password"

@@ -1,3 +1,4 @@
+// Keep this static mapping separate so browsers can cache it across app changes.
 export const stationNames: Readonly<Record<string, string>> = {
     ABW: "Abbey Wood",
     ABE: "Aber",
@@ -2608,7 +2609,3 @@ export const stationNames: Readonly<Record<string, string>> = {
     YSM: "Ystrad Mynach",
     YSR: "Ystrad Rhondda",
 };
-
-export function stationName(code: string): string {
-    return stationNames[code] ?? code;
-}

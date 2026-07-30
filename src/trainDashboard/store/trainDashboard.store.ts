@@ -1,10 +1,11 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
-import {useLocalStorageTyped} from "../composables/useLocalStorageTyped";
+import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
 import {
+    dashboardConfigErrorMessages,
     dashboardConfigSchema,
     type DashboardConfig,
-} from "../config/dashboardConfig";
+} from "../dto/dashboardConfig.dto";
 import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
 
 interface SaveResult {
@@ -18,7 +19,7 @@ const storage = useLocalStorageTyped(
     defaultDashboardConfig
 );
 
-export const useDashboardConfigStore = defineStore("dashboard-config", () => {
+export const useTrainDashboardStore = defineStore("dashboard-config", () => {
     const config = ref<DashboardConfig>(storage.loadFromLocalStorage());
 
     function saveConfig(candidate: unknown): SaveResult {
@@ -27,12 +28,7 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         if (!result.success) {
             return {
                 success: false,
-                errors: result.error.issues.map((issue) => {
-                    const location = issue.path.join(".");
-                    return location
-                        ? `${location}: ${issue.message}`
-                        : issue.message;
-                }),
+                errors: dashboardConfigErrorMessages(result.error),
             };
         }
 

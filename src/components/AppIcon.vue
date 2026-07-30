@@ -13,6 +13,14 @@
             <path d="M12 7v5l3 2" />
         </template>
 
+        <template v-else-if="name === 'chevron'">
+            <path d="m9 5 7 7-7 7" />
+        </template>
+
+        <template v-else-if="name === 'close'">
+            <path d="M6 6l12 12M18 6 6 18" />
+        </template>
+
         <template v-else-if="name === 'train'">
             <rect x="5" y="3" width="14" height="16" rx="3" />
             <path d="M8 7h8M8 11h8M8 19l-2 2M16 19l2 2" />
@@ -40,11 +48,41 @@
             <circle cx="8" cy="15" r="4" />
             <path d="m11 12 8-8M15 8l2 2M17 6l2 2" />
         </template>
+
+        <template v-else-if="name === 'map-pin'">
+            <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+            <circle cx="12" cy="10" r="2.5" />
+        </template>
+
+        <template v-else-if="name === 'plus'">
+            <path d="M12 5v14M5 12h14" />
+        </template>
+
+        <template v-else-if="name === 'trash'">
+            <path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6" />
+        </template>
+
+        <template v-else-if="name === 'walk'">
+            <circle cx="13" cy="4" r="2" />
+            <path d="m10 21 2-7-3-3 2-4 4 3 3 1M12 14l4 3 1 4M9 11l-4 2" />
+        </template>
     </svg>
 </template>
 
 <script setup lang="ts">
 defineProps<{
-    name: "briefcase" | "clock" | "home" | "key" | "settings" | "train";
+    name:
+        | "briefcase"
+        | "chevron"
+        | "close"
+        | "clock"
+        | "home"
+        | "key"
+        | "map-pin"
+        | "plus"
+        | "settings"
+        | "train"
+        | "trash"
+        | "walk";
 }>();
 </script>

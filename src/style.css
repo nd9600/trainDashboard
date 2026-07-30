@@ -1,7 +1,49 @@
 @import "tailwindcss";
 
+@theme {
+    --color-casa: #d9a183;
+    --color-japonica: #a7442f;
+    --color-saffron: #d68a1f;
+
+    --color-canvas: #f6ebdd;
+    --color-paper: #fffaf2;
+    --color-highlight: #f4d6a0;
+    --color-surface: #f0ddc7;
+    --color-surface-muted: #e5c3a3;
+    --color-line: #c49770;
+    --color-line-strong: #a96f4b;
+    --color-ink: #3a2118;
+    --color-ink-muted: #6f4433;
+    --color-ink-subtle: #84604e;
+    --color-primary: #a7442f;
+    --color-primary-hover: #833421;
+    --color-danger: #922e29;
+    --color-danger-dark: #681e1b;
+    --color-danger-surface: #f4d7ce;
+
+    --color-station-teal: #1f6664;
+    --color-station-terracotta: #983f28;
+    --color-station-ochre: #73550d;
+    --color-station-plum: #6f3f61;
+    --color-station-orange: #8c4715;
+    --color-station-olive: #53632d;
+
+    --font-display: Georgia, ui-serif, serif;
+    --container-dashboard: 56.25rem;
+}
+
 @layer base {
+    body {
+        @apply bg-canvas font-sans text-ink;
+    }
+
     button {
         @apply cursor-pointer;
     }
+}
+
+input:not([type="checkbox"]):not([type="radio"]):invalid,
+select:invalid,
+[role="combobox"][aria-invalid="true"] {
+    border: 2px solid green;
 }

@@ -1,9 +1,11 @@
 <template>
-    <div class="relative grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4">
+    <div
+        class="relative hidden grid-cols-[max-content_minmax(0,1fr)] gap-x-4 sm:grid"
+    >
         <div
             v-for="(journey, index) in journeys"
-            :key="`highlight-${journey.label}`"
-            class="pointer-events-none absolute inset-x-0 rounded-lg bg-[#e2ebe5]"
+            :key="`highlight-${journey.id}`"
+            class="pointer-events-none absolute inset-x-0 rounded-lg bg-highlight"
             :class="journey.recommended ? 'block' : 'hidden'"
             :style="{
                 top: `${rowStart + index * rowGap - 26}px`,
@@ -15,8 +17,8 @@
             <div :style="{height: `${rowStart - rowGap / 2}px`}" />
             <div
                 v-for="journey in journeys"
-                :key="journey.label"
-                class="flex items-center gap-2 whitespace-nowrap pr-2 text-[13px] font-semibold"
+                :key="journey.id"
+                class="flex items-center gap-2 whitespace-nowrap pr-2 text-sm font-semibold"
                 :style="{
                     height: `${rowGap}px`,
                     color: stationColour(journey.origin),
@@ -32,10 +34,10 @@
                     <span class="block">{{ journey.label }}</span>
                     <span
                         v-if="journey.recommended"
-                        class="mt-1 flex items-center gap-1 text-xs font-bold text-[#b2483e]"
+                        class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
                     >
                         <AppIcon class="size-3.5" name="clock" />
-                        {{ mustLeaveText(journey) }}
+                        {{ mustLeaveText(journey, now) }}
                     </span>
                 </span>
             </div>
@@ -49,7 +51,7 @@
             aria-label="Comparison of possible train journeys"
         >
             <rect
-                class="fill-[#dedbd3]"
+                class="fill-surface-muted"
                 x="0"
                 y="45"
                 :width="xAt(now)"
@@ -58,14 +60,14 @@
 
             <g v-for="tick in ticks" :key="tick">
                 <line
-                    class="stroke-[#cbc8c0] [stroke-width:1]"
+                    class="stroke-line [stroke-width:1]"
                     :x1="xAt(tick)"
                     y1="45"
                     :x2="xAt(tick)"
                     :y2="chartBottom"
                 />
                 <text
-                    class="fill-[#687477] text-xs"
+                    class="fill-ink-subtle text-xs"
                     :x="xAt(tick)"
                     y="32"
                     text-anchor="middle"
@@ -76,7 +78,7 @@
 
             <g
                 v-for="(journey, index) in journeys"
-                :key="journey.label"
+                :key="journey.id"
                 :transform="`translate(0 ${rowStart + index * rowGap})`"
             >
                 <line
@@ -95,32 +97,41 @@
                 />
 
                 <text
-                    class="fill-[#485457] text-xs"
+                    :class="[
+                        'fill-ink text-xs font-medium [paint-order:stroke] [stroke-linejoin:round] [stroke-width:6]',
+                        journey.recommended
+                            ? 'stroke-highlight'
+                            : 'stroke-canvas',
+                    ]"
                     :x="xAt(journey.segments.at(-1)!.end)"
                     dx="10"
                     y="5"
                 >
-                    {{ journey.arrivalLabel }}
+                    {{
+                        journey.arrivalLabel && journey.arrivalTime
+                            ? journey.arrivalLabel
+                            : "Train arrives"
+                    }}
                     <tspan
                         dx="4"
                         :class="
                             journey.boldArrivalTime ? 'font-bold' : undefined
                         "
                     >
-                        {{ journey.arrivalTime }}
+                        {{ journey.arrivalTime ?? journey.railArrivalTime }}
                     </tspan>
                 </text>
             </g>
 
             <line
-                class="stroke-[#b2483e] [stroke-width:2]"
+                class="stroke-danger [stroke-width:2]"
                 :x1="xAt(now)"
                 y1="45"
                 :x2="xAt(now)"
                 :y2="chartBottom"
             />
             <text
-                class="fill-[#b2483e] text-xs"
+                class="fill-danger text-xs"
                 :x="xAt(now)"
                 :y="chartBottom + 17"
                 text-anchor="middle"
@@ -133,9 +144,10 @@
 
 <script setup lang="ts">
 import {computed} from "vue";
-import AppIcon from "./AppIcon.vue";
-import type {Journey, SegmentKind} from "../journeys";
-import {stationColour} from "../stationColours";
+import AppIcon from "@/components/AppIcon.vue";
+import type {Journey, SegmentKind} from "../../dto/journey.dto";
+import {mustLeaveText} from "../../presentation/journeyPresentation";
+import {stationColour} from "../../stations/stationColours";
 
 const props = defineProps<{
     journeys: Journey[];
@@ -180,16 +192,6 @@ function formatTime(minutes: number): string {
     const remainingMinutes = normalisedMinutes % 60;
 
     return `${hours}:${remainingMinutes.toString().padStart(2, "0")}`;
-}
-
-function mustLeaveText(journey: Journey): string {
-    const minutes = journey.segments.at(0)!.start - props.now;
-
-    if (minutes <= 0) {
-        return "must leave now";
-    }
-
-    return `must leave in ${minutes} minute${minutes === 1 ? "" : "s"}`;
 }
 
 function orderedSegments(journey: Journey): Journey["segments"] {

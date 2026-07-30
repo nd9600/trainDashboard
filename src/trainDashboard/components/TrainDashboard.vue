@@ -1,21 +1,19 @@
 <template>
-    <main class="min-h-screen bg-[#f2efe7] font-sans text-[#172326]">
-        <div class="relative mx-auto w-full max-w-[900px] px-6 pt-8 pb-8">
-            <SettingsPanel />
+    <main class="min-h-screen">
+        <div class="relative mx-auto w-full max-w-dashboard px-6 pt-8 pb-8">
+            <TrainDashboardSettingsModal />
 
             <header class="ml-3 pr-28">
                 <p
-                    class="m-0 flex items-center gap-2 text-sm tracking-[0.08em] text-[#687477] uppercase"
+                    class="m-0 flex items-center gap-2 text-sm tracking-widest text-ink-subtle"
                 >
                     <AppIcon class="size-4" :name="contextIcon" />
-                    {{ resolved.schedule?.name ?? "Journeys" }}
+                    {{ journeyContext }}
                 </p>
-                <h1
-                    class="my-1 [font-family:Georgia,serif] text-[2.3rem] font-normal"
-                >
+                <h1 class="my-1 font-display text-4xl font-normal">
                     {{ heading }}
                 </h1>
-                <p v-if="recommendedJourney" class="m-0 text-[#485457]">
+                <p v-if="recommendedJourney" class="m-0 text-ink-muted">
                     {{ recommendationPrefix }}
                     <span
                         class="font-semibold"
@@ -28,12 +26,12 @@
                     for
                     {{ stationName(recommendedJourney.destination) }}
                 </p>
-                <p class="mt-1 mb-0 text-sm text-[#687477]">
+                <p class="mt-1 mb-0 text-sm text-ink-subtle">
                     It is now {{ formatTime(now) }}
                 </p>
             </header>
 
-            <section v-if="primaryJourneys.length" class="mt-[18px]">
+            <section v-if="primaryJourneys.length" class="mt-5">
                 <JourneyTimeline
                     :journeys="primaryJourneys"
                     :now="now"
@@ -43,24 +41,26 @@
             </section>
             <p
                 v-else
-                class="mt-8 rounded-lg border border-[#cbc8c0] bg-[#ebe8df] p-4 text-[#485457]"
+                class="mt-8 rounded-lg border border-line bg-surface p-4 text-ink-muted"
             >
                 No sample timetable is available for these station pairs yet.
             </p>
 
             <details
                 v-if="secondaryJourneys.length"
-                class="mt-8 rounded-lg border border-[#cbc8c0] bg-[#ebe8df]"
+                class="group mt-8 rounded-lg border border-line bg-surface overflow-auto"
             >
                 <summary
-                    class="cursor-pointer px-4 py-3 font-semibold text-[#485457]"
+                    class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-semibold text-ink-muted"
                 >
-                    <span class="inline-flex items-center gap-2">
-                        <AppIcon class="size-4" name="train" />
-                        Other journeys
-                    </span>
+                    <AppIcon
+                        class="size-4 transition-transform group-open:rotate-90"
+                        name="chevron"
+                    />
+                    <AppIcon class="size-4" name="train" />
+                    Other journeys
                 </summary>
-                <div class="border-t border-[#cbc8c0] bg-[#f2efe7] p-4">
+                <div class="border-t border-line bg-canvas p-4">
                     <JourneyTimeline
                         :journeys="secondaryJourneys"
                         :now="now"
@@ -74,34 +74,40 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from "vue";
-import AppIcon from "./components/AppIcon.vue";
-import JourneyTimeline from "./components/JourneyTimeline.vue";
-import SettingsPanel from "./components/SettingsPanel.vue";
+import {computed, defineAsyncComponent} from "vue";
+import AppIcon from "@/components/AppIcon.vue";
+import JourneyTimeline from "./journeys/JourneyTimeline.vue";
 import {
     clockContextFromDate,
-    resolveDashboardConfig,
-} from "./config/resolveDashboardConfig";
-import {createMockJourneys} from "./mockJourneys";
-import {stationColour} from "./stationColours";
-import {stationName} from "./stations";
-import {useDashboardConfigStore} from "./stores/dashboardConfig";
+    getCurrentJourneyPriorities,
+} from "../journeys/getCurrentJourneyPriorities";
+import {createMockJourneys} from "../journeys/mockJourneys";
+import {stationColour} from "../stations/stationColours";
+import {stationName} from "../stations/stations";
+import {useTrainDashboardStore} from "../store/trainDashboard.store";
 
-const configStore = useDashboardConfigStore();
+const TrainDashboardSettingsModal = defineAsyncComponent(
+    () => import("./settings/TrainDashboardSettingsModal.vue")
+);
+const configStore = useTrainDashboardStore();
 const currentDate = new Date();
 const clock = clockContextFromDate(currentDate);
 const now = clock.minutes;
 const windowStart = now - 5;
 const windowEnd = now + 80;
 
-const resolved = computed(() =>
-    resolveDashboardConfig(configStore.config, clock)
+const currentJourneyPriorities = computed(() =>
+    getCurrentJourneyPriorities(configStore.config, clock)
 );
 const primaryJourneys = computed(() =>
-    createMockJourneys(resolved.value.primaryPairs, now, true)
+    createMockJourneys(currentJourneyPriorities.value.primaryPairs, now, true)
 );
 const secondaryJourneys = computed(() =>
-    createMockJourneys(resolved.value.secondaryPairs, now, false)
+    createMockJourneys(
+        currentJourneyPriorities.value.secondaryPairs,
+        now,
+        false
+    )
 );
 const recommendedJourney = computed(() =>
     primaryJourneys.value.find((journey) => journey.recommended)
@@ -112,7 +118,7 @@ const leaveIn = computed(() => {
 });
 const heading = computed(() => {
     if (leaveIn.value === undefined) {
-        return resolved.value.schedule?.name ?? "Journeys";
+        return currentJourneyPriorities.value.schedule?.name ?? "Journeys";
     }
 
     if (leaveIn.value <= 0) {
@@ -127,7 +133,8 @@ const recommendationPrefix = computed(() => {
 });
 const contextIcon = computed<"briefcase" | "home" | "train">(() => {
     const destinationName =
-        resolved.value.primaryPairs.at(0)?.destination.locationName;
+        currentJourneyPriorities.value.primaryPairs.at(0)?.destination
+            .locationName;
 
     if (destinationName?.toLowerCase() === "work") {
         return "briefcase";
@@ -138,6 +145,15 @@ const contextIcon = computed<"briefcase" | "home" | "train">(() => {
     }
 
     return "train";
+});
+const journeyContext = computed(() => {
+    const pair = currentJourneyPriorities.value.primaryPairs.at(0);
+
+    if (!pair) {
+        return currentJourneyPriorities.value.schedule?.name ?? "Journeys";
+    }
+
+    return `Going from ${pair.origin.locationName} to ${pair.destination.locationName}`;
 });
 
 function formatTime(minutes: number): string {
