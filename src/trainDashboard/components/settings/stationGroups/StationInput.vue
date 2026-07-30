@@ -1,22 +1,22 @@
 <template>
     <div ref="root" class="relative">
         <Combobox
-            :model-value="selectedCode"
+            :modelValue="selectedCode"
             nullable
             @update:model-value="selectStation"
         >
             <ComboboxInput
                 v-bind="$attrs"
-                class="w-full rounded border border-line-strong bg-paper py-1.5 pr-9 pl-2"
+                class="appInput pr-9"
                 aria-label="Station"
                 :aria-invalid="!isValidStation"
-                :display-value="displayStation"
+                :displayValue="displayStation"
                 placeholder="Search by station name or CRS code"
                 required
                 @change="updateQuery"
             />
             <ComboboxButton
-                class="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-ink-subtle hover:text-ink"
+                class="appButton appButton--quiet appButton--icon absolute inset-y-0 right-0 text-ink-subtle hover:text-ink"
                 type="button"
                 aria-label="Show station options"
             >

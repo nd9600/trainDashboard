@@ -3,7 +3,7 @@
         <div class="mb-3 flex items-center justify-between gap-3">
             <strong>{{ stationPairName(pair, groups) }}</strong>
             <button
-                class="flex items-center gap-1.5 px-2 py-1 text-sm text-danger hover:underline"
+                class="appButton appButton--danger px-2 py-1"
                 type="button"
                 @click="emit('remove')"
             >

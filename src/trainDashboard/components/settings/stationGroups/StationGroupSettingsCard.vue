@@ -5,14 +5,10 @@
                 <span class="mb-1 block text-xs text-ink-subtle">
                     Group name
                 </span>
-                <input
-                    v-model="group.name"
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
-                    required
-                />
+                <input v-model="group.name" class="appInput" required />
             </label>
             <button
-                class="flex items-center gap-1.5 px-2 py-1 text-sm text-danger hover:underline"
+                class="appButton appButton--danger px-2 py-1"
                 type="button"
                 @click="emit('remove')"
             >
@@ -37,7 +33,7 @@
                     />
                 </div>
                 <button
-                    class="flex size-9 items-center justify-center text-danger hover:bg-danger-surface"
+                    class="appButton appButton--danger appButton--icon"
                     type="button"
                     aria-label="Remove station"
                     @click="removeStation(stationIndex)"
@@ -48,7 +44,7 @@
         </div>
 
         <button
-            class="mt-3 flex items-center gap-1.5 rounded border border-line-strong bg-paper px-3 py-1.5 text-sm font-semibold hover:bg-surface-muted"
+            class="appButton appButton--secondary mt-3 py-1.5 hover:bg-surface-muted"
             type="button"
             @click="addStation"
         >

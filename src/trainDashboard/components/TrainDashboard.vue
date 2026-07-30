@@ -35,8 +35,8 @@
                 <JourneyTimeline
                     :journeys="primaryJourneys"
                     :now="now"
-                    :window-start="windowStart"
-                    :window-end="windowEnd"
+                    :windowStart="windowStart"
+                    :windowEnd="windowEnd"
                 />
             </section>
             <p
@@ -64,8 +64,8 @@
                     <JourneyTimeline
                         :journeys="secondaryJourneys"
                         :now="now"
-                        :window-start="windowStart"
-                        :window-end="windowEnd"
+                        :windowStart="windowStart"
+                        :windowEnd="windowEnd"
                     />
                 </div>
             </details>

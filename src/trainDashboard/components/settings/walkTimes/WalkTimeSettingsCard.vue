@@ -19,7 +19,7 @@
                         Walk minutes
                     </span>
                     <input
-                        class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                        class="appInput"
                         :min="0"
                         placeholder="Not set"
                         :step="1"

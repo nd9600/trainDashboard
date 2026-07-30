@@ -11,17 +11,14 @@
                 <span class="mb-1 block text-xs text-ink-subtle">
                     API base URL
                 </span>
-                <input
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
-                    placeholder="https://…"
-                />
+                <input class="appInput" placeholder="https://…" />
             </label>
             <label>
                 <span class="mb-1 block text-xs text-ink-subtle">
                     API key
                 </span>
                 <input
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                    class="appInput"
                     autocomplete="off"
                     placeholder="Not connected"
                     type="password"
@@ -32,7 +29,7 @@
                     Client ID
                 </span>
                 <input
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                    class="appInput"
                     autocomplete="off"
                     placeholder="Not connected"
                 />
@@ -42,7 +39,7 @@
                     Client secret
                 </span>
                 <input
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                    class="appInput"
                     autocomplete="new-password"
                     placeholder="Not connected"
                     type="password"

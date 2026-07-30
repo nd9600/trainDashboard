@@ -3,8 +3,8 @@
     <JourneyChart
         :journeys="journeys"
         :now="now"
-        :window-start="windowStart"
-        :window-end="windowEnd"
+        :windowStart="windowStart"
+        :windowEnd="windowEnd"
     />
 </template>
 

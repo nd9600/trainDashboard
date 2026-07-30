@@ -1,12 +1,12 @@
 <template>
     <form
         class="space-y-6"
-        @change="markDirty"
-        @input="markDirty"
+        @change="handleChange"
+        @input="handleChange"
         @submit.prevent="save"
     >
         <AppTabs
-            id-prefix="journey-settings"
+            idPrefix="journey-settings"
             v-model="activeEditorSection"
             :tabs="editorSections"
             variant="card"
@@ -16,26 +16,26 @@
             v-if="activeEditorSection === 'journeys'"
             v-model:pairs="draft.pairs"
             :groups="draft.groups"
-            @changed="markDirty"
+            @changed="handleChange"
             @remove="removePair"
         />
         <StationGroupsSettings
             v-else-if="activeEditorSection === 'groups'"
             v-model:groups="draft.groups"
-            @changed="markDirty"
+            @changed="handleChange"
             @remove="removeGroup"
         />
         <WalkTimesSettings
             v-else-if="activeEditorSection === 'walk-times'"
             v-model:groups="draft.groups"
-            @changed="markDirty"
+            @changed="handleChange"
         />
         <SchedulesSettings
             v-else-if="activeEditorSection === 'schedules'"
             v-model:schedules="draft.schedules"
             :groups="draft.groups"
             :pairs="draft.pairs"
-            @changed="markDirty"
+            @changed="handleChange"
         />
 
         <div
@@ -73,11 +73,12 @@ import WalkTimesSettings from "./walkTimes/WalkTimesSettings.vue";
 const configStore = useTrainDashboardStore();
 const draft = ref<DashboardConfig>(cloneConfig(configStore.config));
 const errors = ref<string[]>([]);
-const isDirty = ref(false);
+const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
+    default: false,
+});
 const isValid = ref(true);
 
 const emit = defineEmits<{
-    dirtyChange: [isDirty: boolean];
     saved: [];
     validChange: [isValid: boolean];
 }>();
@@ -99,7 +100,7 @@ function save(): void {
 
     if (result.success) {
         draft.value = cloneConfig(configStore.config);
-        setDirty(false);
+        setHasUnsavedChanges(false);
         emit("saved");
     }
 }
@@ -107,13 +108,13 @@ function save(): void {
 function cancel(): void {
     draft.value = cloneConfig(configStore.config);
     errors.value = [];
-    setDirty(false);
+    setHasUnsavedChanges(false);
     setValid(true);
 }
 
-function markDirty(): void {
+function handleChange(): void {
     validateDraft();
-    setDirty(true);
+    setHasUnsavedChanges(true);
 }
 
 function validateDraft(): boolean {
@@ -126,13 +127,12 @@ function validateDraft(): boolean {
     return result.success;
 }
 
-function setDirty(value: boolean): void {
-    if (isDirty.value === value) {
+function setHasUnsavedChanges(value: boolean): void {
+    if (hasUnsavedChanges.value === value) {
         return;
     }
 
-    isDirty.value = value;
-    emit("dirtyChange", value);
+    hasUnsavedChanges.value = value;
 }
 
 function setValid(value: boolean): void {
@@ -159,14 +159,14 @@ function removeGroup(groupIndex: number): void {
         (pair) => !removedPairIds.includes(pair.id)
     );
     removePairIdsFromSchedules(removedPairIds);
-    markDirty();
+    handleChange();
 }
 
 function removePair(pairIndex: number): void {
     const pairId = draft.value.pairs[pairIndex]!.id;
     draft.value.pairs.splice(pairIndex, 1);
     removePairIdsFromSchedules([pairId]);
-    markDirty();
+    handleChange();
 }
 
 function referencesGroup(

@@ -7,17 +7,13 @@
                 <span class="mb-1 block text-xs text-ink-subtle">
                     Schedule name
                 </span>
-                <input
-                    v-model="schedule.name"
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
-                    required
-                />
+                <input v-model="schedule.name" class="appInput" required />
             </label>
             <label>
                 <span class="mb-1 block text-xs text-ink-subtle">Start</span>
                 <input
                     v-model="schedule.startsAt"
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                    class="appInput"
                     inputmode="numeric"
                     pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
                     placeholder="HH:MM"
@@ -29,7 +25,7 @@
                 <span class="mb-1 block text-xs text-ink-subtle">End</span>
                 <input
                     v-model="schedule.endsAt"
-                    class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                    class="appInput"
                     inputmode="numeric"
                     pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
                     placeholder="HH:MM"
@@ -38,7 +34,7 @@
                 />
             </label>
             <button
-                class="flex items-center gap-1.5 px-2 py-1 text-sm text-danger hover:underline"
+                class="appButton appButton--danger px-2 py-1"
                 type="button"
                 @click="emit('remove')"
             >

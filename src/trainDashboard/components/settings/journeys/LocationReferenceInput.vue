@@ -3,7 +3,7 @@
         <label>
             <span class="mb-1 block text-xs text-ink-subtle">Type</span>
             <select
-                class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                class="appInput"
                 :value="modelValue.type"
                 @change="changeType"
             >
@@ -15,7 +15,7 @@
         <label>
             <span class="mb-1 block text-xs text-ink-subtle">Place</span>
             <select
-                class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                class="appInput"
                 :value="modelValue.groupId"
                 required
                 @change="updateGroup"
@@ -33,7 +33,7 @@
         <label v-if="modelValue.type === 'station'">
             <span class="mb-1 block text-xs text-ink-subtle">Station</span>
             <select
-                class="w-full rounded border border-line-strong bg-paper px-2 py-1.5"
+                class="appInput"
                 :value="modelValue.crs"
                 required
                 @change="updateStation"

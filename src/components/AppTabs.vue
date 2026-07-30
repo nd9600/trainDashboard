@@ -12,7 +12,7 @@
             v-for="tab in tabs"
             :id="`${idPrefix}-tab-${tab.value}`"
             :key="tab.value"
-            class="inline-flex grow items-center justify-center px-2 py-2 text-sm font-semibold transition-colors sm:px-4"
+            class="appButton grow px-2 py-2 sm:px-4"
             :class="tabClass(tab.value)"
             type="button"
             role="tab"
@@ -59,7 +59,7 @@ function tabClass(value: string): string {
     }
 
     return props.modelValue === value
-        ? "min-w-max border-b-2 border-primary text-primary"
-        : "min-w-max text-ink-subtle hover:bg-surface hover:text-ink-muted";
+        ? "min-w-max rounded-none border-b-2 border-0 border-primary text-primary"
+        : "min-w-max rounded-none border-0 text-ink-subtle hover:bg-surface hover:text-ink-muted";
 }
 </script>

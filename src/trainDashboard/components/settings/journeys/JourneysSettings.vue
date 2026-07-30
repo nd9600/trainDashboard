@@ -22,7 +22,7 @@
         />
 
         <button
-            class="flex items-center gap-1.5 rounded border border-line-strong bg-paper px-3 py-2 text-sm font-semibold hover:bg-surface-muted"
+            class="appButton appButton--primary"
             type="button"
             @click="addJourney"
         >

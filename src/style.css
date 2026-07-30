@@ -17,9 +17,9 @@
     --color-ink-subtle: #84604e;
     --color-primary: #a7442f;
     --color-primary-hover: #833421;
-    --color-danger: #922e29;
-    --color-danger-dark: #681e1b;
-    --color-danger-surface: #f4d7ce;
+    --color-danger: #2456a6;
+    --color-danger-dark: #17366a;
+    --color-danger-surface: #dce8ff;
 
     --color-station-teal: #1f6664;
     --color-station-terracotta: #983f28;
@@ -42,8 +42,53 @@
     }
 }
 
-input:not([type="checkbox"]):not([type="radio"]):invalid,
-select:invalid,
-[role="combobox"][aria-invalid="true"] {
-    border: 2px solid green;
+@layer components {
+    .appButton {
+        @apply inline-flex cursor-pointer items-center justify-center gap-1.5 rounded border border-transparent px-3 py-2 text-sm font-semibold transition-colors;
+    }
+
+    .appButton:focus-visible {
+        @apply outline-2 outline-offset-2 outline-primary;
+    }
+
+    .appButton:disabled {
+        @apply cursor-not-allowed opacity-40;
+    }
+
+    .appButton--primary {
+        @apply bg-primary text-paper hover:bg-primary-hover;
+    }
+
+    .appButton--secondary {
+        @apply border-line-strong bg-paper text-ink hover:bg-surface;
+    }
+
+    .appButton--quiet {
+        @apply bg-transparent text-ink-muted hover:bg-surface-muted;
+    }
+
+    .appButton--danger {
+        @apply border-danger bg-danger-surface text-danger hover:bg-danger hover:text-paper;
+    }
+
+    .appButton--icon {
+        @apply size-9 p-0;
+    }
+
+    .appInput {
+        @apply w-full rounded border border-line-strong bg-paper px-2 py-1.5 text-ink;
+    }
+
+    .appInput:focus {
+        @apply border-primary outline-2 outline-offset-1 outline-primary;
+    }
+
+    .appInput:disabled {
+        @apply cursor-not-allowed bg-surface text-ink-subtle opacity-70;
+    }
+
+    .appInput:invalid,
+    .appInput[aria-invalid="true"] {
+        @apply border-2 border-danger;
+    }
 }

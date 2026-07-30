@@ -1,7 +1,7 @@
 <template>
     <div class="absolute top-5 right-6 z-30">
         <button
-            class="flex items-center gap-2 rounded-lg border border-line bg-surface p-1 sm:px-3 sm:py-2 font-semibold text-ink-muted shadow-sm hover:bg-surface-muted text-xs sm:text-base"
+            class="appButton appButton--secondary gap-2 rounded-lg border-line bg-surface p-1 text-xs text-ink-muted shadow-sm hover:bg-surface-muted sm:px-3 sm:py-2 sm:text-base"
             type="button"
             @click="isOpen = true"
         >
@@ -9,71 +9,64 @@
             Settings
         </button>
 
-        <AppModal
-            :is-open="isOpen"
-            :is-closable="true"
-            spotlight-variant-placement="top"
+        <Modal
+            :isOpen="isOpen"
+            :isClosable="true"
+            rootClass="sm:w-[min(48rem,calc(100vw-3rem))]"
+            spotlightVariantPlacement="top"
             @close="closeSettings"
         >
-            <AppModalDialog
-                rootClass="sm:w-[min(48rem,calc(100vw-3rem))]"
-                :is-closable="true"
-                @close="closeSettings"
+            <template #header>Settings</template>
+
+            <AppTabs
+                idPrefix="settings"
+                v-model="activeSection"
+                :tabs="sections"
+            />
+            <div
+                v-show="activeSection === 'journeys'"
+                id="settings-panel-journeys"
+                aria-labelledby="settings-tab-journeys"
+                role="tabpanel"
             >
-                <template #header>Settings</template>
-
-                <AppTabs
-                    id-prefix="settings"
-                    v-model="activeSection"
-                    :tabs="sections"
+                <JourneySettings
+                    ref="journeySettings"
+                    v-model:hasUnsavedChanges="hasUnsavedChanges"
+                    class="p-5"
+                    @saved="isOpen = false"
+                    @valid-change="isConfigurationValid = $event"
                 />
-                <div
-                    v-show="activeSection === 'journeys'"
-                    id="settings-panel-journeys"
-                    aria-labelledby="settings-tab-journeys"
-                    role="tabpanel"
-                >
-                    <JourneySettings
-                        ref="journeySettings"
-                        class="p-5"
-                        @dirty-change="isConfigurationDirty = $event"
-                        @saved="isOpen = false"
-                        @valid-change="isConfigurationValid = $event"
-                    />
-                </div>
-                <div
-                    v-show="activeSection === 'api'"
-                    id="settings-panel-api"
-                    aria-labelledby="settings-tab-api"
-                    role="tabpanel"
-                >
-                    <ApiSettings class="p-5" />
-                </div>
+            </div>
+            <div
+                v-show="activeSection === 'api'"
+                id="settings-panel-api"
+                aria-labelledby="settings-tab-api"
+                role="tabpanel"
+            >
+                <ApiSettings class="p-5" />
+            </div>
 
-                <template #footer>
-                    <div class="flex justify-end gap-3">
-                        <button
-                            class="rounded border border-line-strong bg-paper px-4 py-2 font-semibold hover:bg-surface disabled:cursor-not-allowed disabled:opacity-40"
-                            type="button"
-                            :disabled="!isConfigurationDirty"
-                            @click="cancelConfiguration"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            class="rounded bg-primary px-4 py-2 font-semibold text-paper hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
-                            type="button"
-                            :disabled="
-                                !isConfigurationDirty || !isConfigurationValid
-                            "
-                            @click="journeySettings?.save()"
-                        >
-                            Save configuration
-                        </button>
-                    </div>
-                </template>
-            </AppModalDialog>
-        </AppModal>
+            <template #footer>
+                <div class="flex justify-end gap-3">
+                    <button
+                        class="appButton appButton--secondary px-4"
+                        type="button"
+                        :disabled="!hasUnsavedChanges"
+                        @click="cancelConfiguration"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        class="appButton appButton--primary px-4"
+                        type="button"
+                        :disabled="!hasUnsavedChanges || !isConfigurationValid"
+                        @click="journeySettings?.save()"
+                    >
+                        Save configuration
+                    </button>
+                </div>
+            </template>
+        </Modal>
     </div>
 </template>
 
@@ -81,8 +74,7 @@
 import {ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import AppTabs from "@/components/AppTabs.vue";
-import AppModal from "@/components/Modal/AppModal.vue";
-import AppModalDialog from "@/components/Modal/AppModalDialog.vue";
+import Modal from "@/components/Modal/Modal.vue";
 import ApiSettings from "./api/ApiSettings.vue";
 import JourneySettings from "./JourneySettings.vue";
 
@@ -92,7 +84,7 @@ interface JourneySettingsHandle {
 }
 
 const isOpen = ref(false);
-const isConfigurationDirty = ref(false);
+const hasUnsavedChanges = ref(false);
 const isConfigurationValid = ref(true);
 const journeySettings = ref<JourneySettingsHandle | null>(null);
 const activeSection = ref("journeys");
