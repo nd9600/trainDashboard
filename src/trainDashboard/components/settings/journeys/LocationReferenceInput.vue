@@ -49,7 +49,7 @@ const locationOptions = computed<LocationOption[]>(() =>
     props.groups.flatMap((group) => [
         {
             key: locationKey({type: "group", groupId: group.id}),
-            label: `${group.name} — any station`,
+            label: `${group.name}`,
             value: {type: "group", groupId: group.id},
         },
         ...group.stations.map((station) => ({
@@ -58,7 +58,7 @@ const locationOptions = computed<LocationOption[]>(() =>
                 groupId: group.id,
                 crs: station.crs,
             }),
-            label: `${group.name} — ${stationDisplayName(station.crs)}`,
+            label: `${group.name} - through ${stationDisplayName(station.crs)}`,
             value: {
                 type: "station" as const,
                 groupId: group.id,

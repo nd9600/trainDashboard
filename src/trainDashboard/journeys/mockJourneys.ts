@@ -112,6 +112,7 @@ function createPairJourneys(pair: ResolvedStationPair, now: number): Journey[] {
                 id: `${pair.id}:${departure}`,
                 origin: pair.origin.crs,
                 destination: pair.destination.crs,
+                contextLabel: `${pair.origin.locationName} to ${pair.destination.locationName}`,
                 label: `${stationName(pair.origin.crs)} → ${stationName(pair.destination.crs)} · ${formatTime(departure)}`,
                 railArrivalTime: formatTime(arrival),
                 arrivalLabel:

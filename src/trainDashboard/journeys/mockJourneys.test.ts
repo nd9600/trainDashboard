@@ -13,6 +13,7 @@ describe("createMockJourneys", () => {
         expect(journeys[0]).toMatchObject({
             origin: "ANL",
             destination: "CHC",
+            contextLabel: "Home to Work",
             arrivalLabel: "Work",
             arrivalTime: "8:44",
             walkingTimesKnown: true,

@@ -11,6 +11,7 @@ export interface Journey {
     id: string;
     origin: string;
     destination: string;
+    contextLabel: string;
     label: string;
     railArrivalTime: string;
     arrivalLabel?: string;

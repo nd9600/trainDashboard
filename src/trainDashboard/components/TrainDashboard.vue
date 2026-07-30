@@ -60,13 +60,21 @@
                     <AppIcon class="size-4" name="train" />
                     Other journeys
                 </summary>
-                <div class="border-t border-line bg-canvas p-4">
-                    <JourneyTimeline
-                        :journeys="secondaryJourneys"
-                        :now="now"
-                        :windowStart="windowStart"
-                        :windowEnd="windowEnd"
-                    />
+                <div class="space-y-6 border-t border-line bg-canvas p-4">
+                    <section
+                        v-for="journeyGroup in secondaryJourneyGroups"
+                        :key="journeyGroup.label"
+                    >
+                        <h2 class="mb-2 font-display text-lg">
+                            {{ journeyGroup.label }}
+                        </h2>
+                        <JourneyTimeline
+                            :journeys="journeyGroup.journeys"
+                            :now="now"
+                            :windowStart="windowStart"
+                            :windowEnd="windowEnd"
+                        />
+                    </section>
                 </div>
             </details>
         </div>
@@ -109,6 +117,17 @@ const secondaryJourneys = computed(() =>
         false
     )
 );
+const secondaryJourneyGroups = computed(() => {
+    const groups = new Map<string, typeof secondaryJourneys.value>();
+
+    for (const journey of secondaryJourneys.value) {
+        const journeys = groups.get(journey.contextLabel) ?? [];
+        journeys.push(journey);
+        groups.set(journey.contextLabel, journeys);
+    }
+
+    return Array.from(groups, ([label, journeys]) => ({label, journeys}));
+});
 const recommendedJourney = computed(() =>
     primaryJourneys.value.find((journey) => journey.recommended)
 );

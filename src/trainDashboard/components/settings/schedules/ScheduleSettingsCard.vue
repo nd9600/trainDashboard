@@ -1,50 +1,16 @@
 <template>
-    <div class="rounded-lg border border-line bg-paper p-4 shadow-sm">
-        <div
-            class="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_7rem_auto]"
-        >
-            <label>
-                <span class="mb-1 block text-xs text-ink-subtle">
-                    Schedule name
-                </span>
-                <input v-model="schedule.name" class="appInput" required />
-            </label>
-            <label>
-                <span class="mb-1 block text-xs text-ink-subtle">Start</span>
-                <input
-                    v-model="schedule.startsAt"
-                    class="appInput"
-                    inputmode="numeric"
-                    pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
-                    placeholder="HH:MM"
-                    required
-                    title="Enter a time from 00:00 to 24:00."
-                />
-            </label>
-            <label>
-                <span class="mb-1 block text-xs text-ink-subtle">End</span>
-                <input
-                    v-model="schedule.endsAt"
-                    class="appInput"
-                    inputmode="numeric"
-                    pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
-                    placeholder="HH:MM"
-                    required
-                    title="Enter a time from 00:00 to 24:00."
-                />
-            </label>
-            <button
-                class="appButton appButton--danger px-2 py-1"
-                type="button"
-                @click="emit('remove')"
-            >
-                <AppIcon class="size-4" name="trash" />
-                Remove
-            </button>
-        </div>
+    <div class="space-y-4 rounded-lg border border-line bg-paper p-4 shadow-sm">
+        <label class="sentenceField">
+            Call this schedule
+            <input
+                v-model="schedule.name"
+                class="appInput sentenceField__control min-w-52 grow"
+                required
+            />
+        </label>
 
-        <fieldset class="mt-3">
-            <legend class="text-xs text-ink-subtle">Days</legend>
+        <fieldset>
+            <legend>Use this schedule on</legend>
             <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1">
                 <label
                     v-for="day in days"
@@ -62,46 +28,63 @@
             </div>
         </fieldset>
 
-        <div class="mt-3 grid gap-4 sm:grid-cols-2">
-            <fieldset>
-                <legend class="text-xs text-ink-subtle">
-                    Primary journeys
-                </legend>
-                <label
-                    v-for="pair in pairs"
-                    :key="pair.id"
-                    class="mt-1 flex items-center gap-2 text-sm"
-                >
-                    <input
-                        v-model="schedule.primaryPairIds"
-                        class="size-4 accent-primary"
-                        type="checkbox"
-                        :value="pair.id"
-                        :disabled="schedule.secondaryPairIds.includes(pair.id)"
-                    />
+        <fieldset class="sentenceField">
+            <legend class="sr-only">Schedule times</legend>
+            <label class="inline-flex items-baseline gap-2">
+                <span>This schedule runs from</span>
+                <input
+                    v-model="schedule.startsAt"
+                    class="appInput sentenceField__control w-24"
+                    inputmode="numeric"
+                    pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
+                    placeholder="HH:MM"
+                    required
+                    title="Enter a time from 00:00 to 24:00."
+                />
+            </label>
+            <label class="inline-flex items-baseline gap-2">
+                <span>until</span>
+                <input
+                    v-model="schedule.endsAt"
+                    class="appInput sentenceField__control w-24"
+                    inputmode="numeric"
+                    pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
+                    placeholder="HH:MM"
+                    required
+                    title="Enter a time from 00:00 to 24:00."
+                />
+            </label>
+        </fieldset>
+
+        <fieldset class="mt-12 space-y-3">
+            <legend class="mb-1">Set how each journey appears</legend>
+            <label v-for="pair in pairs" :key="pair.id" class="sentenceField">
+                <span class="font-medium">
                     {{ stationPairName(pair, groups) }}
-                </label>
-            </fieldset>
-            <fieldset>
-                <legend class="text-xs text-ink-subtle">
-                    Secondary journeys
-                </legend>
-                <label
-                    v-for="pair in pairs"
-                    :key="pair.id"
-                    class="mt-1 flex items-center gap-2 text-sm"
+                </span>
+                <span>is</span>
+                <select
+                    class="appInput sentenceField__control min-w-52 grow"
+                    :value="pairPriority(pair.id)"
+                    @change="updatePairPriority(pair.id, $event)"
                 >
-                    <input
-                        v-model="schedule.secondaryPairIds"
-                        class="size-4 accent-primary"
-                        type="checkbox"
-                        :value="pair.id"
-                        :disabled="schedule.primaryPairIds.includes(pair.id)"
-                    />
-                    {{ stationPairName(pair, groups) }}
-                </label>
-            </fieldset>
-        </div>
+                    <option value="primary">a primary journey</option>
+                    <option value="secondary">
+                        shown under Other journeys
+                    </option>
+                    <option value="hidden">hidden during this schedule</option>
+                </select>
+            </label>
+        </fieldset>
+
+        <button
+            class="appButton appButton--danger px-2 py-1"
+            type="button"
+            @click="emit('remove')"
+        >
+            <AppIcon class="size-4" name="trash" />
+            Remove schedule
+        </button>
     </div>
 </template>
 
@@ -126,6 +109,8 @@ const emit = defineEmits<{
     remove: [];
 }>();
 
+type PairPriority = "hidden" | "primary" | "secondary";
+
 const days: Array<{value: Day; label: string}> = [
     {value: 1, label: "Mon"},
     {value: 2, label: "Tue"},
@@ -135,4 +120,35 @@ const days: Array<{value: Day; label: string}> = [
     {value: 6, label: "Sat"},
     {value: 0, label: "Sun"},
 ];
+
+function pairPriority(pairId: string): PairPriority {
+    if (schedule.value.primaryPairIds.includes(pairId)) {
+        return "primary";
+    }
+
+    if (schedule.value.secondaryPairIds.includes(pairId)) {
+        return "secondary";
+    }
+
+    return "hidden";
+}
+
+function updatePairPriority(pairId: string, event: Event): void {
+    const priority = (event.target as HTMLSelectElement).value as PairPriority;
+
+    schedule.value.primaryPairIds = schedule.value.primaryPairIds.filter(
+        (selectedPairId) => selectedPairId !== pairId
+    );
+    schedule.value.secondaryPairIds = schedule.value.secondaryPairIds.filter(
+        (selectedPairId) => selectedPairId !== pairId
+    );
+
+    if (priority === "primary") {
+        schedule.value.primaryPairIds.push(pairId);
+    }
+
+    if (priority === "secondary") {
+        schedule.value.secondaryPairIds.push(pairId);
+    }
+}
 </script>

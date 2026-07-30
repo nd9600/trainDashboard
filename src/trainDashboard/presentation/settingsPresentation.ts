@@ -12,7 +12,7 @@ export function locationReferenceName(
     const group = groups.find((candidate) => candidate.id === location.groupId);
 
     if (location.type === "station") {
-        return `${group?.name ?? "Missing group"} — ${stationDisplayName(location.crs)}`;
+        return `${group?.name ?? "Missing group"}, through ${stationDisplayName(location.crs)}`;
     }
 
     return group?.name ?? "Missing group";
