@@ -15,16 +15,10 @@
 <script setup lang="ts">
 import type {Journey} from "../../dto/journey.dto";
 import {stationName} from "../../stations/stations";
+import {formatTime} from "@/utilities/time.utility.ts";
 
 defineProps<{
     journey: Journey;
 }>();
 
-function formatTime(minutes: number): string {
-    const normalisedMinutes = ((minutes % 1440) + 1440) % 1440;
-    const hours = Math.floor(normalisedMinutes / 60);
-    const remainingMinutes = normalisedMinutes % 60;
-
-    return `${hours}:${remainingMinutes.toString().padStart(2, "0")}`;
-}
 </script>

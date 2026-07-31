@@ -5,6 +5,7 @@ import type {
 } from "../dto/liveDepartureBoard.dto";
 import type {Journey, TrainLeg} from "../dto/journey.dto";
 import type {ResolvedStationPair} from "./getCurrentJourneyPriorities";
+import {formatTime} from "@/utilities/time.utility.ts";
 
 interface ServiceLeg extends TrainLeg {
     serviceId: string;
@@ -316,12 +317,4 @@ function liveTimeOrScheduled(
     return liveTime && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(liveTime)
         ? liveTime
         : scheduledTime;
-}
-
-function formatTime(minutes: number): string {
-    const normalisedMinutes = ((minutes % 1440) + 1440) % 1440;
-    const hours = Math.floor(normalisedMinutes / 60);
-    const remainingMinutes = normalisedMinutes % 60;
-
-    return `${hours}:${remainingMinutes.toString().padStart(2, "0")}`;
 }

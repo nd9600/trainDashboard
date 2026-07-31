@@ -101,7 +101,7 @@ import {
 } from "@headlessui/vue";
 import {computed, onBeforeUnmount, ref, watch} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import {combineClasses, type ClassValue} from "@/ui.utilities.ts";
+import {combineClasses, type ClassValue} from "@/utilities/ui.utility";
 
 const props = withDefaults(
     defineProps<{

@@ -178,6 +178,7 @@
 <script setup lang="ts">
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
+import {formatTime} from "@/utilities/time.utility.ts";
 import type {Journey, SegmentKind} from "../../dto/journey.dto";
 import {mustLeaveText} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
@@ -229,14 +230,6 @@ function xAt(minutes: number): string {
         (minutes - props.windowStart) / (props.windowEnd - props.windowStart);
 
     return `${progress * 85}%`;
-}
-
-function formatTime(minutes: number): string {
-    const normalisedMinutes = ((minutes % 1440) + 1440) % 1440;
-    const hours = Math.floor(normalisedMinutes / 60);
-    const remainingMinutes = normalisedMinutes % 60;
-
-    return `${hours}:${remainingMinutes.toString().padStart(2, "0")}`;
 }
 
 function timelineLabelClasses(journey: Journey): string[] {
