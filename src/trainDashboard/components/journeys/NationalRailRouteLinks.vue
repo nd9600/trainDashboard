@@ -1,11 +1,12 @@
 <template>
     <div
-        class="rounded-lg border border-line bg-surface p-3 text-sm text-ink-muted"
+        class="rounded-lg border border-line bg-surface p-3 text-base text-ink-muted"
     >
-        <p>Check these routes on National Rail Enquiries:</p>
+        <p>No journeys were found for these routes, check them out on National Rail Enquiries:</p>
         <ul class="mt-2 space-y-1">
             <li v-for="pair in pairs" :key="pair.id">
                 <NationalRailLink
+                    class="text-sm!"
                     :originCrs="pair.origin.crs"
                     :destinationCrs="pair.destination.crs"
                     :departureMinutes="departureMinutes"

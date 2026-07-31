@@ -4,11 +4,11 @@ import type {Journey} from "../dto/journey.dto";
 export function mustLeaveText(journey: Journey, now: number): string {
     const minutes = journey.segments.at(0)!.start - now;
 
-    if (minutes <= 0) {
+    if (minutes <= 1) {
         return "must leave now";
     }
 
-    return `must leave in ${minutes} minute${minutes === 1 ? "" : "s"}`;
+    return `must leave in ${minutes} minutes`;
 }
 
 export function journeyTimelineRange(

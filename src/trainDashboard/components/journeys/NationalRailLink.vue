@@ -6,8 +6,7 @@
         rel="noopener noreferrer"
         target="_blank"
     >
-        {{ label }}
-        <span aria-hidden="true">↗</span>
+        {{ label }} ↗
     </a>
 </template>
 
