@@ -1,12 +1,12 @@
 <template>
-    <div class="absolute top-5 right-6 z-30">
+    <div class="z-30">
         <button
             class="appButton appButton--secondary gap-2 rounded-lg border-line bg-surface p-1 text-xs text-ink-muted shadow-sm hover:bg-surface-muted sm:px-3 sm:py-2 sm:text-base"
             type="button"
             @click="isOpen = true"
         >
             <AppIcon class="size-4" name="settings" />
-            Settings
+            <span class="max-sm:hidden">Settings</span>
         </button>
 
         <Modal

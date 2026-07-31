@@ -1,40 +1,46 @@
 <template>
     <main class="min-h-screen">
-        <div class="relative mx-auto w-full max-w-dashboard px-6 pt-8 pb-8">
-            <TrainDashboardSettingsModal />
+        <div class="mx-auto w-full max-w-dashboard px-6 pt-8 pb-8">
+            <div class="flex justify-between">
+                <DashboardHeader />
+                <TrainDashboardSettingsModal />
+            </div>
 
-            <DashboardHeader />
-
-            <p
+            <div
                 v-if="isLoadingJourneys"
                 class="mt-8 rounded-lg border border-line bg-surface p-4 text-ink-muted"
             >
-                Loading journeys…
-            </p>
-            <section v-else class="mt-5 space-y-4">
+                Loading journeys...
+            </div>
+            <div
+                v-else
+                class="mt-4 space-y-4"
+            >
                 <p
                     v-if="journeyLoadingError"
                     class="rounded-lg border border-line bg-surface p-4 text-ink-muted"
                 >
                     {{ journeyLoadingError }}
                 </p>
-                <JourneyTimeline
-                    v-if="primaryJourneys.length"
-                    :journeys="primaryJourneys"
+                <section>
+                    <JourneyTimeline
+                        v-if="primaryJourneys.length"
+                        :journeys="primaryJourneys"
+                        :now="now"
+                    />
+                    <NationalRailRouteLinks
+                        v-if="primaryPairsWithoutJourneys.length"
+                        :pairs="primaryPairsWithoutJourneys"
+                        :departureMinutes="now"
+                    />
+                </section>
+
+                <OtherJourneys
+                    :pairs="currentJourneyPriorities.secondaryPairs"
+                    :journeys="secondaryJourneys"
                     :now="now"
                 />
-                <NationalRailRouteLinks
-                    v-if="primaryPairsWithoutJourneys.length"
-                    :pairs="primaryPairsWithoutJourneys"
-                    :departureMinutes="now"
-                />
-            </section>
-
-            <OtherJourneys
-                :pairs="currentJourneyPriorities.secondaryPairs"
-                :journeys="secondaryJourneys"
-                :now="now"
-            />
+            </div>
         </div>
     </main>
 </template>

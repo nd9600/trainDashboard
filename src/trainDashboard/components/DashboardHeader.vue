@@ -1,5 +1,5 @@
 <template>
-    <header class="ml-3 pr-28">
+    <header>
         <p
             class="m-0 flex items-center gap-2 text-sm tracking-widest text-ink-subtle"
         >
