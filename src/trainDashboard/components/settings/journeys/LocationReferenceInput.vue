@@ -32,6 +32,8 @@ import {stationDisplayName} from "../../../stations/stations";
 const props = defineProps<{
     modelValue: LocationReference;
     stationGroups: StationGroup[];
+    excludedGroupId?: string;
+    excludedCrs?: string;
     label: string;
 }>();
 
@@ -46,26 +48,35 @@ interface LocationOption {
 }
 
 const locationOptions = computed<LocationOption[]>(() =>
-    props.stationGroups.flatMap((group) => [
-        {
-            key: locationKey({type: "group", groupId: group.id}),
-            label: `${group.name}`,
-            value: {type: "group", groupId: group.id},
-        },
-        ...group.stations.map((station) => ({
-            key: locationKey({
-                type: "station",
-                groupId: group.id,
-                crs: station.crs,
-            }),
-            label: `${group.name} - through ${stationDisplayName(station.crs)}`,
-            value: {
-                type: "station" as const,
-                groupId: group.id,
-                crs: station.crs,
-            },
-        })),
-    ])
+    props.stationGroups
+        .filter((group) => group.id !== props.excludedGroupId)
+        .flatMap((group) => [
+            ...(group.stations.length !== 1 ||
+            group.stations[0]?.crs !== props.excludedCrs
+                ? [
+                      {
+                          key: locationKey({type: "group", groupId: group.id}),
+                          label: `${group.name}`,
+                          value: {type: "group" as const, groupId: group.id},
+                      },
+                  ]
+                : []),
+            ...(group.stations.length > 1 ? group.stations : [])
+                .filter((station) => station.crs !== props.excludedCrs)
+                .map((station) => ({
+                    key: locationKey({
+                        type: "station",
+                        groupId: group.id,
+                        crs: station.crs,
+                    }),
+                    label: `${group.name} - through ${stationDisplayName(station.crs)}`,
+                    value: {
+                        type: "station" as const,
+                        groupId: group.id,
+                        crs: station.crs,
+                    },
+                })),
+        ])
 );
 
 const selectedKey = computed(() => locationKey(props.modelValue));

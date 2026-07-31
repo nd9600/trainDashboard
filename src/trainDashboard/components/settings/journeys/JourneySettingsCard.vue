@@ -15,11 +15,15 @@
             <LocationReferenceInput
                 v-model="journey.origin"
                 :stationGroups="stationGroups"
+                :excludedGroupId="excludedGroupIdForOrigin"
+                :excludedCrs="excludedCrsForOrigin"
                 label="Start the journey from"
             />
             <LocationReferenceInput
                 v-model="journey.destination"
                 :stationGroups="stationGroups"
+                :excludedGroupId="excludedGroupIdForDestination"
+                :excludedCrs="excludedCrsForDestination"
                 label="Finish the journey at"
             />
             <label v-if="journey.viaCrs !== undefined" class="sentenceField">
@@ -58,6 +62,7 @@
 </template>
 
 <script setup lang="ts">
+import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {StationGroup, Journey} from "../../../dto/dashboardConfig.dto";
 import {journeyName} from "../../../presentation/settingsPresentation";
@@ -69,6 +74,23 @@ defineProps<{
 }>();
 
 const journey = defineModel<Journey>("journey", {required: true});
+
+const excludedCrsForOrigin = computed(() =>
+    journey.value.destination.type === "station"
+        ? journey.value.destination.crs
+        : undefined
+);
+const excludedCrsForDestination = computed(() =>
+    journey.value.origin.type === "station"
+        ? journey.value.origin.crs
+        : undefined
+);
+const excludedGroupIdForOrigin = computed(
+    () => journey.value.destination.groupId
+);
+const excludedGroupIdForDestination = computed(
+    () => journey.value.origin.groupId
+);
 
 const emit = defineEmits<{
     changed: [];
