@@ -18,7 +18,7 @@
             <div
                 v-for="journey in journeys"
                 :key="journey.id"
-                class="flex items-center gap-2 whitespace-nowrap pr-2 text-sm font-semibold"
+                class="flex items-center gap-2 whitespace-nowrap px-2 text-sm font-semibold"
                 :style="{
                     height: `${rowGap}px`,
                     color: stationColour(journey.origin),
