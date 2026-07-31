@@ -18,7 +18,7 @@
                 v-for="journeyGroup in journeyGroups"
                 :key="journeyGroup.label"
             >
-                <h2 class="mb-2 font-display text-lg">
+                <h2 class="mb-2 font-display text-base sm:text-lg">
                     {{ journeyGroup.label }}
                 </h2>
                 <JourneyTimeline

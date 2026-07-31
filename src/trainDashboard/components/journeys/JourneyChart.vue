@@ -1,6 +1,6 @@
 <template>
     <div
-        class="relative hidden grid-cols-[max-content_minmax(0,1fr)] gap-x-4 sm:grid"
+        class="relative hidden sm:grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4"
     >
         <div
             v-for="(journey, index) in journeys"

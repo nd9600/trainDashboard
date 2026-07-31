@@ -1,6 +1,6 @@
 <template>
     <div
-        class="rounded-lg border border-line bg-surface p-3 text-base text-ink-muted"
+        class="rounded-lg border border-line bg-surface p-3 text-sm sm:text-base text-ink-muted"
     >
         <p>
             No journeys were found for these routes, check them out on National

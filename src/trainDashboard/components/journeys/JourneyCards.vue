@@ -15,12 +15,12 @@
                 />
                 <div class="min-w-0 grow">
                     <p
-                        class="font-semibold"
+                        class="font-semibold text-sm"
                         :style="{color: stationColour(journey.origin)}"
                     >
                         <JourneyRouteLabel :journey="journey" />
                     </p>
-                    <p class="mt-1 text-sm text-ink-muted">
+                    <p class="mt-1 text-xs text-ink-muted">
                         {{
                             journey.arrivalLabel && journey.arrivalTime
                                 ? journey.arrivalLabel
