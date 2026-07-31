@@ -33,7 +33,7 @@
                 </section>
 
                 <OtherJourneys
-                    :journeyRoutes="currentJourneyPriorities.secondaryRoutes"
+                    :journeyRoutes="activeJourneyPlan.secondaryRoutes"
                     :timetabledJourneys="secondaryJourneys"
                     :currentMinutes="currentMinutes"
                 />
@@ -53,7 +53,7 @@ import DashboardHeader from "./DashboardHeader.vue";
 
 const trainServicesStore = useTrainServicesStore();
 const {
-    currentJourneyPriorities,
+    activeJourneyPlan,
     isLoadingJourneys,
     journeyLoadError,
     currentMinutes,

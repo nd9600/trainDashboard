@@ -1,10 +1,13 @@
-import {fetchDepartureBoard} from "../api/railDataMarketplace.api";
+import {fetchDepartureBoard} from "../../api/railDataMarketplace.api";
 import type {
     DepartureBoard,
     DepartureService,
-} from "../dto/liveDepartureBoard.dto";
-import type {TimetabledJourney, TrainLeg} from "../dto/timetabledJourney.dto";
-import type {JourneyRoute} from "./getActiveJourneyPlan";
+} from "../../dto/liveDepartureBoard.dto";
+import type {
+    TimetabledJourney,
+    TrainLeg,
+} from "../../dto/timetabledJourney.dto";
+import type {JourneyRoute} from "../planning/journeyRoutes";
 import {formatTime} from "@/utilities/time.utility.ts";
 
 interface ServiceLeg extends TrainLeg {
@@ -19,7 +22,10 @@ export async function getTimetabledJourneys(
     currentMinutes: number,
     recommendJourney: boolean
 ): Promise<TimetabledJourney[]> {
-    const departureBoardRequestCache = new Map<string, Promise<DepartureBoard>>();
+    const departureBoardRequestCache = new Map<
+        string,
+        Promise<DepartureBoard>
+    >();
 
     function fetchBoard(
         originCrs: string,

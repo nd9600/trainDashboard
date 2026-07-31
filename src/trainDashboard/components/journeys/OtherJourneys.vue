@@ -46,8 +46,8 @@
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
-import type {JourneyRoute} from "../../journeys/getActiveJourneyPlan";
-import {getRoutesWithoutTimetabledJourneys} from "../../journeys/getRoutesWithoutTimetabledJourneys";
+import type {JourneyRoute} from "../../journeys/planning/journeyRoutes";
+import {getRoutesWithoutTimetabledJourneys} from "../../journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
 import JourneyTimeline from "./JourneyTimeline.vue";
 import NationalRailRouteLinks from "./NationalRailRouteLinks.vue";
 

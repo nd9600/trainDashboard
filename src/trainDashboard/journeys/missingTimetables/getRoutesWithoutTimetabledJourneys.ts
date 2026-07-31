@@ -1,5 +1,5 @@
-import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
-import type {JourneyRoute} from "./getActiveJourneyPlan";
+import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
+import type {JourneyRoute} from "../planning/journeyRoutes";
 
 export function getRoutesWithoutTimetabledJourneys(
     routes: JourneyRoute[],

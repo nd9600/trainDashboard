@@ -1,7 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import type {DepartureBoardRequest} from "../api/railDataMarketplace.api";
-import * as railDataMarketplaceApi from "../api/railDataMarketplace.api";
-import type {JourneyRoute} from "./getActiveJourneyPlan";
+import type {DepartureBoardRequest} from "../../api/railDataMarketplace.api";
+import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
+import type {JourneyRoute} from "../planning/journeyRoutes";
 import {getTimetabledJourneys} from "./getTimetabledJourneys";
 
 describe("getTimetabledJourneys", () => {

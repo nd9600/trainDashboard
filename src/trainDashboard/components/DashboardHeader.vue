@@ -38,13 +38,12 @@ import {stationName} from "../stations/stations";
 import {useTrainServicesStore} from "../store/trainServices.store";
 
 const trainServicesStore = useTrainServicesStore();
-const {currentJourneyPriorities, currentMinutes, recommendedJourney} =
+const {activeJourneyPlan, currentMinutes, recommendedJourney} =
     storeToRefs(trainServicesStore);
 
 const journeyDestinationIcon = computed<"briefcase" | "home" | "train">(() => {
     const destinationName =
-        currentJourneyPriorities.value.primaryRoutes.at(0)?.destination
-            .locationName;
+        activeJourneyPlan.value.primaryRoutes.at(0)?.destination.locationName;
 
     if (destinationName?.toLowerCase() === "work") {
         return "briefcase";
@@ -58,10 +57,10 @@ const journeyDestinationIcon = computed<"briefcase" | "home" | "train">(() => {
 });
 
 const journeyDescription = computed(() => {
-    const journeys = currentJourneyPriorities.value.primaryRoutes.at(0);
+    const journeys = activeJourneyPlan.value.primaryRoutes.at(0);
 
     if (!journeys) {
-        return currentJourneyPriorities.value.schedule?.name ?? "Journeys";
+        return activeJourneyPlan.value.schedule?.name ?? "Journeys";
     }
 
     return `Going from ${journeys.origin.locationName} to ${journeys.destination.locationName}`;
@@ -76,7 +75,7 @@ const leaveInMinutes = computed(() => {
 
 const leaveInString = computed(() => {
     if (leaveInMinutes.value === undefined) {
-        return currentJourneyPriorities.value.schedule?.name ?? "Journeys";
+        return activeJourneyPlan.value.schedule?.name ?? "Journeys";
     }
 
     if (leaveInMinutes.value <= 1) {

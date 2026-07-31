@@ -4,9 +4,9 @@ import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
     type CurrentClock,
     getActiveJourneyPlan,
-} from "../journeys/getActiveJourneyPlan";
-import {getTimetabledJourneys} from "../journeys/getTimetabledJourneys";
-import {getRoutesWithoutTimetabledJourneys} from "../journeys/getRoutesWithoutTimetabledJourneys";
+} from "../journeys/planning/activeJourneyPlan";
+import {getTimetabledJourneys} from "../journeys/timetable/getTimetabledJourneys";
+import {getRoutesWithoutTimetabledJourneys} from "../journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
 import type {Day} from "@/trainDashboard/dto/dashboardConfig.dto.ts";
@@ -28,7 +28,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const journeyLoadError = ref<string>();
 
     ///// getters /////
-    const currentJourneyPriorities = computed(() =>
+    const activeJourneyPlan = computed(() =>
         getActiveJourneyPlan(dashboardConfigStore.config, {
             day: currentClock.day,
             minutes: currentMinutes.value,
@@ -39,7 +39,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     );
     const primaryRoutesWithoutTimetabledJourneys = computed(() =>
         getRoutesWithoutTimetabledJourneys(
-            currentJourneyPriorities.value.primaryRoutes,
+            activeJourneyPlan.value.primaryRoutes,
             primaryJourneys.value
         )
     );
@@ -64,13 +64,13 @@ export const useTrainServicesStore = defineStore("train-services", () => {
                 await Promise.all([
                     getTimetabledJourneys(
                         consumerKey,
-                        currentJourneyPriorities.value.primaryRoutes,
+                        activeJourneyPlan.value.primaryRoutes,
                         currentMinutes.value,
                         true
                     ),
                     getTimetabledJourneys(
                         consumerKey,
-                        currentJourneyPriorities.value.secondaryRoutes,
+                        activeJourneyPlan.value.secondaryRoutes,
                         currentMinutes.value,
                         false
                     ),
@@ -90,14 +90,14 @@ export const useTrainServicesStore = defineStore("train-services", () => {
 
     ///// effects /////
     watch(
-        [currentJourneyPriorities, () => apiStore.settings.consumerKey],
+        [activeJourneyPlan, () => apiStore.settings.consumerKey],
         refreshJourneys,
         {immediate: true}
     );
 
     ///// public API /////
     return {
-        currentJourneyPriorities,
+        activeJourneyPlan,
         isLoadingJourneys,
         journeyLoadError,
         currentMinutes,

@@ -1,18 +1,9 @@
-import {
-    timeToMinutes,
-    type DashboardConfig,
-    type Day,
-    type DisplaySchedule,
-    type LocationReference,
-    type StationGroup,
-    type Journey,
-} from "../dto/dashboardConfig.dto";
-import {formatJourneyName} from "../presentation/settingsPresentation";
-
-export interface CurrentClock {
-    day: Day;
-    minutes: number;
-}
+import type {
+    LocationReference,
+    StationGroup,
+    Journey,
+} from "../../dto/dashboardConfig.dto";
+import {formatJourneyName} from "../../presentation/settingsPresentation";
 
 export interface StationEndpoint {
     crs: string;
@@ -29,54 +20,6 @@ export interface JourneyRoute {
     viaCrs?: string;
 }
 
-export interface ActiveJourneyPlan {
-    schedule: DisplaySchedule | undefined;
-    primaryRoutes: JourneyRoute[];
-    secondaryRoutes: JourneyRoute[];
-}
-
-export function getActiveJourneyPlan(
-    config: DashboardConfig,
-    currentClock: CurrentClock
-): ActiveJourneyPlan {
-    const schedule = config.schedules.find((candidate) =>
-        isScheduleActive(candidate, currentClock)
-    );
-
-    if (!schedule) {
-        return {
-            schedule: undefined,
-            primaryRoutes: [],
-            secondaryRoutes: getRoutesForJourneys(
-                config.journeys,
-                config.stationGroups
-            ),
-        };
-    }
-
-    const journeysById = new Map(
-        config.journeys.map((journey) => [journey.id, journey])
-    );
-
-    return {
-        schedule,
-        primaryRoutes: getRoutesForJourneys(
-            schedule.primaryJourneyIds.flatMap((journeyId) => {
-                const journey = journeysById.get(journeyId);
-                return journey ? [journey] : [];
-            }),
-            config.stationGroups
-        ),
-        secondaryRoutes: getRoutesForJourneys(
-            schedule.secondaryJourneyIds.flatMap((journeyId) => {
-                const journey = journeysById.get(journeyId);
-                return journey ? [journey] : [];
-            }),
-            config.stationGroups
-        ),
-    };
-}
-
 export function getRoutesForJourneys(
     journeys: Journey[],
     stationGroups: StationGroup[]
@@ -90,7 +33,6 @@ export function getRoutesForJourneys(
             journey.origin,
             stationGroupsById
         );
-        console.log(journey, origins);
         const destinations = getStationsForLocation(
             journey.destination,
             stationGroupsById
@@ -115,17 +57,6 @@ export function getRoutesForJourneys(
                 }))
         );
     });
-}
-
-function isScheduleActive(
-    schedule: DisplaySchedule,
-    currentClock: CurrentClock
-): boolean {
-    return (
-        schedule.days.includes(currentClock.day) &&
-        currentClock.minutes >= timeToMinutes(schedule.startsAt) &&
-        currentClock.minutes < timeToMinutes(schedule.endsAt)
-    );
 }
 
 function getStationsForLocation(

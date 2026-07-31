@@ -1,24 +1,22 @@
 import {describe, expect, it} from "vitest";
-import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
-import {dashboardConfigSchema, timeSchema} from "../dto/dashboardConfig.dto";
-import {
-    getRoutesForJourneys,
-    getActiveJourneyPlan,
-} from "./getActiveJourneyPlan";
+import {defaultDashboardConfig} from "../../config/defaultDashboardConfig";
+import {dashboardConfigSchema, timeSchema} from "../../dto/dashboardConfig.dto";
+import {getActiveJourneyPlan} from "./activeJourneyPlan";
+import {getRoutesForJourneys} from "./journeyRoutes";
 
 describe("getActiveJourneyPlan", () => {
     it("prioritises travel from home to work on weekday mornings", () => {
-        const currentPriorities = getActiveJourneyPlan(defaultDashboardConfig, {
+        const activePlan = getActiveJourneyPlan(defaultDashboardConfig, {
             day: 1,
             minutes: 8 * 60,
         });
 
-        expect(currentPriorities.schedule?.id).toBe("weekday-morning");
+        expect(activePlan.schedule?.id).toBe("weekday-morning");
         expect(
-            currentPriorities.primaryRoutes.map((route) => route.journeyId)
+            activePlan.primaryRoutes.map((route) => route.journeyId)
         ).toEqual(["home-to-work", "home-to-work"]);
         expect(
-            currentPriorities.secondaryRoutes.map((route) => route.journeyId)
+            activePlan.secondaryRoutes.map((route) => route.journeyId)
         ).toEqual([
             "home-to-glasgow",
             "home-to-glasgow",
@@ -28,30 +26,24 @@ describe("getActiveJourneyPlan", () => {
     });
 
     it("reverses weekday travel after noon", () => {
-        const currentPriorities = getActiveJourneyPlan(defaultDashboardConfig, {
+        const activePlan = getActiveJourneyPlan(defaultDashboardConfig, {
             day: 3,
             minutes: 12 * 60,
         });
 
-        expect(currentPriorities.schedule?.id).toBe("weekday-afternoon");
+        expect(activePlan.schedule?.id).toBe("weekday-afternoon");
         expect(
-            new Set(
-                currentPriorities.primaryRoutes.map((route) => route.journeyId)
-            )
+            new Set(activePlan.primaryRoutes.map((route) => route.journeyId))
         ).toEqual(new Set(["work-to-home"]));
         expect(
             new Set(
-                currentPriorities.primaryRoutes.map(
+                activePlan.primaryRoutes.map(
                     (journeys) => journeys.destination.locationName
                 )
             )
         ).toEqual(new Set(["Home"]));
         expect(
-            new Set(
-                currentPriorities.secondaryRoutes.map(
-                    (route) => route.journeyId
-                )
-            )
+            new Set(activePlan.secondaryRoutes.map((route) => route.journeyId))
         ).toEqual(new Set(["glasgow-to-home"]));
     });
 
@@ -68,13 +60,13 @@ describe("getActiveJourneyPlan", () => {
             crs: "GLQ",
         };
 
-        const currentPriorities = getActiveJourneyPlan(config, {
+        const activePlan = getActiveJourneyPlan(config, {
             day: 1,
             minutes: 8 * 60,
         });
 
         expect(
-            currentPriorities.secondaryRoutes.map(
+            activePlan.secondaryRoutes.map(
                 (route) => `${route.origin.crs}-${route.destination.crs}`
             )
         ).toEqual(["ANL-GLQ"]);
@@ -84,33 +76,32 @@ describe("getActiveJourneyPlan", () => {
         const config = structuredClone(defaultDashboardConfig);
         config.journeys[0]!.viaCrs = "GLQ";
 
-        const currentPriorities = getActiveJourneyPlan(config, {
+        const activePlan = getActiveJourneyPlan(config, {
             day: 1,
             minutes: 8 * 60,
         });
 
-        expect(currentPriorities.primaryRoutes).toHaveLength(2);
-        expect(
-            currentPriorities.primaryRoutes.map((route) => route.viaCrs)
-        ).toEqual(["GLQ", "GLQ"]);
-        expect(currentPriorities.primaryRoutes[0]?.contextLabel).toBe(
+        expect(activePlan.primaryRoutes).toHaveLength(2);
+        expect(activePlan.primaryRoutes.map((route) => route.viaCrs)).toEqual([
+            "GLQ",
+            "GLQ",
+        ]);
+        expect(activePlan.primaryRoutes[0]?.contextLabel).toBe(
             "Home, through Anniesland (ANL) → Work, changing at Glasgow Queen Street (GLQ)"
         );
     });
 
     it("prioritises travel from home to Glasgow at weekends", () => {
-        const currentPriorities = getActiveJourneyPlan(defaultDashboardConfig, {
+        const activePlan = getActiveJourneyPlan(defaultDashboardConfig, {
             day: 6,
             minutes: 14 * 60,
         });
 
-        expect(currentPriorities.schedule?.id).toBe("weekend");
+        expect(activePlan.schedule?.id).toBe("weekend");
         expect(
-            new Set(
-                currentPriorities.primaryRoutes.map((route) => route.journeyId)
-            )
+            new Set(activePlan.primaryRoutes.map((route) => route.journeyId))
         ).toEqual(new Set(["home-to-glasgow"]));
-        expect(currentPriorities.secondaryRoutes).toEqual([]);
+        expect(activePlan.secondaryRoutes).toEqual([]);
     });
 
     it("preserves unknown walking times when it expands a station group", () => {
