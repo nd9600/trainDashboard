@@ -9,7 +9,7 @@
             <span class="max-sm:hidden">Settings</span>
         </button>
 
-        <Modal
+        <AppModal
             :isOpen="isOpen"
             :isClosable="true"
             rootClass="sm:w-[min(48rem,calc(100vw-3rem))]"
@@ -69,7 +69,7 @@
                     </button>
                 </div>
             </template>
-        </Modal>
+        </AppModal>
     </div>
 </template>
 
@@ -77,7 +77,7 @@
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import AppTabs from "@/components/AppTabs.vue";
-import Modal from "@/components/Modal/Modal.vue";
+import AppModal from "@/components/Modal/AppModal.vue";
 import ApiSettings from "./api/ApiSettings.vue";
 import JourneySettings from "./JourneySettings.vue";
 

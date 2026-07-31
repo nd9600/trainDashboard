@@ -1,7 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {createRailDataMarketplaceApi} from "./railDataMarketplace.api";
+import {getDepartureBoard} from "./railDataMarketplace.api";
 
-describe("createRailDataMarketplaceApi", () => {
+describe("getDepartureBoard", () => {
     afterEach(() => {
         vi.unstubAllGlobals();
     });
@@ -17,11 +17,7 @@ describe("createRailDataMarketplaceApi", () => {
             )
         );
         vi.stubGlobal("fetch", fetchSpy);
-        const api = createRailDataMarketplaceApi({
-            consumerKey: "test-consumer-key",
-        });
-
-        await api.getDepartureBoard({
+        await getDepartureBoard("test-consumer-key", {
             originCrs: "anl",
             destinationCrs: "chc",
             numberOfRows: 6,

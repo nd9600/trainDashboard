@@ -1,6 +1,5 @@
 import {defineStore} from "pinia";
 import {computed, ref, watch} from "vue";
-import {createRailDataMarketplaceApi} from "../api/railDataMarketplace.api";
 import type {Journey} from "../dto/journey.dto";
 import {
     type CurrentClock,
@@ -16,6 +15,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
 
+    ///// state /////
     const currentDate = new Date();
     const currentClock: CurrentClock = {
         day: currentDate.getDay() as Day,
@@ -27,16 +27,13 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const isLoadingJourneys = ref(true);
     const journeyLoadingError = ref<string>();
 
+    ///// getters /////
     const currentJourneyPriorities = computed(() =>
         getCurrentJourneyPriorities(dashboardConfigStore.config, {
             day: currentClock.day,
             minutes: currentMinutes.value,
         })
     );
-    const journeyRequest = computed(() => ({
-        priorities: currentJourneyPriorities.value,
-        consumerKey: apiStore.settings.consumerKey,
-    }));
     const recommendedJourney = computed(() =>
         primaryJourneys.value.find((journey) => journey.recommended)
     );
@@ -47,54 +44,59 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         )
     );
 
+    ///// actions /////
+    async function refreshJourneys(): Promise<void> {
+        isLoadingJourneys.value = true;
+        journeyLoadingError.value = undefined;
+
+        const consumerKey = apiStore.settings.consumerKey;
+
+        if (!consumerKey) {
+            primaryJourneys.value = [];
+            secondaryJourneys.value = [];
+            journeyLoadingError.value =
+                "Add your Consumer key in Settings → API.";
+            isLoadingJourneys.value = false;
+            return;
+        }
+
+        try {
+            const [newPrimaryJourneys, newSecondaryJourneys] =
+                await Promise.all([
+                    getJourneys(
+                        consumerKey,
+                        currentJourneyPriorities.value.primaryPairs,
+                        currentMinutes.value,
+                        true
+                    ),
+                    getJourneys(
+                        consumerKey,
+                        currentJourneyPriorities.value.secondaryPairs,
+                        currentMinutes.value,
+                        false
+                    ),
+                ]);
+
+            primaryJourneys.value = newPrimaryJourneys;
+            secondaryJourneys.value = newSecondaryJourneys;
+        } catch {
+            primaryJourneys.value = [];
+            secondaryJourneys.value = [];
+            journeyLoadingError.value =
+                "Train data could not be loaded. Try again later.";
+        } finally {
+            isLoadingJourneys.value = false;
+        }
+    }
+
+    ///// effects /////
     watch(
-        journeyRequest,
-        async ({priorities, consumerKey}) => {
-            isLoadingJourneys.value = true;
-            journeyLoadingError.value = undefined;
-
-            if (!consumerKey) {
-                primaryJourneys.value = [];
-                secondaryJourneys.value = [];
-                journeyLoadingError.value =
-                    "Add your Consumer key in Settings → API.";
-                isLoadingJourneys.value = false;
-                return;
-            }
-
-            try {
-                const railDataMarketplaceApi = createRailDataMarketplaceApi({
-                    consumerKey,
-                });
-                const [newPrimaryJourneys, newSecondaryJourneys] =
-                    await Promise.all([
-                        getJourneys(
-                            railDataMarketplaceApi,
-                            priorities.primaryPairs,
-                            currentMinutes.value,
-                            true
-                        ),
-                        getJourneys(
-                            railDataMarketplaceApi,
-                            priorities.secondaryPairs,
-                            currentMinutes.value,
-                            false
-                        ),
-                    ]);
-
-                primaryJourneys.value = newPrimaryJourneys;
-                secondaryJourneys.value = newSecondaryJourneys;
-            } catch {
-                primaryJourneys.value = [];
-                secondaryJourneys.value = [];
-                journeyLoadingError.value = "Train data could not be loaded. Try again later.";
-            } finally {
-                isLoadingJourneys.value = false;
-            }
-        },
+        [currentJourneyPriorities, () => apiStore.settings.consumerKey],
+        refreshJourneys,
         {immediate: true}
     );
 
+    ///// public API /////
     return {
         currentJourneyPriorities,
         isLoadingJourneys,

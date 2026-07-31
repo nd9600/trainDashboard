@@ -1,4 +1,4 @@
-import type {RailDataMarketplaceApi} from "../api/railDataMarketplace.api";
+import {getDepartureBoard} from "../api/railDataMarketplace.api";
 import type {
     DepartureBoard,
     DepartureService,
@@ -14,7 +14,7 @@ interface ServiceLeg extends TrainLeg {
 const minimumTransferMinutes = 3;
 
 export async function getJourneys(
-    api: RailDataMarketplaceApi,
+    consumerKey: string,
     pairs: ResolvedStationPair[],
     currentMinutes: number,
     recommendJourney: boolean
@@ -33,7 +33,7 @@ export async function getJourneys(
             return existingRequest;
         }
 
-        const request = api.getDepartureBoard({
+        const request = getDepartureBoard(consumerKey, {
             originCrs,
             destinationCrs,
             numberOfRows: 10,

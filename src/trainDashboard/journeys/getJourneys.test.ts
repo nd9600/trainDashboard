@@ -1,12 +1,13 @@
-import {describe, expect, it} from "vitest";
-import type {
-    DepartureBoardRequest,
-    RailDataMarketplaceApi,
-} from "../api/railDataMarketplace.api";
+import {afterEach, describe, expect, it, vi} from "vitest";
+import type {DepartureBoardRequest} from "../api/railDataMarketplace.api";
+import * as railDataMarketplaceApi from "../api/railDataMarketplace.api";
 import type {ResolvedStationPair} from "./getCurrentJourneyPriorities";
 import {getJourneys} from "./getJourneys";
 
 describe("getJourneys", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
     it("uses the walking times from a configured station pair", async () => {
         const journeys = await getJourneys(
             testApiAt(8 * 60),
@@ -83,15 +84,16 @@ describe("getJourneys", () => {
 
     it("requests departures only after the origin walking time", async () => {
         const requests: DepartureBoardRequest[] = [];
-        const api: RailDataMarketplaceApi = {
-            async getDepartureBoard(request) {
-                requests.push(request);
-                return {crs: request.originCrs, trainServices: []};
-            },
-        };
+        vi.spyOn(
+            railDataMarketplaceApi,
+            "getDepartureBoard"
+        ).mockImplementation(async (_consumerKey, request) => {
+            requests.push(request);
+            return {crs: request.originCrs, trainServices: []};
+        });
 
         await getJourneys(
-            api,
+            "test-key",
             [resolvedPair("ANL", "CHC", 15, 8)],
             8 * 60,
             false
@@ -132,35 +134,33 @@ describe("getJourneys", () => {
     });
 
     it("uses live times when the service is delayed", async () => {
-        const api: RailDataMarketplaceApi = {
-            async getDepartureBoard() {
-                return {
-                    crs: "ANL",
-                    trainServices: [
-                        {
-                            serviceID: "delayed-service",
-                            std: "08:20",
-                            etd: "08:25",
-                            isCancelled: false,
-                            subsequentCallingPoints: [
-                                {
-                                    callingPoint: [
-                                        {
-                                            crs: "CHC",
-                                            st: "08:36",
-                                            et: "08:41",
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                };
-            },
-        };
+        vi.spyOn(railDataMarketplaceApi, "getDepartureBoard").mockResolvedValue(
+            {
+                crs: "ANL",
+                trainServices: [
+                    {
+                        serviceID: "delayed-service",
+                        std: "08:20",
+                        etd: "08:25",
+                        isCancelled: false,
+                        subsequentCallingPoints: [
+                            {
+                                callingPoint: [
+                                    {
+                                        crs: "CHC",
+                                        st: "08:36",
+                                        et: "08:41",
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            }
+        );
 
         const journeys = await getJourneys(
-            api,
+            "test-key",
             [resolvedPair("ANL", "CHC", 15, 8)],
             8 * 60,
             false
@@ -227,7 +227,7 @@ describe("getJourneys", () => {
     });
 });
 
-function testApiAt(now: number): RailDataMarketplaceApi {
+function testApiAt(now: number): string {
     const routes: Record<string, {departureAfter: number; duration: number}> = {
         "ANL-CHC": {departureAfter: 20, duration: 16},
         "ANL-EXG": {departureAfter: 20, duration: 13},
@@ -236,8 +236,8 @@ function testApiAt(now: number): RailDataMarketplaceApi {
         "KVD-GLQ": {departureAfter: 10, duration: 15},
     };
 
-    return {
-        async getDepartureBoard(request) {
+    vi.spyOn(railDataMarketplaceApi, "getDepartureBoard").mockImplementation(
+        async (_consumerKey, request) => {
             const route =
                 routes[`${request.originCrs}-${request.destinationCrs}`];
 
@@ -276,8 +276,10 @@ function testApiAt(now: number): RailDataMarketplaceApi {
                     };
                 }),
             };
-        },
-    };
+        }
+    );
+
+    return "test-key";
 }
 
 function formatApiTime(minutes: number): string {
