@@ -5,7 +5,7 @@ import type {
 } from "../dto/dashboardConfig.dto";
 import {stationDisplayName} from "../stations/stations";
 
-export function locationReferenceName(
+export function formatLocationReference(
     location: LocationReference,
     stationGroups: StationGroup[]
 ): string {
@@ -20,11 +20,11 @@ export function locationReferenceName(
     return group?.name ?? "Missing group";
 }
 
-export function journeyName(
+export function formatJourneyName(
     journey: Journey,
     stationGroups: StationGroup[]
 ): string {
-    const route = `${locationReferenceName(journey.origin, stationGroups)} → ${locationReferenceName(journey.destination, stationGroups)}`;
+    const route = `${formatLocationReference(journey.origin, stationGroups)} → ${formatLocationReference(journey.destination, stationGroups)}`;
 
     return journey.viaCrs
         ? `${route}, changing at ${stationDisplayName(journey.viaCrs)}`

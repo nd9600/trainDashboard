@@ -1,7 +1,7 @@
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 
 // Keep journey wording consistent between mobile and desktop views.
-export function mustLeaveText(
+export function formatMustLeaveMessage(
     journey: TimetabledJourney,
     currentMinutes: number
 ): string {
@@ -14,7 +14,7 @@ export function mustLeaveText(
     return `must leave in ${minutes} minutes`;
 }
 
-export function journeyTimelineRange(
+export function getTimelineRange(
     journeys: TimetabledJourney[],
     currentMinutes: number
 ): {start: number; end: number} {
@@ -39,10 +39,10 @@ export function nationalRailJourneyUrl(journey: TimetabledJourney): string {
         (segment) => segment.kind === "train"
     )!.start;
 
-    return nationalRailUrl(journey.origin, journey.destination, departure);
+    return buildNationalRailUrl(journey.origin, journey.destination, departure);
 }
 
-export function nationalRailUrl(
+export function buildNationalRailUrl(
     originCrs: string,
     destinationCrs: string,
     departureMinutes: number

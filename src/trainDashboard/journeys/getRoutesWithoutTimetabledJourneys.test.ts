@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
-import type {JourneyRoute} from "./getCurrentJourneyPriorities";
+import type {JourneyRoute} from "./getActiveJourneyPlan";
 import {getRoutesWithoutTimetabledJourneys} from "./getRoutesWithoutTimetabledJourneys";
 
 describe("getRoutesWithoutTimetabledJourneys", () => {

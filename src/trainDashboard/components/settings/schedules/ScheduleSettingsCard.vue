@@ -87,7 +87,7 @@
                     }}
                 </span>
                 <span class="font-medium">
-                    {{ journeyName(journey, stationGroups) }}
+                    {{ formatJourneyName(journey, stationGroups) }}
                 </span>
                 <span>is</span>
                 <select
@@ -123,7 +123,7 @@ import type {
     StationGroup,
     Journey,
 } from "../../../dto/dashboardConfig.dto";
-import {journeyName} from "../../../presentation/settingsPresentation";
+import {formatJourneyName} from "../../../presentation/settingsPresentation";
 
 defineProps<{
     stationGroups: StationGroup[];

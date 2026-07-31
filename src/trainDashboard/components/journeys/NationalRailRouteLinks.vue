@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import type {JourneyRoute} from "../../journeys/getCurrentJourneyPriorities";
+import type {JourneyRoute} from "../../journeys/getActiveJourneyPlan";
 import {stationName} from "../../stations/stations";
 import NationalRailLink from "./NationalRailLink.vue";
 

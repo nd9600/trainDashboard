@@ -7,7 +7,7 @@ import {
     type StationGroup,
     type Journey,
 } from "../dto/dashboardConfig.dto";
-import {journeyName} from "../presentation/settingsPresentation";
+import {formatJourneyName} from "../presentation/settingsPresentation";
 
 export interface CurrentClock {
     day: Day;
@@ -29,25 +29,25 @@ export interface JourneyRoute {
     viaCrs?: string;
 }
 
-export interface CurrentJourneyPriorities {
+export interface ActiveJourneyPlan {
     schedule: DisplaySchedule | undefined;
     primaryRoutes: JourneyRoute[];
     secondaryRoutes: JourneyRoute[];
 }
 
-export function getCurrentJourneyPriorities(
+export function getActiveJourneyPlan(
     config: DashboardConfig,
     currentClock: CurrentClock
-): CurrentJourneyPriorities {
+): ActiveJourneyPlan {
     const schedule = config.schedules.find((candidate) =>
-        scheduleMatches(candidate, currentClock)
+        isScheduleActive(candidate, currentClock)
     );
 
     if (!schedule) {
         return {
             schedule: undefined,
             primaryRoutes: [],
-            secondaryRoutes: expandJourneyRoutes(
+            secondaryRoutes: getRoutesForJourneys(
                 config.journeys,
                 config.stationGroups
             ),
@@ -60,14 +60,14 @@ export function getCurrentJourneyPriorities(
 
     return {
         schedule,
-        primaryRoutes: expandJourneyRoutes(
+        primaryRoutes: getRoutesForJourneys(
             schedule.primaryJourneyIds.flatMap((journeyId) => {
                 const journey = journeysById.get(journeyId);
                 return journey ? [journey] : [];
             }),
             config.stationGroups
         ),
-        secondaryRoutes: expandJourneyRoutes(
+        secondaryRoutes: getRoutesForJourneys(
             schedule.secondaryJourneyIds.flatMap((journeyId) => {
                 const journey = journeysById.get(journeyId);
                 return journey ? [journey] : [];
@@ -77,7 +77,7 @@ export function getCurrentJourneyPriorities(
     };
 }
 
-export function expandJourneyRoutes(
+export function getRoutesForJourneys(
     journeys: Journey[],
     stationGroups: StationGroup[]
 ): JourneyRoute[] {
@@ -86,8 +86,12 @@ export function expandJourneyRoutes(
     );
 
     return journeys.flatMap((journey) => {
-        const origins = getStationEndpoints(journey.origin, stationGroupsById);
-        const destinations = getStationEndpoints(
+        const origins = getStationsForLocation(
+            journey.origin,
+            stationGroupsById
+        );
+        console.log(journey, origins);
+        const destinations = getStationsForLocation(
             journey.destination,
             stationGroupsById
         );
@@ -104,7 +108,7 @@ export function expandJourneyRoutes(
                 .map((destination) => ({
                     id: `${journey.id}:${origin.crs}-${destination.crs}`,
                     journeyId: journey.id,
-                    contextLabel: journeyName(journey, stationGroups),
+                    contextLabel: formatJourneyName(journey, stationGroups),
                     origin,
                     destination,
                     viaCrs: journey.viaCrs,
@@ -113,7 +117,7 @@ export function expandJourneyRoutes(
     });
 }
 
-function scheduleMatches(
+function isScheduleActive(
     schedule: DisplaySchedule,
     currentClock: CurrentClock
 ): boolean {
@@ -124,7 +128,7 @@ function scheduleMatches(
     );
 }
 
-function getStationEndpoints(
+function getStationsForLocation(
     location: LocationReference,
     stationGroupsById: Map<string, StationGroup>
 ): StationEndpoint[] {

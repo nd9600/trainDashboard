@@ -3,8 +3,8 @@ import {computed, ref, watch} from "vue";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
     type CurrentClock,
-    getCurrentJourneyPriorities,
-} from "../journeys/getCurrentJourneyPriorities";
+    getActiveJourneyPlan,
+} from "../journeys/getActiveJourneyPlan";
 import {getTimetabledJourneys} from "../journeys/getTimetabledJourneys";
 import {getRoutesWithoutTimetabledJourneys} from "../journeys/getRoutesWithoutTimetabledJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
@@ -25,11 +25,11 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const primaryJourneys = ref<TimetabledJourney[]>([]);
     const secondaryJourneys = ref<TimetabledJourney[]>([]);
     const isLoadingJourneys = ref(true);
-    const journeyLoadingError = ref<string>();
+    const journeyLoadError = ref<string>();
 
     ///// getters /////
     const currentJourneyPriorities = computed(() =>
-        getCurrentJourneyPriorities(dashboardConfigStore.config, {
+        getActiveJourneyPlan(dashboardConfigStore.config, {
             day: currentClock.day,
             minutes: currentMinutes.value,
         })
@@ -47,15 +47,14 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     ///// actions /////
     async function refreshJourneys(): Promise<void> {
         isLoadingJourneys.value = true;
-        journeyLoadingError.value = undefined;
+        journeyLoadError.value = undefined;
 
         const consumerKey = apiStore.settings.consumerKey;
 
         if (!consumerKey) {
             primaryJourneys.value = [];
             secondaryJourneys.value = [];
-            journeyLoadingError.value =
-                "Add your Consumer key in Settings → API.";
+            journeyLoadError.value = "Add your Consumer key in Settings → API.";
             isLoadingJourneys.value = false;
             return;
         }
@@ -82,7 +81,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         } catch {
             primaryJourneys.value = [];
             secondaryJourneys.value = [];
-            journeyLoadingError.value =
+            journeyLoadError.value =
                 "Train data could not be loaded. Try again later.";
         } finally {
             isLoadingJourneys.value = false;
@@ -100,7 +99,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     return {
         currentJourneyPriorities,
         isLoadingJourneys,
-        journeyLoadingError,
+        journeyLoadError,
         currentMinutes,
         primaryJourneys,
         primaryRoutesWithoutTimetabledJourneys,

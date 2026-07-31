@@ -11,7 +11,7 @@ export interface DepartureBoardRequest {
     timeWindowMinutes?: number;
 }
 
-export async function getDepartureBoard(
+export async function fetchDepartureBoard(
     consumerKey: string,
     request: DepartureBoardRequest
 ): Promise<DepartureBoard> {

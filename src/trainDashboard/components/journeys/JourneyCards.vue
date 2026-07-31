@@ -45,7 +45,7 @@
                         class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
                     >
                         <AppIcon class="size-3.5" name="clock" />
-                        {{ mustLeaveText(journey, currentMinutes) }}
+                        {{ formatMustLeaveMessage(journey, currentMinutes) }}
                     </p>
                     <JourneyNationalRailLink class="mt-1" :journey="journey" />
                 </div>
@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
-import {mustLeaveText} from "../../presentation/journeyPresentation";
+import {formatMustLeaveMessage} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
 import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";

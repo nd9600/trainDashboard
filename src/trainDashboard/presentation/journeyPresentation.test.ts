@@ -1,9 +1,9 @@
 import {describe, expect, it} from "vitest";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
-    journeyTimelineRange,
+    getTimelineRange,
     nationalRailJourneyUrl,
-    nationalRailUrl,
+    buildNationalRailUrl,
 } from "./journeyPresentation";
 
 describe("nationalRailJourneyUrl", () => {
@@ -35,7 +35,7 @@ describe("nationalRailJourneyUrl", () => {
     });
 
     it("links a route without timetable data from the requested time", () => {
-        expect(nationalRailUrl("ANL", "EDB", 17 * 60)).toBe(
+        expect(buildNationalRailUrl("ANL", "EDB", 17 * 60)).toBe(
             "https://ojp.nationalrail.co.uk/service/timesandfares/ANL/EDB/today/1700/dep"
         );
     });
@@ -70,7 +70,7 @@ describe("nationalRailJourneyUrl", () => {
             ],
         };
 
-        expect(journeyTimelineRange([journey], 15 * 60 + 2)).toEqual({
+        expect(getTimelineRange([journey], 15 * 60 + 2)).toEqual({
             start: 15 * 60 - 5,
             end: 18 * 60 + 10,
         });

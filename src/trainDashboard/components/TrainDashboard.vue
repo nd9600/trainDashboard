@@ -14,10 +14,10 @@
             </div>
             <div v-else class="mt-4 space-y-4">
                 <p
-                    v-if="journeyLoadingError"
+                    v-if="journeyLoadError"
                     class="rounded-lg border border-line bg-surface p-4 text-ink-muted"
                 >
-                    {{ journeyLoadingError }}
+                    {{ journeyLoadError }}
                 </p>
                 <section>
                     <JourneyTimeline
@@ -55,7 +55,7 @@ const trainServicesStore = useTrainServicesStore();
 const {
     currentJourneyPriorities,
     isLoadingJourneys,
-    journeyLoadingError,
+    journeyLoadError,
     currentMinutes,
     primaryJourneys,
     primaryRoutesWithoutTimetabledJourneys,

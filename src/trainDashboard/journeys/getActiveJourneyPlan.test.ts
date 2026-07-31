@@ -2,19 +2,16 @@ import {describe, expect, it} from "vitest";
 import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
 import {dashboardConfigSchema, timeSchema} from "../dto/dashboardConfig.dto";
 import {
-    expandJourneyRoutes,
-    getCurrentJourneyPriorities,
-} from "./getCurrentJourneyPriorities";
+    getRoutesForJourneys,
+    getActiveJourneyPlan,
+} from "./getActiveJourneyPlan";
 
-describe("getCurrentJourneyPriorities", () => {
+describe("getActiveJourneyPlan", () => {
     it("prioritises travel from home to work on weekday mornings", () => {
-        const currentPriorities = getCurrentJourneyPriorities(
-            defaultDashboardConfig,
-            {
-                day: 1,
-                minutes: 8 * 60,
-            }
-        );
+        const currentPriorities = getActiveJourneyPlan(defaultDashboardConfig, {
+            day: 1,
+            minutes: 8 * 60,
+        });
 
         expect(currentPriorities.schedule?.id).toBe("weekday-morning");
         expect(
@@ -31,13 +28,10 @@ describe("getCurrentJourneyPriorities", () => {
     });
 
     it("reverses weekday travel after noon", () => {
-        const currentPriorities = getCurrentJourneyPriorities(
-            defaultDashboardConfig,
-            {
-                day: 3,
-                minutes: 12 * 60,
-            }
-        );
+        const currentPriorities = getActiveJourneyPlan(defaultDashboardConfig, {
+            day: 3,
+            minutes: 12 * 60,
+        });
 
         expect(currentPriorities.schedule?.id).toBe("weekday-afternoon");
         expect(
@@ -74,7 +68,7 @@ describe("getCurrentJourneyPriorities", () => {
             crs: "GLQ",
         };
 
-        const currentPriorities = getCurrentJourneyPriorities(config, {
+        const currentPriorities = getActiveJourneyPlan(config, {
             day: 1,
             minutes: 8 * 60,
         });
@@ -90,7 +84,7 @@ describe("getCurrentJourneyPriorities", () => {
         const config = structuredClone(defaultDashboardConfig);
         config.journeys[0]!.viaCrs = "GLQ";
 
-        const currentPriorities = getCurrentJourneyPriorities(config, {
+        const currentPriorities = getActiveJourneyPlan(config, {
             day: 1,
             minutes: 8 * 60,
         });
@@ -105,13 +99,10 @@ describe("getCurrentJourneyPriorities", () => {
     });
 
     it("prioritises travel from home to Glasgow at weekends", () => {
-        const currentPriorities = getCurrentJourneyPriorities(
-            defaultDashboardConfig,
-            {
-                day: 6,
-                minutes: 14 * 60,
-            }
-        );
+        const currentPriorities = getActiveJourneyPlan(defaultDashboardConfig, {
+            day: 6,
+            minutes: 14 * 60,
+        });
 
         expect(currentPriorities.schedule?.id).toBe("weekend");
         expect(
@@ -123,7 +114,7 @@ describe("getCurrentJourneyPriorities", () => {
     });
 
     it("preserves unknown walking times when it expands a station group", () => {
-        const [journeys] = expandJourneyRoutes(
+        const [journeys] = getRoutesForJourneys(
             [defaultDashboardConfig.journeys[2]!],
             defaultDashboardConfig.stationGroups
         );
@@ -143,7 +134,7 @@ describe("getCurrentJourneyPriorities", () => {
     });
 
     it("uses the selected group name for an individual station", () => {
-        const [journeys] = expandJourneyRoutes(
+        const [journeys] = getRoutesForJourneys(
             [defaultDashboardConfig.journeys[0]!],
             defaultDashboardConfig.stationGroups
         );

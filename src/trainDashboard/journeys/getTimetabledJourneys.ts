@@ -1,10 +1,10 @@
-import {getDepartureBoard} from "../api/railDataMarketplace.api";
+import {fetchDepartureBoard} from "../api/railDataMarketplace.api";
 import type {
     DepartureBoard,
     DepartureService,
 } from "../dto/liveDepartureBoard.dto";
 import type {TimetabledJourney, TrainLeg} from "../dto/timetabledJourney.dto";
-import type {JourneyRoute} from "./getCurrentJourneyPriorities";
+import type {JourneyRoute} from "./getActiveJourneyPlan";
 import {formatTime} from "@/utilities/time.utility.ts";
 
 interface ServiceLeg extends TrainLeg {
@@ -19,37 +19,37 @@ export async function getTimetabledJourneys(
     currentMinutes: number,
     recommendJourney: boolean
 ): Promise<TimetabledJourney[]> {
-    const boardRequests = new Map<string, Promise<DepartureBoard>>();
+    const departureBoardRequestCache = new Map<string, Promise<DepartureBoard>>();
 
-    function getBoard(
+    function fetchBoard(
         originCrs: string,
         destinationCrs: string,
         timeOffsetMinutes: number
     ) {
         const route = `${originCrs}-${destinationCrs}:${timeOffsetMinutes}`;
-        const existingRequest = boardRequests.get(route);
+        const existingDepartureBoard = departureBoardRequestCache.get(route);
 
-        if (existingRequest) {
-            return existingRequest;
+        if (existingDepartureBoard) {
+            return existingDepartureBoard;
         }
 
-        const request = getDepartureBoard(consumerKey, {
+        const departureBoard = fetchDepartureBoard(consumerKey, {
             originCrs,
             destinationCrs,
             numberOfRows: 10,
             timeOffsetMinutes,
             timeWindowMinutes: 120,
         });
-        boardRequests.set(route, request);
+        departureBoardRequestCache.set(route, departureBoard);
 
-        return request;
+        return departureBoard;
     }
 
     const timetabledJourneys = (
         await Promise.all(
             journeyRoutes.map(async (route) => {
                 if (!route.viaCrs) {
-                    const board = await getBoard(
+                    const board = await fetchBoard(
                         route.origin.crs,
                         route.destination.crs,
                         route.origin.walkMinutes ?? 0
@@ -64,12 +64,12 @@ export async function getTimetabledJourneys(
                 }
 
                 const [firstBoard, secondBoard] = await Promise.all([
-                    getBoard(
+                    fetchBoard(
                         route.origin.crs,
                         route.viaCrs,
                         route.origin.walkMinutes ?? 0
                     ),
-                    getBoard(route.viaCrs, route.destination.crs, 0),
+                    fetchBoard(route.viaCrs, route.destination.crs, 0),
                 ]);
                 const firstLegs = directLegs(
                     firstBoard,

@@ -1,7 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {DepartureBoardRequest} from "../api/railDataMarketplace.api";
 import * as railDataMarketplaceApi from "../api/railDataMarketplace.api";
-import type {JourneyRoute} from "./getCurrentJourneyPriorities";
+import type {JourneyRoute} from "./getActiveJourneyPlan";
 import {getTimetabledJourneys} from "./getTimetabledJourneys";
 
 describe("getTimetabledJourneys", () => {
@@ -86,7 +86,7 @@ describe("getTimetabledJourneys", () => {
         const requests: DepartureBoardRequest[] = [];
         vi.spyOn(
             railDataMarketplaceApi,
-            "getDepartureBoard"
+            "fetchDepartureBoard"
         ).mockImplementation(async (_consumerKey, request) => {
             requests.push(request);
             return {crs: request.originCrs, trainServices: []};
@@ -134,30 +134,31 @@ describe("getTimetabledJourneys", () => {
     });
 
     it("uses live times when the service is delayed", async () => {
-        vi.spyOn(railDataMarketplaceApi, "getDepartureBoard").mockResolvedValue(
-            {
-                crs: "ANL",
-                trainServices: [
-                    {
-                        serviceID: "delayed-service",
-                        std: "08:20",
-                        etd: "08:25",
-                        isCancelled: false,
-                        subsequentCallingPoints: [
-                            {
-                                callingPoint: [
-                                    {
-                                        crs: "CHC",
-                                        st: "08:36",
-                                        et: "08:41",
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            }
-        );
+        vi.spyOn(
+            railDataMarketplaceApi,
+            "fetchDepartureBoard"
+        ).mockResolvedValue({
+            crs: "ANL",
+            trainServices: [
+                {
+                    serviceID: "delayed-service",
+                    std: "08:20",
+                    etd: "08:25",
+                    isCancelled: false,
+                    subsequentCallingPoints: [
+                        {
+                            callingPoint: [
+                                {
+                                    crs: "CHC",
+                                    st: "08:36",
+                                    et: "08:41",
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
 
         const journeys = await getTimetabledJourneys(
             "test-key",
@@ -236,7 +237,7 @@ function testApiAt(now: number): string {
         "KVD-GLQ": {departureAfter: 10, duration: 15},
     };
 
-    vi.spyOn(railDataMarketplaceApi, "getDepartureBoard").mockImplementation(
+    vi.spyOn(railDataMarketplaceApi, "fetchDepartureBoard").mockImplementation(
         async (_consumerKey, request) => {
             const route =
                 routes[`${request.originCrs}-${request.destinationCrs}`];

@@ -3,9 +3,9 @@
         {{ label }}
         <select
             class="appInput sentenceField__control min-w-52 grow"
-            :value="selectedKey"
+            :value="selectedLocationKey"
             required
-            @change="updateLocation"
+            @change="selectLocation"
         >
             <option v-if="locationOptions.length === 0" disabled value="">
                 Add a station group first
@@ -41,13 +41,13 @@ const emit = defineEmits<{
     "update:modelValue": [value: LocationReference];
 }>();
 
-interface LocationOption {
+interface JourneyLocationOption {
     key: string;
     label: string;
     value: LocationReference;
 }
 
-const locationOptions = computed<LocationOption[]>(() =>
+const locationOptions = computed<JourneyLocationOption[]>(() =>
     props.stationGroups
         .filter((group) => group.id !== props.excludedGroupId)
         .flatMap((group) => [
@@ -79,11 +79,11 @@ const locationOptions = computed<LocationOption[]>(() =>
         ])
 );
 
-const selectedKey = computed(() => locationKey(props.modelValue));
+const selectedLocationKey = computed(() => locationKey(props.modelValue));
 
-function updateLocation(event: Event): void {
+function selectLocation(event: Event): void {
     const selectedOption = locationOptions.value.find(
-        (option) => option.key === inputValue(event)
+        (option) => option.key === getSelectValue(event)
     );
 
     if (!selectedOption) {
@@ -93,7 +93,7 @@ function updateLocation(event: Event): void {
     emit("update:modelValue", selectedOption.value);
 }
 
-function inputValue(event: Event): string {
+function getSelectValue(event: Event): string {
     return (event.target as HTMLSelectElement).value;
 }
 
