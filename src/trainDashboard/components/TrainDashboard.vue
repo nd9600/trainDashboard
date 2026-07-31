@@ -26,19 +26,19 @@
                     <JourneyTimeline
                         v-if="primaryJourneys.length"
                         :journeys="primaryJourneys"
-                        :now="now"
+                        :currentMinutes="currentMinutes"
                     />
                     <NationalRailRouteLinks
                         v-if="primaryPairsWithoutJourneys.length"
                         :pairs="primaryPairsWithoutJourneys"
-                        :departureMinutes="now"
+                        :departureMinutes="currentMinutes"
                     />
                 </section>
 
                 <OtherJourneys
                     :pairs="currentJourneyPriorities.secondaryPairs"
                     :journeys="secondaryJourneys"
-                    :now="now"
+                    :currentMinutes="currentMinutes"
                 />
             </div>
         </div>
@@ -59,7 +59,7 @@ const {
     currentJourneyPriorities,
     isLoadingJourneys,
     journeyLoadingError,
-    now,
+    currentMinutes,
     primaryJourneys,
     primaryPairsWithoutJourneys,
     secondaryJourneys,

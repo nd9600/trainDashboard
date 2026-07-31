@@ -23,7 +23,7 @@
             {{ stationName(recommendedJourney.destination) }}
         </p>
         <p class="mt-1 mb-0 text-sm text-ink-subtle">
-            It is now {{ formatTime(now) }}
+            It is now {{ formatTime(currentMinutes) }}
         </p>
     </header>
 </template>
@@ -40,7 +40,7 @@ import {useTrainServicesStore} from "../store/trainServices.store";
 const trainServicesStore = useTrainServicesStore();
 const {
     currentJourneyPriorities,
-    now,
+    currentMinutes,
     recommendedJourney,
 } = storeToRefs(trainServicesStore);
 
@@ -72,7 +72,9 @@ const journeyDescription = computed(() => {
 
 const leaveInMinutes = computed(() => {
     const journey = recommendedJourney.value;
-    return journey ? journey.segments.at(0)!.start - now.value : undefined;
+    return journey
+        ? journey.segments.at(0)!.start - currentMinutes.value
+        : undefined;
 });
 
 const leaveInString = computed(() => {

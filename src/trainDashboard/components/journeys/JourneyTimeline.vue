@@ -1,12 +1,12 @@
 <template>
     <JourneyCards
         :journeys="displayedJourneys"
-        :now="now"
+        :currentMinutes="currentMinutes"
         :mustLeaveJourneyId="mustLeaveJourneyId"
     />
     <JourneyChart
         :journeys="displayedJourneys"
-        :now="now"
+        :currentMinutes="currentMinutes"
         :mustLeaveJourneyId="mustLeaveJourneyId"
         :windowStart="timelineStart"
         :windowEnd="timelineEnd"
@@ -22,13 +22,13 @@ import JourneyChart from "./JourneyChart.vue";
 
 const props = defineProps<{
     journeys: Journey[];
-    now: number;
+    currentMinutes: number;
     mustLeaveJourneyId?: string;
 }>();
 
 const displayedJourneys = computed(() => props.journeys.slice(0, 6));
 const timelineRange = computed(() =>
-    journeyTimelineRange(displayedJourneys.value, props.now)
+    journeyTimelineRange(displayedJourneys.value, props.currentMinutes)
 );
 const timelineStart = computed(() => timelineRange.value.start);
 const timelineEnd = computed(() => timelineRange.value.end);

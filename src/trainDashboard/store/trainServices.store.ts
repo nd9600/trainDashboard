@@ -3,20 +3,25 @@ import {computed, ref, watch} from "vue";
 import {createRailDataMarketplaceApi} from "../api/railDataMarketplace.api";
 import type {Journey} from "../dto/journey.dto";
 import {
-    clockContextFromDate,
+    type CurrentClock,
     getCurrentJourneyPriorities,
 } from "../journeys/getCurrentJourneyPriorities";
 import {getJourneys} from "../journeys/getJourneys";
 import {getStationPairsWithoutJourneys} from "../journeys/getStationPairsWithoutJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
+import type {Day} from "@/trainDashboard/dto/dashboardConfig.dto.ts";
 
 export const useTrainServicesStore = defineStore("train-services", () => {
     const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
 
-    const clock = clockContextFromDate(new Date());
-    const now = ref(clock.minutes);
+    const currentDate = new Date();
+    const currentClock: CurrentClock = {
+        day: currentDate.getDay() as Day,
+        minutes: currentDate.getHours() * 60 + currentDate.getMinutes(),
+    };
+    const currentMinutes = ref(currentClock.minutes);
     const primaryJourneys = ref<Journey[]>([]);
     const secondaryJourneys = ref<Journey[]>([]);
     const isLoadingJourneys = ref(true);
@@ -24,8 +29,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
 
     const currentJourneyPriorities = computed(() =>
         getCurrentJourneyPriorities(dashboardConfigStore.config, {
-            day: clock.day,
-            minutes: now.value,
+            day: currentClock.day,
+            minutes: currentMinutes.value,
         })
     );
     const journeyRequest = computed(() => ({
@@ -66,13 +71,13 @@ export const useTrainServicesStore = defineStore("train-services", () => {
                         getJourneys(
                             railDataMarketplaceApi,
                             priorities.primaryPairs,
-                            now.value,
+                            currentMinutes.value,
                             true
                         ),
                         getJourneys(
                             railDataMarketplaceApi,
                             priorities.secondaryPairs,
-                            now.value,
+                            currentMinutes.value,
                             false
                         ),
                     ]);
@@ -94,7 +99,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         currentJourneyPriorities,
         isLoadingJourneys,
         journeyLoadingError,
-        now,
+        currentMinutes,
         primaryJourneys,
         primaryPairsWithoutJourneys,
         recommendedJourney,

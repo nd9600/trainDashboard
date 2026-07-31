@@ -9,7 +9,7 @@ import {
 } from "../dto/dashboardConfig.dto";
 import {stationPairName} from "../presentation/settingsPresentation";
 
-export interface ClockContext {
+export interface CurrentClock {
     day: Day;
     minutes: number;
 }
@@ -35,19 +35,12 @@ export interface CurrentJourneyPriorities {
     secondaryPairs: ResolvedStationPair[];
 }
 
-export function clockContextFromDate(date: Date): ClockContext {
-    return {
-        day: date.getDay() as Day,
-        minutes: date.getHours() * 60 + date.getMinutes(),
-    };
-}
-
 export function getCurrentJourneyPriorities(
     config: DashboardConfig,
-    clock: ClockContext
+    currentClock: CurrentClock
 ): CurrentJourneyPriorities {
     const schedule = config.schedules.find((candidate) =>
-        scheduleMatches(candidate, clock)
+        scheduleMatches(candidate, currentClock)
     );
 
     if (!schedule) {
@@ -112,12 +105,12 @@ export function expandStationPairs(
 
 function scheduleMatches(
     schedule: DisplaySchedule,
-    clock: ClockContext
+    currentClock: CurrentClock
 ): boolean {
     return (
-        schedule.days.includes(clock.day) &&
-        clock.minutes >= timeToMinutes(schedule.startsAt) &&
-        clock.minutes < timeToMinutes(schedule.endsAt)
+        schedule.days.includes(currentClock.day) &&
+        currentClock.minutes >= timeToMinutes(schedule.startsAt) &&
+        currentClock.minutes < timeToMinutes(schedule.endsAt)
     );
 }
 

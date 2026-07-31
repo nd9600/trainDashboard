@@ -40,7 +40,7 @@
                         class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
                     >
                         <AppIcon class="size-3.5" name="clock" />
-                        {{ mustLeaveText(journey, now) }}
+                        {{ mustLeaveText(journey, currentMinutes) }}
                     </span>
                     <JourneyNationalRailLink class="mt-1" :journey="journey" />
                 </div>
@@ -58,7 +58,7 @@
                 class="fill-surface-muted"
                 x="0"
                 y="45"
-                :width="xAt(now)"
+                :width="xAt(currentMinutes)"
                 :height="chartBottom - 45"
             />
 
@@ -103,9 +103,9 @@
 
             <line
                 class="stroke-danger [stroke-width:2]"
-                :x1="xAt(now)"
+                :x1="xAt(currentMinutes)"
                 y1="45"
-                :x2="xAt(now)"
+                :x2="xAt(currentMinutes)"
                 :y2="chartBottom"
             />
 
@@ -165,7 +165,7 @@
 
             <text
                 class="fill-danger text-xs"
-                :x="xAt(now)"
+                :x="xAt(currentMinutes)"
                 :y="chartBottom + 17"
                 text-anchor="middle"
             >
@@ -187,7 +187,7 @@ import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 const props = defineProps<{
     journeys: Journey[];
-    now: number;
+    currentMinutes: number;
     mustLeaveJourneyId?: string;
     windowStart: number;
     windowEnd: number;

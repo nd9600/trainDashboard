@@ -16,7 +16,7 @@ const minimumTransferMinutes = 3;
 export async function getJourneys(
     api: RailDataMarketplaceApi,
     pairs: ResolvedStationPair[],
-    now: number,
+    currentMinutes: number,
     recommendJourney: boolean
 ): Promise<Journey[]> {
     const boardRequests = new Map<string, Promise<DepartureBoard>>();
@@ -59,7 +59,7 @@ export async function getJourneys(
                         board,
                         pair.origin.crs,
                         pair.destination.crs,
-                        now
+                        currentMinutes
                     ).map((leg) => createJourney(pair, [leg]));
                 }
 
@@ -75,13 +75,13 @@ export async function getJourneys(
                     firstBoard,
                     pair.origin.crs,
                     pair.viaCrs,
-                    now
+                    currentMinutes
                 );
                 const secondLegs = directLegs(
                     secondBoard,
                     pair.viaCrs,
                     pair.destination.crs,
-                    now
+                    currentMinutes
                 );
 
                 return firstLegs.flatMap((firstLeg) => {
@@ -99,7 +99,7 @@ export async function getJourneys(
         )
     )
         .flat()
-        .filter((journey) => journey.segments.at(0)!.start >= now)
+        .filter((journey) => journey.segments.at(0)!.start >= currentMinutes)
         .sort((first, second) => {
             const arrivalDifference =
                 first.segments.at(-1)!.end - second.segments.at(-1)!.end;
@@ -118,7 +118,7 @@ export async function getJourneys(
         .filter(
             (journey) =>
                 journey.walkingTimesKnown &&
-                journey.segments.at(0)!.start >= now
+                journey.segments.at(0)!.start >= currentMinutes
         )
         .sort((first, second) => {
             const arrivalDifference =
@@ -142,7 +142,7 @@ function directLegs(
     board: DepartureBoard,
     originCrs: string,
     destinationCrs: string,
-    now: number
+    currentMinutes: number
 ): ServiceLeg[] {
     return board.trainServices
         .flatMap((service) => {
@@ -150,7 +150,7 @@ function directLegs(
                 service,
                 originCrs,
                 destinationCrs,
-                now
+                currentMinutes
             );
 
             return leg ? [leg] : [];
@@ -162,7 +162,7 @@ function createServiceLeg(
     service: DepartureService,
     originCrs: string,
     destinationCrs: string,
-    now: number
+    currentMinutes: number
 ): ServiceLeg | undefined {
     if (service.isCancelled) {
         return undefined;
@@ -181,7 +181,7 @@ function createServiceLeg(
 
     const departure = minutesOnOrAfter(
         liveTimeOrScheduled(service.etd, service.std),
-        now - 60
+        currentMinutes - 60
     );
 
     if (departure === undefined) {

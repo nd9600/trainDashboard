@@ -1,8 +1,8 @@
 import type {Journey} from "../dto/journey.dto";
 
 // Keep journey wording consistent between mobile and desktop views.
-export function mustLeaveText(journey: Journey, now: number): string {
-    const minutes = journey.segments.at(0)!.start - now;
+export function mustLeaveText(journey: Journey, currentMinutes: number): string {
+    const minutes = journey.segments.at(0)!.start - currentMinutes;
 
     if (minutes <= 1) {
         return "must leave now";
@@ -13,13 +13,17 @@ export function mustLeaveText(journey: Journey, now: number): string {
 
 export function journeyTimelineRange(
     journeys: Journey[],
-    now: number
+    currentMinutes: number
 ): {start: number; end: number} {
     const segments = journeys.flatMap((journey) => journey.segments);
 
     return {
-        start: Math.min(now, ...segments.map((segment) => segment.start)) - 5,
-        end: Math.max(now, ...segments.map((segment) => segment.end)) + 10,
+        start:
+            Math.min(currentMinutes, ...segments.map((segment) => segment.start)) -
+            5,
+        end:
+            Math.max(currentMinutes, ...segments.map((segment) => segment.end)) +
+            10,
     };
 }
 

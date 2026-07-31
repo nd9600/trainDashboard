@@ -24,14 +24,14 @@
                 <JourneyTimeline
                     v-if="journeyGroup.journeys.length"
                     :journeys="journeyGroup.journeys"
-                    :now="now"
+                    :currentMinutes="currentMinutes"
                     :mustLeaveJourneyId="firstSecondaryJourneyId"
                 />
                 <NationalRailRouteLinks
                     v-if="journeyGroup.missingPairs.length"
                     :class="journeyGroup.journeys.length ? 'mt-4' : undefined"
                     :pairs="journeyGroup.missingPairs"
-                    :departureMinutes="now"
+                    :departureMinutes="currentMinutes"
                 />
             </section>
         </div>
@@ -50,7 +50,7 @@ import NationalRailRouteLinks from "./NationalRailRouteLinks.vue";
 const props = defineProps<{
     pairs: ResolvedStationPair[];
     journeys: Journey[];
-    now: number;
+    currentMinutes: number;
 }>();
 
 const firstSecondaryJourneyId = computed(() => props.journeys.at(0)?.id);
