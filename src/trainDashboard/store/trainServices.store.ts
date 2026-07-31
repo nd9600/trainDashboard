@@ -14,13 +14,13 @@ import {useDashboardConfigStore} from "./dashboardConfig.store";
 export const useTrainServicesStore = defineStore("train-services", () => {
     const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
+
     const clock = clockContextFromDate(new Date());
     const now = ref(clock.minutes);
     const primaryJourneys = ref<Journey[]>([]);
     const secondaryJourneys = ref<Journey[]>([]);
     const isLoadingJourneys = ref(true);
     const journeyLoadingError = ref<string>();
-    let journeyRequestId = 0;
 
     const currentJourneyPriorities = computed(() =>
         getCurrentJourneyPriorities(dashboardConfigStore.config, {
@@ -45,7 +45,6 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     watch(
         journeyRequest,
         async ({priorities, consumerKey}) => {
-            const requestId = ++journeyRequestId;
             isLoadingJourneys.value = true;
             journeyLoadingError.value = undefined;
 
@@ -78,25 +77,14 @@ export const useTrainServicesStore = defineStore("train-services", () => {
                         ),
                     ]);
 
-                if (requestId !== journeyRequestId) {
-                    return;
-                }
-
                 primaryJourneys.value = newPrimaryJourneys;
                 secondaryJourneys.value = newSecondaryJourneys;
             } catch {
-                if (requestId !== journeyRequestId) {
-                    return;
-                }
-
                 primaryJourneys.value = [];
                 secondaryJourneys.value = [];
-                journeyLoadingError.value =
-                    "Train data could not be loaded. Try again later.";
+                journeyLoadingError.value = "Train data could not be loaded. Try again later.";
             } finally {
-                if (requestId === journeyRequestId) {
-                    isLoadingJourneys.value = false;
-                }
+                isLoadingJourneys.value = false;
             }
         },
         {immediate: true}
