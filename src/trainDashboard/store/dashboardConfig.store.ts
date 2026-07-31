@@ -6,23 +6,22 @@ import {
     dashboardConfigSchema,
     type DashboardConfig,
 } from "../dto/dashboardConfig.dto";
-import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
-
-interface SaveResult {
-    success: boolean;
-    errors: string[];
-}
 
 const storage = useLocalStorageTyped(
     "train-dashboard-config-v1",
     dashboardConfigSchema,
-    defaultDashboardConfig
+    {
+        version: 1,
+        groups: [],
+        pairs: [],
+        schedules: [],
+    }
 );
 
-export const useTrainDashboardStore = defineStore("dashboard-config", () => {
+export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     const config = ref<DashboardConfig>(storage.loadFromLocalStorage());
 
-    function saveConfig(candidate: unknown): SaveResult {
+    function saveConfig(candidate: unknown): {success: boolean; errors: string[];} {
         const result = dashboardConfigSchema.safeParse(candidate);
 
         if (!result.success) {
@@ -38,9 +37,5 @@ export const useTrainDashboardStore = defineStore("dashboard-config", () => {
         return {success: true, errors: []};
     }
 
-    function resetConfig(): void {
-        saveConfig(structuredClone(defaultDashboardConfig));
-    }
-
-    return {config, resetConfig, saveConfig};
+    return {config, saveConfig};
 });

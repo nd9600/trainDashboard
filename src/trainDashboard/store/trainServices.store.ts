@@ -9,10 +9,10 @@ import {
 import {getJourneys} from "../journeys/getJourneys";
 import {getStationPairsWithoutJourneys} from "../journeys/getStationPairsWithoutJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
-import {useTrainDashboardStore} from "./trainDashboard.store";
+import {useDashboardConfigStore} from "./dashboardConfig.store";
 
 export const useTrainServicesStore = defineStore("train-services", () => {
-    const configStore = useTrainDashboardStore();
+    const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
     const clock = clockContextFromDate(new Date());
     const now = ref(clock.minutes);
@@ -23,7 +23,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     let journeyRequestId = 0;
 
     const currentJourneyPriorities = computed(() =>
-        getCurrentJourneyPriorities(configStore.config, {
+        getCurrentJourneyPriorities(dashboardConfigStore.config, {
             day: clock.day,
             minutes: now.value,
         })

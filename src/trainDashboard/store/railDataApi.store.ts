@@ -6,14 +6,10 @@ import {
     type RailDataApiSettings,
 } from "../dto/railDataApiSettings.dto";
 
-const defaultSettings: RailDataApiSettings = {
-    consumerKey: "",
-};
-
 const storage = useLocalStorageTyped(
     "train-dashboard-rail-data-api",
     railDataApiSettingsSchema,
-    defaultSettings
+    {consumerKey: "",}
 );
 
 export const useRailDataApiStore = defineStore("rail-data-api", () => {

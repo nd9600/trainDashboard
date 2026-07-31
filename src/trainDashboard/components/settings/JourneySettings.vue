@@ -64,14 +64,14 @@ import {
     dashboardConfigErrorMessages,
     dashboardConfigSchema,
 } from "../../dto/dashboardConfig.dto";
-import {useTrainDashboardStore} from "../../store/trainDashboard.store";
+import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import JourneysSettings from "./journeys/JourneysSettings.vue";
 import SchedulesSettings from "./schedules/SchedulesSettings.vue";
 import StationGroupsSettings from "./stationGroups/StationGroupsSettings.vue";
 import WalkTimesSettings from "./walkTimes/WalkTimesSettings.vue";
 
-const configStore = useTrainDashboardStore();
-const draft = ref<DashboardConfig>(cloneConfig(configStore.config));
+const dashboardConfigStore = useDashboardConfigStore();
+const draft = ref<DashboardConfig>(cloneConfig(dashboardConfigStore.config));
 const errors = ref<string[]>([]);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
@@ -95,18 +95,18 @@ function save(): void {
         return;
     }
 
-    const result = configStore.saveConfig(draft.value);
+    const result = dashboardConfigStore.saveConfig(draft.value);
     errors.value = result.errors;
 
     if (result.success) {
-        draft.value = cloneConfig(configStore.config);
+        draft.value = cloneConfig(dashboardConfigStore.config);
         setHasUnsavedChanges(false);
         emit("saved");
     }
 }
 
 function cancel(): void {
-    draft.value = cloneConfig(configStore.config);
+    draft.value = cloneConfig(dashboardConfigStore.config);
     errors.value = [];
     setHasUnsavedChanges(false);
     setValid(true);
