@@ -14,7 +14,7 @@ export interface TrainLeg {
     arrival: number;
 }
 
-export interface Journey {
+export interface TimetabledJourney {
     id: string;
     origin: string;
     destination: string;

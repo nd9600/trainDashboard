@@ -1,8 +1,8 @@
 <template>
     <section
-        id="journey-settings-panel-groups"
+        id="journey-settings-panel-stationGroups"
         class="space-y-4"
-        aria-labelledby="journey-settings-tab-groups"
+        aria-labelledby="journey-settings-tab-stationGroups"
         role="tabpanel"
     >
         <div>
@@ -14,9 +14,9 @@
         </div>
 
         <StationGroupSettingsCard
-            v-for="(group, groupIndex) in groups"
+            v-for="(group, groupIndex) in stationGroups"
             :key="group.id"
-            v-model:group="groups[groupIndex]!"
+            v-model:group="stationGroups[groupIndex]!"
             @changed="emit('changed')"
             @remove="emit('remove', groupIndex)"
         />
@@ -37,7 +37,9 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {StationGroup} from "../../../dto/dashboardConfig.dto";
 import StationGroupSettingsCard from "./StationGroupSettingsCard.vue";
 
-const groups = defineModel<StationGroup[]>("groups", {required: true});
+const stationGroups = defineModel<StationGroup[]>("stationGroups", {
+    required: true,
+});
 
 const emit = defineEmits<{
     changed: [];
@@ -45,8 +47,8 @@ const emit = defineEmits<{
 }>();
 
 function addGroup(): void {
-    groups.value = [
-        ...groups.value,
+    stationGroups.value = [
+        ...stationGroups.value,
         {
             id: newId("group"),
             name: "New group",

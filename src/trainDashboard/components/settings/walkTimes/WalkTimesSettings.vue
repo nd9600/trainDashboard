@@ -14,9 +14,9 @@
         </div>
 
         <WalkTimeSettingsCard
-            v-for="(group, groupIndex) in groups"
+            v-for="(group, groupIndex) in stationGroups"
             :key="group.id"
-            v-model:group="groups[groupIndex]!"
+            v-model:group="stationGroups[groupIndex]!"
             @changed="emit('changed')"
         />
     </section>
@@ -26,7 +26,9 @@
 import type {StationGroup} from "../../../dto/dashboardConfig.dto";
 import WalkTimeSettingsCard from "./WalkTimeSettingsCard.vue";
 
-const groups = defineModel<StationGroup[]>("groups", {required: true});
+const stationGroups = defineModel<StationGroup[]>("stationGroups", {
+    required: true,
+});
 
 const emit = defineEmits<{
     changed: [];

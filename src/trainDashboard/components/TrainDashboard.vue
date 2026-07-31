@@ -12,10 +12,7 @@
             >
                 Loading journeys...
             </div>
-            <div
-                v-else
-                class="mt-4 space-y-4"
-            >
+            <div v-else class="mt-4 space-y-4">
                 <p
                     v-if="journeyLoadingError"
                     class="rounded-lg border border-line bg-surface p-4 text-ink-muted"
@@ -29,15 +26,15 @@
                         :currentMinutes="currentMinutes"
                     />
                     <NationalRailRouteLinks
-                        v-if="primaryPairsWithoutJourneys.length"
-                        :pairs="primaryPairsWithoutJourneys"
+                        v-if="primaryRoutesWithoutTimetabledJourneys.length"
+                        :journeyRoutes="primaryRoutesWithoutTimetabledJourneys"
                         :departureMinutes="currentMinutes"
                     />
                 </section>
 
                 <OtherJourneys
-                    :pairs="currentJourneyPriorities.secondaryPairs"
-                    :journeys="secondaryJourneys"
+                    :journeyRoutes="currentJourneyPriorities.secondaryRoutes"
+                    :timetabledJourneys="secondaryJourneys"
                     :currentMinutes="currentMinutes"
                 />
             </div>
@@ -61,7 +58,7 @@ const {
     journeyLoadingError,
     currentMinutes,
     primaryJourneys,
-    primaryPairsWithoutJourneys,
+    primaryRoutesWithoutTimetabledJourneys,
     secondaryJourneys,
 } = storeToRefs(trainServicesStore);
 </script>

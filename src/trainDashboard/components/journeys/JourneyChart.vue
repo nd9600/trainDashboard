@@ -179,14 +179,17 @@
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {formatTime} from "@/utilities/time.utility.ts";
-import type {Journey, SegmentKind} from "../../dto/journey.dto";
+import type {
+    TimetabledJourney,
+    SegmentKind,
+} from "../../dto/timetabledJourney.dto";
 import {mustLeaveText} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
 import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 const props = defineProps<{
-    journeys: Journey[];
+    journeys: TimetabledJourney[];
     currentMinutes: number;
     mustLeaveJourneyId?: string;
     windowStart: number;
@@ -232,14 +235,16 @@ function xAt(minutes: number): string {
     return `${progress * 85}%`;
 }
 
-function timelineLabelClasses(journey: Journey): string[] {
+function timelineLabelClasses(journey: TimetabledJourney): string[] {
     return [
         "fill-ink text-xs font-medium [paint-order:stroke] [stroke-linejoin:round] [stroke-width:6]",
         journey.recommended ? "stroke-highlight" : "stroke-canvas",
     ];
 }
 
-function orderedSegments(journey: Journey): Journey["segments"] {
+function orderedSegments(
+    journey: TimetabledJourney
+): TimetabledJourney["segments"] {
     return [
         ...journey.segments.filter((segment) => segment.kind === "walk"),
         ...journey.segments.filter((segment) => segment.kind === "wait"),

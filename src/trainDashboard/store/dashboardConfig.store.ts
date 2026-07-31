@@ -12,8 +12,8 @@ const storage = useLocalStorageTyped(
     dashboardConfigSchema,
     {
         version: 1,
-        groups: [],
-        pairs: [],
+        stationGroups: [],
+        journeys: [],
         schedules: [],
     }
 );
@@ -21,7 +21,10 @@ const storage = useLocalStorageTyped(
 export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     const config = ref<DashboardConfig>(storage.loadFromLocalStorage());
 
-    function saveConfig(candidate: unknown): {success: boolean; errors: string[];} {
+    function saveConfig(candidate: unknown): {
+        success: boolean;
+        errors: string[];
+    } {
         const result = dashboardConfigSchema.safeParse(candidate);
 
         if (!result.success) {

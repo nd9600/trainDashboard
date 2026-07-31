@@ -109,7 +109,6 @@ function saveSettings(): void {
     if (hasUnsavedApiSettings.value) {
         apiSettings.value?.save();
     }
-
 }
 
 function cancelSettings(): void {

@@ -1,17 +1,17 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {DepartureBoardRequest} from "../api/railDataMarketplace.api";
 import * as railDataMarketplaceApi from "../api/railDataMarketplace.api";
-import type {ResolvedStationPair} from "./getCurrentJourneyPriorities";
-import {getJourneys} from "./getJourneys";
+import type {JourneyRoute} from "./getCurrentJourneyPriorities";
+import {getTimetabledJourneys} from "./getTimetabledJourneys";
 
-describe("getJourneys", () => {
+describe("getTimetabledJourneys", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
-    it("uses the walking times from a configured station pair", async () => {
-        const journeys = await getJourneys(
+    it("uses the walking times from a configured journey route", async () => {
+        const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [resolvedPair("ANL", "CHC", 15, 8)],
+            [journeyRoute("ANL", "CHC", 15, 8)],
             8 * 60,
             false
         );
@@ -32,11 +32,11 @@ describe("getJourneys", () => {
     });
 
     it("recommends the catchable journey with the earliest finish", async () => {
-        const journeys = await getJourneys(
+        const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
             [
-                resolvedPair("ANL", "CHC", 15, 8),
-                resolvedPair("ANL", "EXG", 15, 15),
+                journeyRoute("ANL", "CHC", 15, 8),
+                journeyRoute("ANL", "EXG", 15, 15),
             ],
             8 * 60,
             true
@@ -51,11 +51,11 @@ describe("getJourneys", () => {
     });
 
     it("orders journeys by final arrival time", async () => {
-        const journeys = await getJourneys(
+        const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
             [
-                resolvedPair("ANL", "EXG", 15, 15),
-                resolvedPair("ANL", "CHC", 15, 8),
+                journeyRoute("ANL", "EXG", 15, 15),
+                journeyRoute("ANL", "CHC", 15, 8),
             ],
             8 * 60,
             false
@@ -70,9 +70,9 @@ describe("getJourneys", () => {
     });
 
     it("does not show a journey when its walk has already started", async () => {
-        const journeys = await getJourneys(
+        const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [resolvedPair("ANL", "CHC", 25, 8)],
+            [journeyRoute("ANL", "CHC", 25, 8)],
             8 * 60,
             false
         );
@@ -92,9 +92,9 @@ describe("getJourneys", () => {
             return {crs: request.originCrs, trainServices: []};
         });
 
-        await getJourneys(
+        await getTimetabledJourneys(
             "test-key",
-            [resolvedPair("ANL", "CHC", 15, 8)],
+            [journeyRoute("ANL", "CHC", 15, 8)],
             8 * 60,
             false
         );
@@ -104,10 +104,10 @@ describe("getJourneys", () => {
         ]);
     });
 
-    it("omits a pair until timetable data is available for it", async () => {
-        const journeys = await getJourneys(
+    it("omits a journeys until timetable data is available for it", async () => {
+        const journeys = await getTimetabledJourneys(
             testApiAt(17 * 60),
-            [resolvedPair("EDB", "GLQ", 0, 0)],
+            [journeyRoute("EDB", "GLQ", 0, 0)],
             17 * 60,
             false
         );
@@ -116,9 +116,9 @@ describe("getJourneys", () => {
     });
 
     it("shows rail segments without personalised times when walking times are unknown", async () => {
-        const journeys = await getJourneys(
+        const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [resolvedPair("ANL", "CHC", undefined, undefined)],
+            [journeyRoute("ANL", "CHC", undefined, undefined)],
             8 * 60,
             true
         );
@@ -159,9 +159,9 @@ describe("getJourneys", () => {
             }
         );
 
-        const journeys = await getJourneys(
+        const journeys = await getTimetabledJourneys(
             "test-key",
-            [resolvedPair("ANL", "CHC", 15, 8)],
+            [journeyRoute("ANL", "CHC", 15, 8)],
             8 * 60,
             false
         );
@@ -178,9 +178,9 @@ describe("getJourneys", () => {
     });
 
     it("combines direct services through a configured connecting station", async () => {
-        const journeys = await getJourneys(
+        const journeys = await getTimetabledJourneys(
             testApiAt(15 * 60),
-            [resolvedPair("KVD", "EDB", 5, 0, "GLQ")],
+            [journeyRoute("KVD", "EDB", 5, 0, "GLQ")],
             15 * 60,
             false
         );
@@ -213,9 +213,9 @@ describe("getJourneys", () => {
     });
 
     it("requires three minutes to change trains", async () => {
-        const journeys = await getJourneys(
+        const journeys = await getTimetabledJourneys(
             testApiAt(15 * 60),
-            [resolvedPair("ANL", "EDB", 0, 0, "GLQ")],
+            [journeyRoute("ANL", "EDB", 0, 0, "GLQ")],
             15 * 60,
             false
         );
@@ -292,16 +292,16 @@ function formatApiTime(minutes: number): string {
         .padStart(2, "0")}`;
 }
 
-function resolvedPair(
+function journeyRoute(
     origin: string,
     destination: string,
     originWalkMinutes: number | undefined,
     destinationWalkMinutes: number | undefined,
     viaCrs?: string
-): ResolvedStationPair {
+): JourneyRoute {
     return {
-        id: `pair:${origin}-${destination}`,
-        pairId: "pair",
+        id: `journeys:${origin}-${destination}`,
+        journeyId: "journeys",
         contextLabel: "Home to Work",
         origin: {
             crs: origin,

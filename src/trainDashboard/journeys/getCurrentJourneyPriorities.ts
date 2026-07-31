@@ -5,34 +5,34 @@ import {
     type DisplaySchedule,
     type LocationReference,
     type StationGroup,
-    type StationPair,
+    type Journey,
 } from "../dto/dashboardConfig.dto";
-import {stationPairName} from "../presentation/settingsPresentation";
+import {journeyName} from "../presentation/settingsPresentation";
 
 export interface CurrentClock {
     day: Day;
     minutes: number;
 }
 
-export interface ResolvedEndpoint {
+export interface StationEndpoint {
     crs: string;
     walkMinutes?: number;
     locationName: string;
 }
 
-export interface ResolvedStationPair {
+export interface JourneyRoute {
     id: string;
-    pairId: string;
+    journeyId: string;
     contextLabel: string;
-    origin: ResolvedEndpoint;
-    destination: ResolvedEndpoint;
+    origin: StationEndpoint;
+    destination: StationEndpoint;
     viaCrs?: string;
 }
 
 export interface CurrentJourneyPriorities {
     schedule: DisplaySchedule | undefined;
-    primaryPairs: ResolvedStationPair[];
-    secondaryPairs: ResolvedStationPair[];
+    primaryRoutes: JourneyRoute[];
+    secondaryRoutes: JourneyRoute[];
 }
 
 export function getCurrentJourneyPriorities(
@@ -46,58 +46,68 @@ export function getCurrentJourneyPriorities(
     if (!schedule) {
         return {
             schedule: undefined,
-            primaryPairs: [],
-            secondaryPairs: expandStationPairs(config.pairs, config.groups),
+            primaryRoutes: [],
+            secondaryRoutes: expandJourneyRoutes(
+                config.journeys,
+                config.stationGroups
+            ),
         };
     }
 
-    const pairsById = new Map(config.pairs.map((pair) => [pair.id, pair]));
+    const journeysById = new Map(
+        config.journeys.map((journey) => [journey.id, journey])
+    );
 
     return {
         schedule,
-        primaryPairs: expandStationPairs(
-            schedule.primaryPairIds.flatMap((pairId) => {
-                const pair = pairsById.get(pairId);
-                return pair ? [pair] : [];
+        primaryRoutes: expandJourneyRoutes(
+            schedule.primaryJourneyIds.flatMap((journeyId) => {
+                const journey = journeysById.get(journeyId);
+                return journey ? [journey] : [];
             }),
-            config.groups
+            config.stationGroups
         ),
-        secondaryPairs: expandStationPairs(
-            schedule.secondaryPairIds.flatMap((pairId) => {
-                const pair = pairsById.get(pairId);
-                return pair ? [pair] : [];
+        secondaryRoutes: expandJourneyRoutes(
+            schedule.secondaryJourneyIds.flatMap((journeyId) => {
+                const journey = journeysById.get(journeyId);
+                return journey ? [journey] : [];
             }),
-            config.groups
+            config.stationGroups
         ),
     };
 }
 
-export function expandStationPairs(
-    pairs: StationPair[],
-    groups: StationGroup[]
-): ResolvedStationPair[] {
-    const groupsById = new Map(groups.map((group) => [group.id, group]));
+export function expandJourneyRoutes(
+    journeys: Journey[],
+    stationGroups: StationGroup[]
+): JourneyRoute[] {
+    const stationGroupsById = new Map(
+        stationGroups.map((group) => [group.id, group])
+    );
 
-    return pairs.flatMap((pair) => {
-        const origins = resolveLocation(pair.origin, groupsById);
-        const destinations = resolveLocation(pair.destination, groupsById);
+    return journeys.flatMap((journey) => {
+        const origins = getStationEndpoints(journey.origin, stationGroupsById);
+        const destinations = getStationEndpoints(
+            journey.destination,
+            stationGroupsById
+        );
 
         return origins.flatMap((origin) =>
             destinations
                 .filter((destination) => destination.crs !== origin.crs)
                 .filter(
                     (destination) =>
-                        pair.viaCrs === undefined ||
-                        (origin.crs !== pair.viaCrs &&
-                            destination.crs !== pair.viaCrs)
+                        journey.viaCrs === undefined ||
+                        (origin.crs !== journey.viaCrs &&
+                            destination.crs !== journey.viaCrs)
                 )
                 .map((destination) => ({
-                    id: `${pair.id}:${origin.crs}-${destination.crs}`,
-                    pairId: pair.id,
-                    contextLabel: stationPairName(pair, groups),
+                    id: `${journey.id}:${origin.crs}-${destination.crs}`,
+                    journeyId: journey.id,
+                    contextLabel: journeyName(journey, stationGroups),
                     origin,
                     destination,
-                    viaCrs: pair.viaCrs,
+                    viaCrs: journey.viaCrs,
                 }))
         );
     });
@@ -114,11 +124,11 @@ function scheduleMatches(
     );
 }
 
-function resolveLocation(
+function getStationEndpoints(
     location: LocationReference,
-    groupsById: Map<string, StationGroup>
-): ResolvedEndpoint[] {
-    const group = groupsById.get(location.groupId);
+    stationGroupsById: Map<string, StationGroup>
+): StationEndpoint[] {
+    const group = stationGroupsById.get(location.groupId);
 
     if (!group) {
         return [];

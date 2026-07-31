@@ -3,8 +3,8 @@ import type {
     DepartureBoard,
     DepartureService,
 } from "../dto/liveDepartureBoard.dto";
-import type {Journey, TrainLeg} from "../dto/journey.dto";
-import type {ResolvedStationPair} from "./getCurrentJourneyPriorities";
+import type {TimetabledJourney, TrainLeg} from "../dto/timetabledJourney.dto";
+import type {JourneyRoute} from "./getCurrentJourneyPriorities";
 import {formatTime} from "@/utilities/time.utility.ts";
 
 interface ServiceLeg extends TrainLeg {
@@ -13,12 +13,12 @@ interface ServiceLeg extends TrainLeg {
 
 const minimumTransferMinutes = 3;
 
-export async function getJourneys(
+export async function getTimetabledJourneys(
     consumerKey: string,
-    pairs: ResolvedStationPair[],
+    journeyRoutes: JourneyRoute[],
     currentMinutes: number,
     recommendJourney: boolean
-): Promise<Journey[]> {
+): Promise<TimetabledJourney[]> {
     const boardRequests = new Map<string, Promise<DepartureBoard>>();
 
     function getBoard(
@@ -45,42 +45,42 @@ export async function getJourneys(
         return request;
     }
 
-    const journeys = (
+    const timetabledJourneys = (
         await Promise.all(
-            pairs.map(async (pair) => {
-                if (!pair.viaCrs) {
+            journeyRoutes.map(async (route) => {
+                if (!route.viaCrs) {
                     const board = await getBoard(
-                        pair.origin.crs,
-                        pair.destination.crs,
-                        pair.origin.walkMinutes ?? 0
+                        route.origin.crs,
+                        route.destination.crs,
+                        route.origin.walkMinutes ?? 0
                     );
 
                     return directLegs(
                         board,
-                        pair.origin.crs,
-                        pair.destination.crs,
+                        route.origin.crs,
+                        route.destination.crs,
                         currentMinutes
-                    ).map((leg) => createJourney(pair, [leg]));
+                    ).map((leg) => createJourney(route, [leg]));
                 }
 
                 const [firstBoard, secondBoard] = await Promise.all([
                     getBoard(
-                        pair.origin.crs,
-                        pair.viaCrs,
-                        pair.origin.walkMinutes ?? 0
+                        route.origin.crs,
+                        route.viaCrs,
+                        route.origin.walkMinutes ?? 0
                     ),
-                    getBoard(pair.viaCrs, pair.destination.crs, 0),
+                    getBoard(route.viaCrs, route.destination.crs, 0),
                 ]);
                 const firstLegs = directLegs(
                     firstBoard,
-                    pair.origin.crs,
-                    pair.viaCrs,
+                    route.origin.crs,
+                    route.viaCrs,
                     currentMinutes
                 );
                 const secondLegs = directLegs(
                     secondBoard,
-                    pair.viaCrs,
-                    pair.destination.crs,
+                    route.viaCrs,
+                    route.destination.crs,
                     currentMinutes
                 );
 
@@ -92,7 +92,7 @@ export async function getJourneys(
                     );
 
                     return secondLeg
-                        ? [createJourney(pair, [firstLeg, secondLeg])]
+                        ? [createJourney(route, [firstLeg, secondLeg])]
                         : [];
                 });
             })
@@ -111,10 +111,10 @@ export async function getJourneys(
         });
 
     if (!recommendJourney) {
-        return journeys;
+        return timetabledJourneys;
     }
 
-    const recommendedJourney = [...journeys]
+    const recommendedJourney = [...timetabledJourneys]
         .filter(
             (journey) =>
                 journey.walkingTimesKnown &&
@@ -132,7 +132,7 @@ export async function getJourneys(
         })
         .at(0);
 
-    return journeys.map((journey) => ({
+    return timetabledJourneys.map((journey) => ({
         ...journey,
         recommended: journey === recommendedJourney,
     }));
@@ -210,24 +210,27 @@ function createServiceLeg(
 }
 
 function createJourney(
-    pair: ResolvedStationPair,
+    route: JourneyRoute,
     serviceLegs: ServiceLeg[]
-): Journey {
+): TimetabledJourney {
     const firstLeg = serviceLegs.at(0)!;
     const lastLeg = serviceLegs.at(-1)!;
     const walkingTimesKnown =
-        pair.origin.walkMinutes !== undefined &&
-        pair.destination.walkMinutes !== undefined;
+        route.origin.walkMinutes !== undefined &&
+        route.destination.walkMinutes !== undefined;
     const finish =
-        pair.destination.walkMinutes === undefined
+        route.destination.walkMinutes === undefined
             ? lastLeg.arrival
-            : lastLeg.arrival + pair.destination.walkMinutes;
-    const segments: Journey["segments"] = [];
+            : lastLeg.arrival + route.destination.walkMinutes;
+    const segments: TimetabledJourney["segments"] = [];
 
-    if (pair.origin.walkMinutes !== undefined && pair.origin.walkMinutes > 0) {
+    if (
+        route.origin.walkMinutes !== undefined &&
+        route.origin.walkMinutes > 0
+    ) {
         segments.push({
             kind: "walk",
-            start: firstLeg.departure - pair.origin.walkMinutes,
+            start: firstLeg.departure - route.origin.walkMinutes,
             end: firstLeg.departure,
         });
     }
@@ -251,8 +254,8 @@ function createJourney(
     });
 
     if (
-        pair.destination.walkMinutes !== undefined &&
-        pair.destination.walkMinutes > 0
+        route.destination.walkMinutes !== undefined &&
+        route.destination.walkMinutes > 0
     ) {
         segments.push({
             kind: "walk",
@@ -262,22 +265,22 @@ function createJourney(
     }
 
     return {
-        id: `${pair.id}:${serviceLegs.map((leg) => leg.serviceId).join(":")}`,
-        origin: pair.origin.crs,
-        destination: pair.destination.crs,
-        contextLabel: pair.contextLabel,
+        id: `${route.id}:${serviceLegs.map((leg) => leg.serviceId).join(":")}`,
+        origin: route.origin.crs,
+        destination: route.destination.crs,
+        contextLabel: route.contextLabel,
         railArrivalTime: formatTime(lastLeg.arrival),
         arrivalLabel:
-            pair.destination.walkMinutes === undefined
+            route.destination.walkMinutes === undefined
                 ? undefined
-                : pair.destination.locationName,
+                : route.destination.locationName,
         arrivalTime:
-            pair.destination.walkMinutes === undefined
+            route.destination.walkMinutes === undefined
                 ? undefined
                 : formatTime(finish),
         boldArrivalTime:
-            pair.destination.walkMinutes !== undefined &&
-            pair.destination.locationName.toLowerCase() === "home",
+            route.destination.walkMinutes !== undefined &&
+            route.destination.locationName.toLowerCase() === "home",
         walkingTimesKnown,
         segments,
         trainLegs: serviceLegs.map(

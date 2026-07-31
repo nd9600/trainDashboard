@@ -10,7 +10,7 @@
             {{ leaveInString }}
         </h1>
         <p v-if="recommendedJourney" class="m-0 text-ink-muted">
-            {{ shouldWalk ? 'Walk to' : 'Train from' }}
+            {{ shouldWalk ? "Walk to" : "Train from" }}
             <span
                 class="font-semibold"
                 :style="{
@@ -38,15 +38,12 @@ import {stationName} from "../stations/stations";
 import {useTrainServicesStore} from "../store/trainServices.store";
 
 const trainServicesStore = useTrainServicesStore();
-const {
-    currentJourneyPriorities,
-    currentMinutes,
-    recommendedJourney,
-} = storeToRefs(trainServicesStore);
+const {currentJourneyPriorities, currentMinutes, recommendedJourney} =
+    storeToRefs(trainServicesStore);
 
 const journeyDestinationIcon = computed<"briefcase" | "home" | "train">(() => {
     const destinationName =
-        currentJourneyPriorities.value.primaryPairs.at(0)?.destination
+        currentJourneyPriorities.value.primaryRoutes.at(0)?.destination
             .locationName;
 
     if (destinationName?.toLowerCase() === "work") {
@@ -61,13 +58,13 @@ const journeyDestinationIcon = computed<"briefcase" | "home" | "train">(() => {
 });
 
 const journeyDescription = computed(() => {
-    const pair = currentJourneyPriorities.value.primaryPairs.at(0);
+    const journeys = currentJourneyPriorities.value.primaryRoutes.at(0);
 
-    if (!pair) {
+    if (!journeys) {
         return currentJourneyPriorities.value.schedule?.name ?? "Journeys";
     }
 
-    return `Going from ${pair.origin.locationName} to ${pair.destination.locationName}`;
+    return `Going from ${journeys.origin.locationName} to ${journeys.destination.locationName}`;
 });
 
 const leaveInMinutes = computed(() => {
@@ -93,5 +90,4 @@ const shouldWalk = computed(() => {
     const firstSegment = recommendedJourney.value?.segments.at(0);
     return firstSegment?.kind === "walk";
 });
-
 </script>

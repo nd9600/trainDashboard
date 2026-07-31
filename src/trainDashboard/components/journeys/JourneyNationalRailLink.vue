@@ -16,10 +16,10 @@
 </template>
 
 <script setup lang="ts">
-import type {Journey} from "../../dto/journey.dto";
+import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import NationalRailLink from "./NationalRailLink.vue";
 
 defineProps<{
-    journey: Journey;
+    journey: TimetabledJourney;
 }>();
 </script>

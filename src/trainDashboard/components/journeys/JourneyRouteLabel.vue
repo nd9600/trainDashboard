@@ -5,20 +5,18 @@
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
             class="block"
         >
-            {{ stationName(leg.origin) }} →
-            {{ stationName(leg.destination) }} ·
+            {{ stationName(leg.origin) }} → {{ stationName(leg.destination) }} ·
             {{ formatTime(leg.departure) }}
         </span>
     </span>
 </template>
 
 <script setup lang="ts">
-import type {Journey} from "../../dto/journey.dto";
+import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {stationName} from "../../stations/stations";
 import {formatTime} from "@/utilities/time.utility.ts";
 
 defineProps<{
-    journey: Journey;
+    journey: TimetabledJourney;
 }>();
-
 </script>

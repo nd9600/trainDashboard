@@ -56,14 +56,14 @@
 
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
-import type {Journey} from "../../dto/journey.dto";
+import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {mustLeaveText} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
 import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 defineProps<{
-    journeys: Journey[];
+    journeys: TimetabledJourney[];
     currentMinutes: number;
     mustLeaveJourneyId?: string;
 }>();

@@ -57,31 +57,43 @@
         </fieldset>
 
         <fieldset class="mt-12 space-y-3">
-            <legend class="mb-1 font-semibold">Set how each journey appears</legend>
+            <legend class="mb-1 font-semibold">
+                Set how each journey appears
+            </legend>
             <label
-                v-for="pair in pairs"
-                :key="pair.id"
+                v-for="journey in journeys"
+                :key="journey.id"
                 class="sentenceField"
-                :class="pairPriority(pair.id) === 'hidden' ? 'opacity-50' : ''"
+                :class="
+                    journeyPriority(journey.id) === 'hidden' ? 'opacity-50' : ''
+                "
             >
                 <span
-                    class="size-6  text-white rounded-full flex justify-center items-center font-bold"
+                    class="size-6 text-white rounded-full flex justify-center items-center font-bold"
                     :class="{
-                        'bg-japonica': pairPriority(pair.id) === 'primary',
-                        'bg-saffron': pairPriority(pair.id) === 'secondary',
-                        'bg-casa': pairPriority(pair.id) === 'hidden',
+                        'bg-japonica':
+                            journeyPriority(journey.id) === 'primary',
+                        'bg-saffron':
+                            journeyPriority(journey.id) === 'secondary',
+                        'bg-casa': journeyPriority(journey.id) === 'hidden',
                     }"
                 >
-                    {{ pairPriority(pair.id) === 'primary' ? 1 : pairPriority(pair.id) === 'secondary' ? 2 : '' }}
+                    {{
+                        journeyPriority(journey.id) === "primary"
+                            ? 1
+                            : journeyPriority(journey.id) === "secondary"
+                              ? 2
+                              : ""
+                    }}
                 </span>
                 <span class="font-medium">
-                    {{ stationPairName(pair, groups) }}
+                    {{ journeyName(journey, stationGroups) }}
                 </span>
                 <span>is</span>
                 <select
                     class="appInput sentenceField__control min-w-52 grow"
-                    :value="pairPriority(pair.id)"
-                    @change="updatePairPriority(pair.id, $event)"
+                    :value="journeyPriority(journey.id)"
+                    @change="updateJourneyPriority(journey.id, $event)"
                 >
                     <option value="primary">a primary journey</option>
                     <option value="secondary">
@@ -109,13 +121,13 @@ import type {
     Day,
     DisplaySchedule,
     StationGroup,
-    StationPair,
+    Journey,
 } from "../../../dto/dashboardConfig.dto";
-import {stationPairName} from "../../../presentation/settingsPresentation";
+import {journeyName} from "../../../presentation/settingsPresentation";
 
 defineProps<{
-    groups: StationGroup[];
-    pairs: StationPair[];
+    stationGroups: StationGroup[];
+    journeys: Journey[];
 }>();
 
 const schedule = defineModel<DisplaySchedule>("schedule", {required: true});
@@ -136,34 +148,35 @@ const days: Array<{value: Day; label: string}> = [
     {value: 0, label: "Sunday"},
 ];
 
-function pairPriority(pairId: string): PairPriority {
-    if (schedule.value.primaryPairIds.includes(pairId)) {
+function journeyPriority(journeyId: string): PairPriority {
+    if (schedule.value.primaryJourneyIds.includes(journeyId)) {
         return "primary";
     }
 
-    if (schedule.value.secondaryPairIds.includes(pairId)) {
+    if (schedule.value.secondaryJourneyIds.includes(journeyId)) {
         return "secondary";
     }
 
     return "hidden";
 }
 
-function updatePairPriority(pairId: string, event: Event): void {
+function updateJourneyPriority(journeyId: string, event: Event): void {
     const priority = (event.target as HTMLSelectElement).value as PairPriority;
 
-    schedule.value.primaryPairIds = schedule.value.primaryPairIds.filter(
-        (selectedPairId) => selectedPairId !== pairId
+    schedule.value.primaryJourneyIds = schedule.value.primaryJourneyIds.filter(
+        (selectedPairId) => selectedPairId !== journeyId
     );
-    schedule.value.secondaryPairIds = schedule.value.secondaryPairIds.filter(
-        (selectedPairId) => selectedPairId !== pairId
-    );
+    schedule.value.secondaryJourneyIds =
+        schedule.value.secondaryJourneyIds.filter(
+            (selectedPairId) => selectedPairId !== journeyId
+        );
 
     if (priority === "primary") {
-        schedule.value.primaryPairIds.push(pairId);
+        schedule.value.primaryJourneyIds.push(journeyId);
     }
 
     if (priority === "secondary") {
-        schedule.value.secondaryPairIds.push(pairId);
+        schedule.value.secondaryJourneyIds.push(journeyId);
     }
 }
 </script>

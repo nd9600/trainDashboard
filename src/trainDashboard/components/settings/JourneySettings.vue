@@ -14,27 +14,27 @@
 
         <JourneysSettings
             v-if="activeEditorSection === 'journeys'"
-            v-model:pairs="draft.pairs"
-            :groups="draft.groups"
+            v-model:journeys="draft.journeys"
+            :stationGroups="draft.stationGroups"
             @changed="handleChange"
-            @remove="removePair"
+            @remove="removeJourney"
         />
         <StationGroupsSettings
-            v-else-if="activeEditorSection === 'groups'"
-            v-model:groups="draft.groups"
+            v-else-if="activeEditorSection === 'stationGroups'"
+            v-model:stationGroups="draft.stationGroups"
             @changed="handleChange"
             @remove="removeGroup"
         />
         <WalkTimesSettings
             v-else-if="activeEditorSection === 'walk-times'"
-            v-model:groups="draft.groups"
+            v-model:stationGroups="draft.stationGroups"
             @changed="handleChange"
         />
         <SchedulesSettings
             v-else-if="activeEditorSection === 'schedules'"
             v-model:schedules="draft.schedules"
-            :groups="draft.groups"
-            :pairs="draft.pairs"
+            :stationGroups="draft.stationGroups"
+            :journeys="draft.journeys"
             @changed="handleChange"
         />
 
@@ -86,7 +86,7 @@ const emit = defineEmits<{
 const activeEditorSection = ref("journeys");
 const editorSections = [
     {value: "journeys", label: "Journeys", icon: "train" as const},
-    {value: "groups", label: "Station groups", icon: "map-pin" as const},
+    {value: "stationGroups", label: "Station groups", icon: "map-pin" as const},
     {value: "walk-times", label: "Walk times", icon: "walk" as const},
     {value: "schedules", label: "Schedules", icon: "clock" as const},
 ];
@@ -145,27 +145,27 @@ function setValid(value: boolean): void {
 }
 
 function removeGroup(groupIndex: number): void {
-    const groupId = draft.value.groups[groupIndex]!.id;
-    const removedPairIds = draft.value.pairs
+    const groupId = draft.value.stationGroups[groupIndex]!.id;
+    const removedJourneyIds = draft.value.journeys
         .filter(
-            (pair) =>
-                referencesGroup(pair.origin, groupId) ||
-                referencesGroup(pair.destination, groupId)
+            (journey) =>
+                referencesGroup(journey.origin, groupId) ||
+                referencesGroup(journey.destination, groupId)
         )
-        .map((pair) => pair.id);
+        .map((journey) => journey.id);
 
-    draft.value.groups.splice(groupIndex, 1);
-    draft.value.pairs = draft.value.pairs.filter(
-        (pair) => !removedPairIds.includes(pair.id)
+    draft.value.stationGroups.splice(groupIndex, 1);
+    draft.value.journeys = draft.value.journeys.filter(
+        (journey) => !removedJourneyIds.includes(journey.id)
     );
-    removePairIdsFromSchedules(removedPairIds);
+    removeJourneyIdsFromSchedules(removedJourneyIds);
     handleChange();
 }
 
-function removePair(pairIndex: number): void {
-    const pairId = draft.value.pairs[pairIndex]!.id;
-    draft.value.pairs.splice(pairIndex, 1);
-    removePairIdsFromSchedules([pairId]);
+function removeJourney(journeyIndex: number): void {
+    const journeyId = draft.value.journeys[journeyIndex]!.id;
+    draft.value.journeys.splice(journeyIndex, 1);
+    removeJourneyIdsFromSchedules([journeyId]);
     handleChange();
 }
 
@@ -176,13 +176,13 @@ function referencesGroup(
     return location.type === "group" && location.groupId === groupId;
 }
 
-function removePairIdsFromSchedules(pairIds: string[]): void {
+function removeJourneyIdsFromSchedules(journeyIds: string[]): void {
     for (const schedule of draft.value.schedules) {
-        schedule.primaryPairIds = schedule.primaryPairIds.filter(
-            (pairId) => !pairIds.includes(pairId)
+        schedule.primaryJourneyIds = schedule.primaryJourneyIds.filter(
+            (journeyId) => !journeyIds.includes(journeyId)
         );
-        schedule.secondaryPairIds = schedule.secondaryPairIds.filter(
-            (pairId) => !pairIds.includes(pairId)
+        schedule.secondaryJourneyIds = schedule.secondaryJourneyIds.filter(
+            (journeyId) => !journeyIds.includes(journeyId)
         );
     }
 }

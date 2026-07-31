@@ -6,7 +6,7 @@ import {
 export const defaultDashboardConfig: DashboardConfig =
     dashboardConfigSchema.parse({
         version: 1,
-        groups: [
+        stationGroups: [
             {
                 id: "home",
                 name: "Home",
@@ -29,7 +29,7 @@ export const defaultDashboardConfig: DashboardConfig =
                 stations: [{crs: "GLQ"}, {crs: "GLC"}],
             },
         ],
-        pairs: [
+        journeys: [
             {
                 id: "home-to-work",
                 origin: {
@@ -66,8 +66,8 @@ export const defaultDashboardConfig: DashboardConfig =
                 days: [1, 2, 3, 4, 5],
                 startsAt: "00:00",
                 endsAt: "12:00",
-                primaryPairIds: ["home-to-work"],
-                secondaryPairIds: ["home-to-glasgow"],
+                primaryJourneyIds: ["home-to-work"],
+                secondaryJourneyIds: ["home-to-glasgow"],
             },
             {
                 id: "weekday-afternoon",
@@ -75,8 +75,8 @@ export const defaultDashboardConfig: DashboardConfig =
                 days: [1, 2, 3, 4, 5],
                 startsAt: "12:00",
                 endsAt: "24:00",
-                primaryPairIds: ["work-to-home"],
-                secondaryPairIds: ["glasgow-to-home"],
+                primaryJourneyIds: ["work-to-home"],
+                secondaryJourneyIds: ["glasgow-to-home"],
             },
             {
                 id: "weekend",
@@ -84,8 +84,8 @@ export const defaultDashboardConfig: DashboardConfig =
                 days: [0, 6],
                 startsAt: "00:00",
                 endsAt: "24:00",
-                primaryPairIds: ["home-to-glasgow"],
-                secondaryPairIds: [],
+                primaryJourneyIds: ["home-to-glasgow"],
+                secondaryJourneyIds: [],
             },
         ],
     });

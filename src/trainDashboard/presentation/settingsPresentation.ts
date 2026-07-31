@@ -1,15 +1,17 @@
 import type {
     LocationReference,
     StationGroup,
-    StationPair,
+    Journey,
 } from "../dto/dashboardConfig.dto";
 import {stationDisplayName} from "../stations/stations";
 
 export function locationReferenceName(
     location: LocationReference,
-    groups: StationGroup[]
+    stationGroups: StationGroup[]
 ): string {
-    const group = groups.find((candidate) => candidate.id === location.groupId);
+    const group = stationGroups.find(
+        (candidate) => candidate.id === location.groupId
+    );
 
     if (location.type === "station") {
         return `${group?.name ?? "Missing group"}, through ${stationDisplayName(location.crs)}`;
@@ -18,13 +20,13 @@ export function locationReferenceName(
     return group?.name ?? "Missing group";
 }
 
-export function stationPairName(
-    pair: StationPair,
-    groups: StationGroup[]
+export function journeyName(
+    journey: Journey,
+    stationGroups: StationGroup[]
 ): string {
-    const route = `${locationReferenceName(pair.origin, groups)} → ${locationReferenceName(pair.destination, groups)}`;
+    const route = `${locationReferenceName(journey.origin, stationGroups)} → ${locationReferenceName(journey.destination, stationGroups)}`;
 
-    return pair.viaCrs
-        ? `${route}, changing at ${stationDisplayName(pair.viaCrs)}`
+    return journey.viaCrs
+        ? `${route}, changing at ${stationDisplayName(journey.viaCrs)}`
         : route;
 }

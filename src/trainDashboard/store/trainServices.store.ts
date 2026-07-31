@@ -1,12 +1,12 @@
 import {defineStore} from "pinia";
 import {computed, ref, watch} from "vue";
-import type {Journey} from "../dto/journey.dto";
+import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
     type CurrentClock,
     getCurrentJourneyPriorities,
 } from "../journeys/getCurrentJourneyPriorities";
-import {getJourneys} from "../journeys/getJourneys";
-import {getStationPairsWithoutJourneys} from "../journeys/getStationPairsWithoutJourneys";
+import {getTimetabledJourneys} from "../journeys/getTimetabledJourneys";
+import {getRoutesWithoutTimetabledJourneys} from "../journeys/getRoutesWithoutTimetabledJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
 import type {Day} from "@/trainDashboard/dto/dashboardConfig.dto.ts";
@@ -22,8 +22,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         minutes: currentDate.getHours() * 60 + currentDate.getMinutes(),
     };
     const currentMinutes = ref(currentClock.minutes);
-    const primaryJourneys = ref<Journey[]>([]);
-    const secondaryJourneys = ref<Journey[]>([]);
+    const primaryJourneys = ref<TimetabledJourney[]>([]);
+    const secondaryJourneys = ref<TimetabledJourney[]>([]);
     const isLoadingJourneys = ref(true);
     const journeyLoadingError = ref<string>();
 
@@ -37,9 +37,9 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const recommendedJourney = computed(() =>
         primaryJourneys.value.find((journey) => journey.recommended)
     );
-    const primaryPairsWithoutJourneys = computed(() =>
-        getStationPairsWithoutJourneys(
-            currentJourneyPriorities.value.primaryPairs,
+    const primaryRoutesWithoutTimetabledJourneys = computed(() =>
+        getRoutesWithoutTimetabledJourneys(
+            currentJourneyPriorities.value.primaryRoutes,
             primaryJourneys.value
         )
     );
@@ -63,15 +63,15 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         try {
             const [newPrimaryJourneys, newSecondaryJourneys] =
                 await Promise.all([
-                    getJourneys(
+                    getTimetabledJourneys(
                         consumerKey,
-                        currentJourneyPriorities.value.primaryPairs,
+                        currentJourneyPriorities.value.primaryRoutes,
                         currentMinutes.value,
                         true
                     ),
-                    getJourneys(
+                    getTimetabledJourneys(
                         consumerKey,
-                        currentJourneyPriorities.value.secondaryPairs,
+                        currentJourneyPriorities.value.secondaryRoutes,
                         currentMinutes.value,
                         false
                     ),
@@ -103,7 +103,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         journeyLoadingError,
         currentMinutes,
         primaryJourneys,
-        primaryPairsWithoutJourneys,
+        primaryRoutesWithoutTimetabledJourneys,
         recommendedJourney,
         secondaryJourneys,
     };

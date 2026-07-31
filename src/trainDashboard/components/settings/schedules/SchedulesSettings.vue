@@ -16,8 +16,8 @@
             v-for="(schedule, scheduleIndex) in schedules"
             :key="schedule.id"
             v-model:schedule="schedules[scheduleIndex]!"
-            :groups="groups"
-            :pairs="pairs"
+            :stationGroups="stationGroups"
+            :journeys="journeys"
             @remove="removeSchedule(scheduleIndex)"
         />
 
@@ -36,14 +36,14 @@
 import type {
     DisplaySchedule,
     StationGroup,
-    StationPair,
+    Journey,
 } from "../../../dto/dashboardConfig.dto";
 import AppIcon from "@/components/AppIcon.vue";
 import ScheduleSettingsCard from "./ScheduleSettingsCard.vue";
 
 defineProps<{
-    groups: StationGroup[];
-    pairs: StationPair[];
+    stationGroups: StationGroup[];
+    journeys: Journey[];
 }>();
 
 const schedules = defineModel<DisplaySchedule[]>("schedules", {
@@ -63,8 +63,8 @@ function addSchedule(): void {
             days: [1, 2, 3, 4, 5],
             startsAt: "09:00",
             endsAt: "17:00",
-            primaryPairIds: [],
-            secondaryPairIds: [],
+            primaryJourneyIds: [],
+            secondaryJourneyIds: [],
         },
     ];
     emit("changed");

@@ -30,15 +30,12 @@ export async function getDepartureBoard(
         timeWindow: String(request.timeWindowMinutes ?? 120),
     }).toString();
 
-    const response = await fetch(
-        url,
-        {
-            headers: {
-                Accept: "application/json",
-                "x-apikey": consumerKey,
-            },
-        }
-    );
+    const response = await fetch(url, {
+        headers: {
+            Accept: "application/json",
+            "x-apikey": consumerKey,
+        },
+    });
 
     if (!response.ok) {
         throw new Error(

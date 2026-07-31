@@ -60,7 +60,7 @@ export const locationReferenceSchema = z.discriminatedUnion("type", [
     }),
 ]);
 
-export const stationPairSchema = z.object({
+export const journeySchema = z.object({
     id: idSchema,
     origin: locationReferenceSchema,
     destination: locationReferenceSchema,
@@ -74,8 +74,8 @@ export const displayScheduleSchema = z
         days: z.array(daySchema).min(1, "Select at least one day."),
         startsAt: timeSchema,
         endsAt: timeSchema,
-        primaryPairIds: z.array(idSchema),
-        secondaryPairIds: z.array(idSchema),
+        primaryJourneyIds: z.array(idSchema),
+        secondaryJourneyIds: z.array(idSchema),
     })
     .refine(
         (schedule) =>
@@ -88,8 +88,8 @@ export const displayScheduleSchema = z
 
 const dashboardConfigBaseSchema = z.object({
     version: z.literal(1),
-    groups: z.array(stationGroupSchema),
-    pairs: z.array(stationPairSchema).min(1, "Add at least one pair."),
+    stationGroups: z.array(stationGroupSchema),
+    journeys: z.array(journeySchema).min(1, "Add at least one journey."),
     schedules: z
         .array(displayScheduleSchema)
         .min(1, "Add at least one schedule."),
@@ -98,15 +98,15 @@ const dashboardConfigBaseSchema = z.object({
 export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
     (config, context) => {
         reportDuplicateIds(
-            config.groups,
-            "groups",
+            config.stationGroups,
+            "stationGroups",
             "Group IDs must be unique.",
             context
         );
         reportDuplicateIds(
-            config.pairs,
-            "pairs",
-            "Pair IDs must be unique.",
+            config.journeys,
+            "journeys",
+            "Journey IDs must be unique.",
             context
         );
         reportDuplicateIds(
@@ -116,23 +116,25 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
             context
         );
 
-        const groupsById = new Map(
-            config.groups.map((group) => [group.id, group])
+        const stationGroupsById = new Map(
+            config.stationGroups.map((group) => [group.id, group])
         );
-        const pairIds = new Set(config.pairs.map((pair) => pair.id));
+        const journeyIds = new Set(
+            config.journeys.map((journey) => journey.id)
+        );
 
-        config.pairs.forEach((pair, pairIndex) => {
+        config.journeys.forEach((journey, journeyIndex) => {
             for (const [endpointName, endpoint] of [
-                ["origin", pair.origin],
-                ["destination", pair.destination],
+                ["origin", journey.origin],
+                ["destination", journey.destination],
             ] as const) {
-                const group = groupsById.get(endpoint.groupId);
+                const group = stationGroupsById.get(endpoint.groupId);
 
                 if (!group) {
                     context.addIssue({
                         code: "custom",
                         message: `Group "${endpoint.groupId}" does not exist.`,
-                        path: ["pairs", pairIndex, endpointName],
+                        path: ["journeys", journeyIndex, endpointName],
                     });
                     continue;
                 }
@@ -146,37 +148,37 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
                     context.addIssue({
                         code: "custom",
                         message: `Station "${endpoint.crs}" is not in group "${group.name}".`,
-                        path: ["pairs", pairIndex, endpointName, "crs"],
+                        path: ["journeys", journeyIndex, endpointName, "crs"],
                     });
                 }
             }
         });
 
         config.schedules.forEach((schedule, scheduleIndex) => {
-            const selectedPairIds = [
-                ...schedule.primaryPairIds,
-                ...schedule.secondaryPairIds,
+            const selectedJourneyIds = [
+                ...schedule.primaryJourneyIds,
+                ...schedule.secondaryJourneyIds,
             ];
 
-            selectedPairIds.forEach((pairId) => {
-                if (!pairIds.has(pairId)) {
+            selectedJourneyIds.forEach((journeyId) => {
+                if (!journeyIds.has(journeyId)) {
                     context.addIssue({
                         code: "custom",
-                        message: `Pair "${pairId}" does not exist.`,
+                        message: `Journey "${journeyId}" does not exist.`,
                         path: ["schedules", scheduleIndex],
                     });
                 }
             });
 
-            const primaryPairIds = new Set(schedule.primaryPairIds);
-            const duplicatePairId = schedule.secondaryPairIds.find((pairId) =>
-                primaryPairIds.has(pairId)
+            const primaryJourneyIds = new Set(schedule.primaryJourneyIds);
+            const duplicateJourneyId = schedule.secondaryJourneyIds.find(
+                (journeyId) => primaryJourneyIds.has(journeyId)
             );
 
-            if (duplicatePairId) {
+            if (duplicateJourneyId) {
                 context.addIssue({
                     code: "custom",
-                    message: `Pair "${duplicatePairId}" cannot be primary and secondary.`,
+                    message: `Journey "${duplicateJourneyId}" cannot be primary and secondary.`,
                     path: ["schedules", scheduleIndex],
                 });
             }
@@ -203,7 +205,7 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
 export type Day = z.output<typeof daySchema>;
 export type StationGroup = z.output<typeof stationGroupSchema>;
 export type LocationReference = z.output<typeof locationReferenceSchema>;
-export type StationPair = z.output<typeof stationPairSchema>;
+export type Journey = z.output<typeof journeySchema>;
 export type DisplaySchedule = z.output<typeof displayScheduleSchema>;
 export type DashboardConfig = z.output<typeof dashboardConfigSchema>;
 
@@ -240,7 +242,7 @@ function schedulesOverlap(
 
 function reportDuplicateIds(
     items: Array<{id: string}>,
-    path: "groups" | "pairs" | "schedules",
+    path: "stationGroups" | "journeys" | "schedules",
     message: string,
     context: z.RefinementCtx
 ): void {

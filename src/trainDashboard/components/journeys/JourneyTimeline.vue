@@ -15,13 +15,13 @@
 
 <script setup lang="ts">
 import {computed} from "vue";
-import type {Journey} from "../../dto/journey.dto";
+import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {journeyTimelineRange} from "../../presentation/journeyPresentation";
 import JourneyCards from "./JourneyCards.vue";
 import JourneyChart from "./JourneyChart.vue";
 
 const props = defineProps<{
-    journeys: Journey[];
+    journeys: TimetabledJourney[];
     currentMinutes: number;
     mustLeaveJourneyId?: string;
 }>();

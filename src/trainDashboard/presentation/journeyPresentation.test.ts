@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import type {Journey} from "../dto/journey.dto";
+import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
     journeyTimelineRange,
     nationalRailJourneyUrl,
@@ -8,7 +8,7 @@ import {
 
 describe("nationalRailJourneyUrl", () => {
     it("links to the journey departure on National Rail Enquiries", () => {
-        const journey: Journey = {
+        const journey: TimetabledJourney = {
             id: "work-to-home:CHC-ANL:1700",
             origin: "CHC",
             destination: "ANL",
@@ -41,7 +41,7 @@ describe("nationalRailJourneyUrl", () => {
     });
 
     it("covers the earliest segment start and latest segment end", () => {
-        const journey: Journey = {
+        const journey: TimetabledJourney = {
             id: "connected",
             origin: "KVD",
             destination: "EDB",

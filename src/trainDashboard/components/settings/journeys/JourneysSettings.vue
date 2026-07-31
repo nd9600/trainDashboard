@@ -14,12 +14,12 @@
         </div>
 
         <JourneySettingsCard
-            v-for="(pair, pairIndex) in pairs"
-            :key="pair.id"
-            v-model:pair="pairs[pairIndex]!"
-            :groups="groups"
+            v-for="(journey, journeyIndex) in journeys"
+            :key="journey.id"
+            v-model:journey="journeys[journeyIndex]!"
+            :stationGroups="stationGroups"
             @changed="emit('changed')"
-            @remove="emit('remove', pairIndex)"
+            @remove="emit('remove', journeyIndex)"
         />
 
         <button
@@ -38,26 +38,26 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {
     LocationReference,
     StationGroup,
-    StationPair,
+    Journey,
 } from "../../../dto/dashboardConfig.dto";
 import JourneySettingsCard from "./JourneySettingsCard.vue";
 
 const props = defineProps<{
-    groups: StationGroup[];
+    stationGroups: StationGroup[];
 }>();
 
-const pairs = defineModel<StationPair[]>("pairs", {required: true});
+const journeys = defineModel<Journey[]>("journeys", {required: true});
 
 const emit = defineEmits<{
     changed: [];
-    remove: [pairIndex: number];
+    remove: [journeyIndex: number];
 }>();
 
 function addJourney(): void {
-    pairs.value = [
-        ...pairs.value,
+    journeys.value = [
+        ...journeys.value,
         {
-            id: newId("pair"),
+            id: newId("journey"),
             origin: defaultLocation(),
             destination: defaultLocation(),
         },
@@ -68,7 +68,7 @@ function addJourney(): void {
 function defaultLocation(): LocationReference {
     return {
         type: "group",
-        groupId: props.groups.at(0)?.id ?? "",
+        groupId: props.stationGroups.at(0)?.id ?? "",
     };
 }
 

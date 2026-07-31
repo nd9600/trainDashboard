@@ -9,7 +9,7 @@ import {
 const storage = useLocalStorageTyped(
     "train-dashboard-rail-data-api",
     railDataApiSettingsSchema,
-    {consumerKey: "",}
+    {consumerKey: ""}
 );
 
 export const useRailDataApiStore = defineStore("rail-data-api", () => {

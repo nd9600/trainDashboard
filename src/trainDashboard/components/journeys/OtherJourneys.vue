@@ -22,15 +22,19 @@
                     {{ journeyGroup.label }}
                 </h2>
                 <JourneyTimeline
-                    v-if="journeyGroup.journeys.length"
-                    :journeys="journeyGroup.journeys"
+                    v-if="journeyGroup.timetabledJourneys.length"
+                    :journeys="journeyGroup.timetabledJourneys"
                     :currentMinutes="currentMinutes"
                     :mustLeaveJourneyId="firstSecondaryJourneyId"
                 />
                 <NationalRailRouteLinks
-                    v-if="journeyGroup.missingPairs.length"
-                    :class="journeyGroup.journeys.length ? 'mt-4' : undefined"
-                    :pairs="journeyGroup.missingPairs"
+                    v-if="journeyGroup.missingRoutes.length"
+                    :class="
+                        journeyGroup.timetabledJourneys.length
+                            ? 'mt-4'
+                            : undefined
+                    "
+                    :journeyRoutes="journeyGroup.missingRoutes"
                     :departureMinutes="currentMinutes"
                 />
             </section>
@@ -41,52 +45,57 @@
 <script setup lang="ts">
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {Journey} from "../../dto/journey.dto";
-import type {ResolvedStationPair} from "../../journeys/getCurrentJourneyPriorities";
-import {getStationPairsWithoutJourneys} from "../../journeys/getStationPairsWithoutJourneys";
+import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
+import type {JourneyRoute} from "../../journeys/getCurrentJourneyPriorities";
+import {getRoutesWithoutTimetabledJourneys} from "../../journeys/getRoutesWithoutTimetabledJourneys";
 import JourneyTimeline from "./JourneyTimeline.vue";
 import NationalRailRouteLinks from "./NationalRailRouteLinks.vue";
 
 const props = defineProps<{
-    pairs: ResolvedStationPair[];
-    journeys: Journey[];
+    journeyRoutes: JourneyRoute[];
+    timetabledJourneys: TimetabledJourney[];
     currentMinutes: number;
 }>();
 
-const firstSecondaryJourneyId = computed(() => props.journeys.at(0)?.id);
+const firstSecondaryJourneyId = computed(
+    () => props.timetabledJourneys.at(0)?.id
+);
 const journeyGroups = computed(() => {
-    const groups = new Map<
+    const stationGroups = new Map<
         string,
         {
-            pairs: ResolvedStationPair[];
-            journeys: Journey[];
+            routes: JourneyRoute[];
+            timetabledJourneys: TimetabledJourney[];
         }
     >();
 
-    for (const pair of props.pairs) {
-        const group = groups.get(pair.contextLabel);
+    for (const route of props.journeyRoutes) {
+        const group = stationGroups.get(route.contextLabel);
 
         if (group) {
-            group.pairs.push(pair);
+            group.routes.push(route);
         } else {
-            groups.set(pair.contextLabel, {pairs: [pair], journeys: []});
+            stationGroups.set(route.contextLabel, {
+                routes: [route],
+                timetabledJourneys: [],
+            });
         }
     }
 
-    for (const journey of props.journeys) {
-        const group = groups.get(journey.contextLabel);
+    for (const journey of props.timetabledJourneys) {
+        const group = stationGroups.get(journey.contextLabel);
 
         if (group) {
-            group.journeys.push(journey);
+            group.timetabledJourneys.push(journey);
         }
     }
 
-    return Array.from(groups, ([label, group]) => ({
+    return Array.from(stationGroups, ([label, group]) => ({
         label,
         ...group,
-        missingPairs: getStationPairsWithoutJourneys(
-            group.pairs,
-            group.journeys
+        missingRoutes: getRoutesWithoutTimetabledJourneys(
+            group.routes,
+            group.timetabledJourneys
         ),
     }));
 });

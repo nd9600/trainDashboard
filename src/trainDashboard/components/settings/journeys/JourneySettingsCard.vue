@@ -1,7 +1,7 @@
 <template>
     <div class="rounded-lg border border-line bg-paper p-4 shadow-sm">
         <div class="mb-3 flex items-center justify-between gap-3">
-            <strong>{{ stationPairName(pair, groups) }}</strong>
+            <strong>{{ journeyName(journey, stationGroups) }}</strong>
             <button
                 class="appButton appButton--danger px-2 py-1"
                 type="button"
@@ -13,19 +13,19 @@
         </div>
         <div class="space-y-3">
             <LocationReferenceInput
-                v-model="pair.origin"
-                :groups="groups"
+                v-model="journey.origin"
+                :stationGroups="stationGroups"
                 label="Start the journey from"
             />
             <LocationReferenceInput
-                v-model="pair.destination"
-                :groups="groups"
+                v-model="journey.destination"
+                :stationGroups="stationGroups"
                 label="Finish the journey at"
             />
-            <label v-if="pair.viaCrs !== undefined" class="sentenceField">
+            <label v-if="journey.viaCrs !== undefined" class="sentenceField">
                 Change trains at
                 <StationInput
-                    v-model="pair.viaCrs"
+                    v-model="journey.viaCrs"
                     class="sentenceField__control min-w-52 grow"
                 />
                 <button
@@ -37,7 +37,10 @@
                     <AppIcon class="size-4" name="trash" />
                 </button>
             </label>
-            <p v-if="pair.viaCrs !== undefined" class="text-xs text-ink-subtle">
+            <p
+                v-if="journey.viaCrs !== undefined"
+                class="text-xs text-ink-subtle"
+            >
                 The dashboard allows at least 3 minutes to change trains. It
                 cannot check the station’s official minimum connection time.
             </p>
@@ -56,16 +59,16 @@
 
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
-import type {StationGroup, StationPair} from "../../../dto/dashboardConfig.dto";
-import {stationPairName} from "../../../presentation/settingsPresentation";
+import type {StationGroup, Journey} from "../../../dto/dashboardConfig.dto";
+import {journeyName} from "../../../presentation/settingsPresentation";
 import LocationReferenceInput from "./LocationReferenceInput.vue";
 import StationInput from "../stationGroups/StationInput.vue";
 
 defineProps<{
-    groups: StationGroup[];
+    stationGroups: StationGroup[];
 }>();
 
-const pair = defineModel<StationPair>("pair", {required: true});
+const journey = defineModel<Journey>("journey", {required: true});
 
 const emit = defineEmits<{
     changed: [];
@@ -73,12 +76,12 @@ const emit = defineEmits<{
 }>();
 
 function addConnectingStation(): void {
-    pair.value.viaCrs = "";
+    journey.value.viaCrs = "";
     emit("changed");
 }
 
 function removeConnectingStation(): void {
-    delete pair.value.viaCrs;
+    delete journey.value.viaCrs;
     emit("changed");
 }
 </script>

@@ -1,7 +1,10 @@
-import type {Journey} from "../dto/journey.dto";
+import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 
 // Keep journey wording consistent between mobile and desktop views.
-export function mustLeaveText(journey: Journey, currentMinutes: number): string {
+export function mustLeaveText(
+    journey: TimetabledJourney,
+    currentMinutes: number
+): string {
     const minutes = journey.segments.at(0)!.start - currentMinutes;
 
     if (minutes <= 1) {
@@ -12,22 +15,26 @@ export function mustLeaveText(journey: Journey, currentMinutes: number): string 
 }
 
 export function journeyTimelineRange(
-    journeys: Journey[],
+    journeys: TimetabledJourney[],
     currentMinutes: number
 ): {start: number; end: number} {
     const segments = journeys.flatMap((journey) => journey.segments);
 
     return {
         start:
-            Math.min(currentMinutes, ...segments.map((segment) => segment.start)) -
-            5,
+            Math.min(
+                currentMinutes,
+                ...segments.map((segment) => segment.start)
+            ) - 5,
         end:
-            Math.max(currentMinutes, ...segments.map((segment) => segment.end)) +
-            10,
+            Math.max(
+                currentMinutes,
+                ...segments.map((segment) => segment.end)
+            ) + 10,
     };
 }
 
-export function nationalRailJourneyUrl(journey: Journey): string {
+export function nationalRailJourneyUrl(journey: TimetabledJourney): string {
     const departure = journey.segments.find(
         (segment) => segment.kind === "train"
     )!.start;

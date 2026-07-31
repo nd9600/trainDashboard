@@ -31,7 +31,7 @@ import {stationDisplayName} from "../../../stations/stations";
 
 const props = defineProps<{
     modelValue: LocationReference;
-    groups: StationGroup[];
+    stationGroups: StationGroup[];
     label: string;
 }>();
 
@@ -46,7 +46,7 @@ interface LocationOption {
 }
 
 const locationOptions = computed<LocationOption[]>(() =>
-    props.groups.flatMap((group) => [
+    props.stationGroups.flatMap((group) => [
         {
             key: locationKey({type: "group", groupId: group.id}),
             label: `${group.name}`,
