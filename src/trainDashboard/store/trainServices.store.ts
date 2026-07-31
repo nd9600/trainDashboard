@@ -5,7 +5,10 @@ import {
     type CurrentClock,
     getActiveJourneyPlan,
 } from "../journeys/planning/activeJourneyPlan";
-import {getTimetabledJourneys} from "../journeys/timetable/getTimetabledJourneys";
+import {
+    getTimetabledJourneys,
+    type DepartureBoardRequestCache,
+} from "../journeys/timetable/getTimetabledJourneys";
 import {getRoutesWithoutTimetabledJourneys} from "../journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
@@ -60,19 +63,23 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         }
 
         try {
+            const departureBoardRequestCache: DepartureBoardRequestCache =
+                new Map();
             const [newPrimaryJourneys, newSecondaryJourneys] =
                 await Promise.all([
                     getTimetabledJourneys(
                         consumerKey,
                         activeJourneyPlan.value.primaryRoutes,
                         currentMinutes.value,
-                        true
+                        true,
+                        departureBoardRequestCache
                     ),
                     getTimetabledJourneys(
                         consumerKey,
                         activeJourneyPlan.value.secondaryRoutes,
                         currentMinutes.value,
-                        false
+                        false,
+                        departureBoardRequestCache
                     ),
                 ]);
 

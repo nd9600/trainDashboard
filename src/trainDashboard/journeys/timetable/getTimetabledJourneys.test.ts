@@ -2,7 +2,10 @@ import {afterEach, describe, expect, it, vi} from "vitest";
 import type {DepartureBoardRequest} from "../../api/railDataMarketplace.api";
 import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
 import type {JourneyRoute} from "../planning/journeyRoutes";
-import {getTimetabledJourneys} from "./getTimetabledJourneys";
+import {
+    getTimetabledJourneys,
+    type DepartureBoardRequestCache,
+} from "./getTimetabledJourneys";
 
 describe("getTimetabledJourneys", () => {
     afterEach(() => {
@@ -102,6 +105,30 @@ describe("getTimetabledJourneys", () => {
         expect(requests).toEqual([
             expect.objectContaining({timeOffsetMinutes: 15}),
         ]);
+    });
+
+    it("reuses a departure board cache across journey groups", async () => {
+        testApiAt(8 * 60);
+        const departureBoardRequestCache: DepartureBoardRequestCache =
+            new Map();
+        const route = journeyRoute("ANL", "CHC", 15, 8);
+
+        await getTimetabledJourneys(
+            "test-key",
+            [route],
+            8 * 60,
+            false,
+            departureBoardRequestCache
+        );
+        await getTimetabledJourneys(
+            "test-key",
+            [route],
+            8 * 60,
+            false,
+            departureBoardRequestCache
+        );
+
+        expect(departureBoardRequestCache).toHaveLength(1);
     });
 
     it("omits a journeys until timetable data is available for it", async () => {

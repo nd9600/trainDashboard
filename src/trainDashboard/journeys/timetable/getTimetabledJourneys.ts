@@ -16,17 +16,15 @@ interface ServiceLeg extends TrainLeg {
 
 const minimumTransferMinutes = 3;
 
+export type DepartureBoardRequestCache = Map<string, Promise<DepartureBoard>>;
+
 export async function getTimetabledJourneys(
     consumerKey: string,
     journeyRoutes: JourneyRoute[],
     currentMinutes: number,
-    recommendJourney: boolean
+    recommendJourney: boolean,
+    departureBoardRequestCache: DepartureBoardRequestCache = new Map()
 ): Promise<TimetabledJourney[]> {
-    const departureBoardRequestCache = new Map<
-        string,
-        Promise<DepartureBoard>
-    >();
-
     function fetchBoard(
         originCrs: string,
         destinationCrs: string,
