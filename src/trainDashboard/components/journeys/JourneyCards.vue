@@ -38,7 +38,7 @@
                         </span>
                     </p>
                     <p class="mt-1 text-xs text-ink-subtle">
-                        Leave
+                        Leaves
                         {{ formatTime(journey.trainLegs[0]!.departure) }} ·
                         {{ stationName(journey.origin) }} ·
                         {{

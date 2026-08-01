@@ -34,7 +34,7 @@
                         Open API settings
                     </button>
                 </p>
-                <section>
+                <section class="flex flex-col gap-4 border-b-1 border-casa pb-8">
                     <JourneyTimeline
                         v-if="primaryJourneys.length"
                         :journeys="primaryJourneys"
