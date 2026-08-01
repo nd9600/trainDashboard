@@ -56,12 +56,16 @@
             </label>
         </fieldset>
 
+        <p class="rounded bg-surface-muted p-3 text-sm text-ink-muted">
+            {{ schedulePreview }}
+        </p>
+
         <fieldset class="mt-12 space-y-3">
             <legend class="mb-1 font-semibold">
                 Set how each journey appears
             </legend>
             <label
-                v-for="journey in journeys"
+                v-for="journey in props.journeys"
                 :key="journey.id"
                 class="sentenceField"
                 :class="
@@ -87,7 +91,7 @@
                     }}
                 </span>
                 <span class="font-medium">
-                    {{ formatJourneyName(journey, stationGroups) }}
+                    {{ formatJourneyName(journey, props.stationGroups) }}
                 </span>
                 <span>is</span>
                 <select
@@ -116,6 +120,7 @@
 </template>
 
 <script setup lang="ts">
+import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {
     Day,
@@ -125,7 +130,7 @@ import type {
 } from "../../../dto/dashboardConfig.dto";
 import {formatJourneyName} from "../../../presentation/settingsPresentation";
 
-defineProps<{
+const props = defineProps<{
     stationGroups: StationGroup[];
     journeys: Journey[];
 }>();
@@ -135,6 +140,31 @@ const schedule = defineModel<DisplaySchedule>("schedule", {required: true});
 const emit = defineEmits<{
     remove: [];
 }>();
+
+const schedulePreview = computed(() => {
+    const activeDays = days
+        .filter((day) => schedule.value.days.includes(day.value))
+        .map((day) => day.label)
+        .join(", ");
+    const primaryJourneys = props.journeys
+        .filter((journey) =>
+            schedule.value.primaryJourneyIds.includes(journey.id)
+        )
+        .map((journey) => formatJourneyName(journey, props.stationGroups));
+    const secondaryJourneys = props.journeys
+        .filter((journey) =>
+            schedule.value.secondaryJourneyIds.includes(journey.id)
+        )
+        .map((journey) => formatJourneyName(journey, props.stationGroups));
+    const primaryText = primaryJourneys.length
+        ? `${primaryJourneys.join("; ")} is primary`
+        : "no primary journey is selected";
+    const secondaryText = secondaryJourneys.length
+        ? ` ${secondaryJourneys.join("; ")} appears under Other journeys.`
+        : "";
+
+    return `${activeDays || "No days selected"}, ${schedule.value.startsAt}–${schedule.value.endsAt}: ${primaryText}.${secondaryText}`;
+});
 
 type PairPriority = "hidden" | "primary" | "secondary";
 

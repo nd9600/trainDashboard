@@ -12,6 +12,14 @@
             </p>
         </div>
 
+        <p
+            v-if="journeys.length === 0"
+            class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
+            role="status"
+        >
+            Add a journey before you create a priority schedule.
+        </p>
+
         <ScheduleSettingsCard
             v-for="(schedule, scheduleIndex) in schedules"
             :key="schedule.id"
@@ -24,6 +32,7 @@
         <button
             class="appButton appButton--secondary hover:bg-surface-muted"
             type="button"
+            :disabled="journeys.length === 0"
             @click="addSchedule"
         >
             <AppIcon class="size-4" name="plus" />
@@ -71,6 +80,12 @@ function addSchedule(): void {
 }
 
 function removeSchedule(scheduleIndex: number): void {
+    const schedule = schedules.value[scheduleIndex]!;
+
+    if (!window.confirm(`Remove schedule “${schedule.name}”?`)) {
+        return;
+    }
+
     schedules.value = schedules.value.filter(
         (_, index) => index !== scheduleIndex
     );

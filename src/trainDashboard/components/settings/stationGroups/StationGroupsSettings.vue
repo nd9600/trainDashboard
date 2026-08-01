@@ -13,6 +13,10 @@
             </p>
         </div>
 
+        <p v-if="stationGroups.length === 0" class="text-sm text-ink-subtle">
+            Add your first place, such as Home or Work, then add its stations.
+        </p>
+
         <StationGroupSettingsCard
             v-for="(group, groupIndex) in stationGroups"
             :key="group.id"

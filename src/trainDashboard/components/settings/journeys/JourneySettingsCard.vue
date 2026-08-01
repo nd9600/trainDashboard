@@ -50,12 +50,11 @@
             </p>
             <button
                 v-else
-                class="appButton appButton--secondary py-1.5"
+                class="appButton appButton--quiet px-0 py-1 text-primary underline underline-offset-2"
                 type="button"
                 @click="addConnectingStation"
             >
-                <AppIcon class="size-4" name="plus" />
-                Add connecting station
+                Add a change at a station
             </button>
         </div>
     </div>

@@ -64,6 +64,7 @@ import {
     dashboardConfigErrorMessages,
     dashboardConfigSchema,
 } from "../../dto/dashboardConfig.dto";
+import {formatJourneyName} from "../../presentation/settingsPresentation";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import JourneysSettings from "./journeys/JourneysSettings.vue";
 import SchedulesSettings from "./schedules/SchedulesSettings.vue";
@@ -145,7 +146,8 @@ function setValid(value: boolean): void {
 }
 
 function removeGroup(groupIndex: number): void {
-    const groupId = draft.value.stationGroups[groupIndex]!.id;
+    const group = draft.value.stationGroups[groupIndex]!;
+    const groupId = group.id;
     const removedJourneyIds = draft.value.journeys
         .filter(
             (journey) =>
@@ -153,6 +155,24 @@ function removeGroup(groupIndex: number): void {
                 referencesGroup(journey.destination, groupId)
         )
         .map((journey) => journey.id);
+
+    const affectedScheduleCount = draft.value.schedules.filter((schedule) =>
+        removedJourneyIds.some(
+            (journeyId) =>
+                schedule.primaryJourneyIds.includes(journeyId) ||
+                schedule.secondaryJourneyIds.includes(journeyId)
+        )
+    ).length;
+
+    const consequence = removedJourneyIds.length
+        ? ` This will also remove ${removedJourneyIds.length} journey${removedJourneyIds.length === 1 ? "" : "s"} and update ${affectedScheduleCount} schedule${affectedScheduleCount === 1 ? "" : "s"}.`
+        : "";
+
+    if (
+        !window.confirm(`Remove station group “${group.name}”?${consequence}`)
+    ) {
+        return;
+    }
 
     draft.value.stationGroups.splice(groupIndex, 1);
     draft.value.journeys = draft.value.journeys.filter(
@@ -163,7 +183,17 @@ function removeGroup(groupIndex: number): void {
 }
 
 function removeJourney(journeyIndex: number): void {
-    const journeyId = draft.value.journeys[journeyIndex]!.id;
+    const journey = draft.value.journeys[journeyIndex]!;
+    const journeyId = journey.id;
+
+    if (
+        !window.confirm(
+            `Remove journey “${formatJourneyName(journey, draft.value.stationGroups)}”?`
+        )
+    ) {
+        return;
+    }
+
     draft.value.journeys.splice(journeyIndex, 1);
     removeJourneyIdsFromSchedules([journeyId]);
     handleChange();

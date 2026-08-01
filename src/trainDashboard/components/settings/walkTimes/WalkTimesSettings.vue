@@ -13,6 +13,11 @@
             </p>
         </div>
 
+        <p v-if="stationGroups.length === 0" class="text-sm text-ink-subtle">
+            Add station groups first. Walking times will appear here for each
+            station.
+        </p>
+
         <WalkTimeSettingsCard
             v-for="(group, groupIndex) in stationGroups"
             :key="group.id"

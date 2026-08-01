@@ -3,14 +3,11 @@
         <NationalRailLink
             v-for="leg in journey.trainLegs"
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
+            class="max-w-full"
             :originCrs="leg.origin"
             :destinationCrs="leg.destination"
             :departureMinutes="leg.departure"
-            :label="
-                journey.trainLegs.length > 1
-                    ? `${leg.origin} → ${leg.destination}, NRE`
-                    : 'NRE'
-            "
+            :label="`${leg.origin} → ${leg.destination}, NRE`"
         />
     </span>
 </template>

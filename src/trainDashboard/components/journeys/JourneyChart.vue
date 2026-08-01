@@ -30,7 +30,7 @@
                         backgroundColor: stationColour(journey.origin),
                     }"
                 />
-                <div class="leading-tight">
+                <div class="relative leading-tight">
                     <JourneyRouteLabel :journey="journey" />
                     <span
                         v-if="
@@ -42,7 +42,10 @@
                         <AppIcon class="size-3.5" name="clock" />
                         {{ formatMustLeaveMessage(journey, currentMinutes) }}
                     </span>
-                    <JourneyNationalRailLink class="mt-1" :journey="journey" />
+                    <JourneyNationalRailLink
+                        class="absolute top-full left-0 max-w-full flex-wrap whitespace-normal"
+                        :journey="journey"
+                    />
                 </div>
             </div>
         </div>
@@ -53,6 +56,7 @@
             :height="chartHeight"
             role="img"
             aria-label="Comparison of possible train journeys"
+            :aria-describedby="chartDescriptionId"
         >
             <rect
                 class="fill-surface-muted"
@@ -172,11 +176,27 @@
                 now
             </text>
         </svg>
+        <ol :id="chartDescriptionId" class="sr-only">
+            <li v-for="journey in journeys" :key="`description-${journey.id}`">
+                <JourneyRouteLabel :journey="journey" />. Leave
+                {{ formatTime(journey.trainLegs[0]!.departure) }} from
+                {{ stationName(journey.origin) }}. Arrive at
+                {{ stationName(journey.destination) }}
+                {{ journey.arrivalTime ?? journey.railArrivalTime }}.
+                <span v-if="journey.trainLegs.length === 1">Direct train.</span>
+                <span v-else>
+                    {{ journey.trainLegs.length - 1 }} train change<span
+                        v-if="journey.trainLegs.length > 2"
+                        >s</span
+                    >.
+                </span>
+            </li>
+        </ol>
     </div>
 </template>
 
 <script setup lang="ts">
-import {computed} from "vue";
+import {computed, useId} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {formatTime} from "@/utilities/time.utility.ts";
 import type {
@@ -185,6 +205,7 @@ import type {
 } from "../../dto/timetabledJourney.dto";
 import {formatMustLeaveMessage} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
+import {stationName} from "../../stations/stations";
 import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
@@ -197,7 +218,8 @@ const props = defineProps<{
 }>();
 
 const rowStart = 85;
-const rowGap = 72;
+const rowGap = 96;
+const chartDescriptionId = useId();
 
 const chartBottom = computed(
     () => rowStart + (props.journeys.length - 1) * rowGap + 35

@@ -13,6 +13,15 @@
             </p>
         </div>
 
+        <p
+            v-if="stationGroups.length < 2"
+            class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
+            role="status"
+        >
+            Add at least two station groups before you add a journey. A journey
+            needs different start and finish locations.
+        </p>
+
         <JourneySettingsCard
             v-for="(journey, journeyIndex) in journeys"
             :key="journey.id"
@@ -25,6 +34,7 @@
         <button
             class="appButton appButton--primary"
             type="button"
+            :disabled="stationGroups.length < 2"
             @click="addJourney"
         >
             <AppIcon class="size-4" name="plus" />

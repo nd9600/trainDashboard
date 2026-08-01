@@ -1,14 +1,13 @@
 <template>
-    <span>
-        <span
+    <div>
+        <p
             v-for="leg in journey.trainLegs"
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
-            class="block"
         >
             {{ stationName(leg.origin) }} → {{ stationName(leg.destination) }} ·
             {{ formatTime(leg.departure) }}
-        </span>
-    </span>
+        </p>
+    </div>
 </template>
 
 <script setup lang="ts">

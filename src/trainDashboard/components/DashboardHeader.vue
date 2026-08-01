@@ -19,8 +19,7 @@
             >
                 {{ stationName(recommendedJourney.origin) }}
             </span>
-            for
-            {{ stationName(recommendedJourney.destination) }}
+            {{ journeySummary }}
         </p>
         <p class="mt-1 mb-0 text-sm text-ink-subtle">
             It is now {{ formatTime(currentMinutes) }}
@@ -88,5 +87,20 @@ const leaveInString = computed(() => {
 const shouldWalk = computed(() => {
     const firstSegment = recommendedJourney.value?.segments.at(0);
     return firstSegment?.kind === "walk";
+});
+
+const journeySummary = computed(() => {
+    const journey = recommendedJourney.value;
+
+    if (!journey) {
+        return "";
+    }
+
+    const firstTrain = journey.trainLegs.at(0);
+    const finalArrival = journey.arrivalTime ?? journey.railArrivalTime;
+    const changeCount = journey.trainLegs.length - 1;
+    const changes = changeCount === 0 ? "" : `· ${changeCount} change`;
+
+    return `· train ${formatTime(firstTrain!.departure)} · arrive ${stationName(journey.destination)} ${finalArrival}${changes}`;
 });
 </script>

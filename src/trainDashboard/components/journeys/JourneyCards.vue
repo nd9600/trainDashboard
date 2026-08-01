@@ -37,6 +37,19 @@
                             {{ journey.arrivalTime ?? journey.railArrivalTime }}
                         </span>
                     </p>
+                    <p class="mt-1 text-xs text-ink-subtle">
+                        Leave
+                        {{ formatTime(journey.trainLegs[0]!.departure) }} ·
+                        {{ stationName(journey.origin) }} ·
+                        {{
+                            journey.trainLegs.length === 1
+                                ? "direct"
+                                : `${journey.trainLegs.length - 1} change${journey.trainLegs.length === 2 ? "" : "s"}`
+                        }}
+                        <span v-if="!journey.walkingTimesKnown">
+                            · walking time unknown
+                        </span>
+                    </p>
                     <p
                         v-if="
                             journey.recommended ||
@@ -59,6 +72,8 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {formatMustLeaveMessage} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
+import {stationName} from "../../stations/stations";
+import {formatTime} from "@/utilities/time.utility.ts";
 import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 

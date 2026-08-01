@@ -3,7 +3,7 @@
         <button
             class="appButton appButton--secondary gap-2 rounded-lg border-line bg-surface p-1 text-xs text-ink-muted shadow-sm hover:bg-surface-muted sm:px-3 sm:py-2 sm:text-base"
             type="button"
-            @click="isOpen = true"
+            @click="openSettings"
         >
             <AppIcon class="size-4" name="settings" />
             <span class="max-sm:hidden">Settings</span>
@@ -101,6 +101,15 @@ const sections = [
     {value: "api", label: "API", icon: "key" as const},
 ];
 
+function openSettings(): void {
+    isOpen.value = true;
+}
+
+function openApiSettings(): void {
+    activeSection.value = "api";
+    openSettings();
+}
+
 function saveSettings(): void {
     if (hasUnsavedJourneyConfiguration.value) {
         journeySettings.value?.save();
@@ -121,4 +130,9 @@ function closeSettings(): void {
     apiSettings.value?.cancel();
     isOpen.value = false;
 }
+
+defineExpose({
+    open: openSettings,
+    openApiSettings,
+});
 </script>
