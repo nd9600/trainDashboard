@@ -1,7 +1,7 @@
 <template>
     <div class="rounded-lg border border-line bg-paper p-4 shadow-sm">
         <div class="mb-3 flex items-center justify-between gap-3">
-            <strong>{{ formatJourneyName(journey, stationGroups) }}</strong>
+            <strong>{{ getJourneyLabel(journey, stationGroups) }}</strong>
             <button
                 class="appButton appButton--danger px-2 py-1"
                 type="button"
@@ -64,7 +64,7 @@
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {StationGroup, Journey} from "../../../dto/dashboardConfig.dto";
-import {formatJourneyName} from "../../../presentation/settingsPresentation";
+import {getJourneyLabel} from "../../../journeys/journeyLabels";
 import LocationReferenceInput from "./LocationReferenceInput.vue";
 import StationInput from "../stationGroups/StationInput.vue";
 

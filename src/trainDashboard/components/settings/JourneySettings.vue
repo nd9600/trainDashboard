@@ -64,7 +64,7 @@ import {
     dashboardConfigErrorMessages,
     dashboardConfigSchema,
 } from "../../dto/dashboardConfig.dto";
-import {formatJourneyName} from "../../presentation/settingsPresentation";
+import {getJourneyLabel} from "../../journeys/journeyLabels";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import JourneysSettings from "./journeys/JourneysSettings.vue";
 import SchedulesSettings from "./schedules/SchedulesSettings.vue";
@@ -188,7 +188,7 @@ function removeJourney(journeyIndex: number): void {
 
     if (
         !window.confirm(
-            `Remove journey “${formatJourneyName(journey, draft.value.stationGroups)}”?`
+            `Remove journey “${getJourneyLabel(journey, draft.value.stationGroups)}”?`
         )
     ) {
         return;

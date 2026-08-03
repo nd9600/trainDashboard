@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import {computed} from "vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
-import {getTimelineRange} from "../../presentation/journeyPresentation";
+import {getJourneyTimelineRange} from "../../journeys/journeyTimes";
 import JourneyCards from "./JourneyCards.vue";
 import JourneyCharts from "./JourneyCharts.vue";
 
@@ -32,7 +32,7 @@ const props = defineProps<{
 
 const displayedJourneys = computed(() => props.journeys.slice(0, 6));
 const timelineRange = computed(() =>
-    getTimelineRange(displayedJourneys.value, props.currentMinutes)
+    getJourneyTimelineRange(displayedJourneys.value, props.currentMinutes)
 );
 const timelineStart = computed(() => timelineRange.value.start);
 const timelineEnd = computed(() => timelineRange.value.end);

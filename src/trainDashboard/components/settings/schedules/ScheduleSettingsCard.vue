@@ -91,7 +91,7 @@
                     }}
                 </span>
                 <span class="font-medium">
-                    {{ formatJourneyName(journey, props.stationGroups) }}
+                    {{ getJourneyLabel(journey, props.stationGroups) }}
                 </span>
                 <span>is</span>
                 <select
@@ -128,7 +128,7 @@ import type {
     StationGroup,
     Journey,
 } from "../../../dto/dashboardConfig.dto";
-import {formatJourneyName} from "../../../presentation/settingsPresentation";
+import {getJourneyLabel} from "../../../journeys/journeyLabels";
 
 const props = defineProps<{
     stationGroups: StationGroup[];
@@ -150,12 +150,12 @@ const schedulePreview = computed(() => {
         .filter((journey) =>
             schedule.value.primaryJourneyIds.includes(journey.id)
         )
-        .map((journey) => formatJourneyName(journey, props.stationGroups));
+        .map((journey) => getJourneyLabel(journey, props.stationGroups));
     const secondaryJourneys = props.journeys
         .filter((journey) =>
             schedule.value.secondaryJourneyIds.includes(journey.id)
         )
-        .map((journey) => formatJourneyName(journey, props.stationGroups));
+        .map((journey) => getJourneyLabel(journey, props.stationGroups));
     const primaryText = primaryJourneys.length
         ? `${primaryJourneys.join("; ")} is primary`
         : "no primary journey is selected";

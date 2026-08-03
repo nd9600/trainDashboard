@@ -1,11 +1,11 @@
 import type {
+    Journey,
     LocationReference,
     StationGroup,
-    Journey,
 } from "../dto/dashboardConfig.dto";
 import {stationDisplayName} from "../stations/stations";
 
-export function formatLocationReference(
+export function getLocationLabel(
     location: LocationReference,
     stationGroups: StationGroup[]
 ): string {
@@ -20,11 +20,11 @@ export function formatLocationReference(
     return group?.name ?? "Missing group";
 }
 
-export function formatJourneyName(
+export function getJourneyLabel(
     journey: Journey,
     stationGroups: StationGroup[]
 ): string {
-    const route = `${formatLocationReference(journey.origin, stationGroups)} → ${formatLocationReference(journey.destination, stationGroups)}`;
+    const route = `${getLocationLabel(journey.origin, stationGroups)} → ${getLocationLabel(journey.destination, stationGroups)}`;
 
     return journey.viaCrs
         ? `${route}, changing at ${stationDisplayName(journey.viaCrs)}`

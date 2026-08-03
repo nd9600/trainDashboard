@@ -16,7 +16,7 @@
                 class="mb-2 flex items-center gap-1 text-xs font-bold text-danger"
             >
                 <AppIcon class="size-3.5" name="clock" />
-                {{ formatMustLeaveMessage(journey, currentMinutes) }}
+                {{ getMustLeaveMessage(journey, currentMinutes) }}
             </p>
             <p
                 v-if="!journey.walkingTimesKnown"
@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
-import {formatMustLeaveMessage} from "../../presentation/journeyPresentation";
+import {getMustLeaveMessage} from "../../journeys/journeyTimes";
 import {stationColour} from "../../stations/stationColours";
 import JourneyItinerary from "./JourneyItinerary.vue";
 

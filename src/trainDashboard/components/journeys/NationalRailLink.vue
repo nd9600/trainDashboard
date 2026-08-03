@@ -2,7 +2,11 @@
     <a
         class="inline-flex w-fit items-center gap-0.5 text-xs font-medium text-ink-subtle underline decoration-line-strong underline-offset-2 hover:text-primary"
         :href="
-            buildNationalRailUrl(originCrs, destinationCrs, departureMinutes)
+            getNationalRailJourneyUrl(
+                originCrs,
+                destinationCrs,
+                departureMinutes
+            )
         "
         :aria-label="`${label} on National Rail Enquiries`"
         rel="noopener noreferrer"
@@ -13,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import {buildNationalRailUrl} from "../../presentation/journeyPresentation";
+import {getNationalRailJourneyUrl} from "../../journeys/nationalRailUrls";
 
 withDefaults(
     defineProps<{
