@@ -19,29 +19,34 @@
             </button>
         </div>
 
-        <fieldset>
-            <legend>Use this schedule on</legend>
-            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+        <fieldset class="sentenceField whitespace-normal flex-col items-start">
+            <legend class="sr-only">Schedule days</legend>
+            <p>Use this schedule on</p>
+            <div class="flex flex-wrap gap-2 sm:gap-4">
                 <label
                     v-for="day in days"
                     :key="day.value"
-                    class="flex items-center gap-1 text-sm"
+                    class="inline-flex cursor-pointer"
                 >
                     <input
                         v-model="schedule.days"
-                        class="size-4 accent-primary"
+                        class="peer sr-only"
                         type="checkbox"
                         :value="day.value"
                     />
+                    <span
+                        class="rounded-full border border-line-strong bg-paper px-2.5 py-1 text-sm text-ink transition-colors hover:bg-surface-muted hover:border-surface-muted peer-checked:border-primary peer-checked:bg-primary peer-checked:text-paper peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary"
+                    >
                     {{ day.label }}
+                </span>
                 </label>
             </div>
         </fieldset>
 
-        <fieldset class="sentenceField">
+        <fieldset class="sentenceField whitespace-normal">
             <legend class="sr-only">Schedule times</legend>
             <label class="inline-flex items-baseline gap-2">
-                <span>This schedule runs from</span>
+                <span>from</span>
                 <input
                     v-model="schedule.startsAt"
                     class="appInput sentenceField__control w-24"
@@ -65,10 +70,6 @@
                 />
             </label>
         </fieldset>
-
-        <p class="text-sm font-medium text-ink-muted">
-            {{ activeDaysText }} · {{ schedule.startsAt }}–{{ schedule.endsAt }}
-        </p>
 
         <fieldset class="space-y-5 border-t border-line pt-4">
             <legend class="mb-3 font-semibold">Journey priorities</legend>
@@ -168,8 +169,6 @@ const emit = defineEmits<{
     remove: [];
 }>();
 
-const activeDaysText = computed(() => getActiveDaysText(schedule.value.days));
-
 const primaryJourneys = computed(() =>
     props.journeys.filter((journey) =>
         schedule.value.primaryJourneyIds.includes(journey.id)
@@ -229,44 +228,5 @@ function updateJourneyPriority(
     if (priority === "secondary") {
         schedule.value.secondaryJourneyIds.push(journeyId);
     }
-}
-
-function getActiveDaysText(activeDays: Day[]): string {
-    const selectedDays = days.filter((day) => activeDays.includes(day.value));
-
-    if (selectedDays.length === 0) {
-        return "No days selected";
-    }
-
-    if (selectedDays.length === days.length) {
-        return "Every day";
-    }
-
-    const ranges: Array<(typeof days)[number][]> = [];
-
-    selectedDays.forEach((day) => {
-        const currentRange = ranges.at(-1);
-        const previousDay = currentRange?.at(-1);
-        const daysAreConsecutive =
-            previousDay && days.indexOf(day) === days.indexOf(previousDay) + 1;
-
-        if (currentRange && daysAreConsecutive) {
-            currentRange.push(day);
-            return;
-        }
-
-        ranges.push([day]);
-    });
-
-    return ranges
-        .map((range) => {
-            const firstDay = range.at(0)!;
-            const lastDay = range.at(-1)!;
-
-            return range.length === 1
-                ? firstDay.label
-                : `${firstDay.label}–${lastDay.label}`;
-        })
-        .join(", ");
 }
 </script>
