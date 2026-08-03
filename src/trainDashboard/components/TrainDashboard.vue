@@ -36,9 +36,13 @@
                 </p>
                 <section
                     class="flex flex-col gap-4"
-                    :class="activeJourneyPlan.secondaryRoutes.length > 0 ? ' border-b-1 border-casa pb-8' : ''"
+                    :class="
+                        activeJourneyPlan.secondaryRoutes.length > 0
+                            ? ' border-b-1 border-casa pb-8'
+                            : ''
+                    "
                 >
-                    <JourneyTimeline
+                    <JourneyTimelines
                         v-if="primaryJourneys.length"
                         :journeys="primaryJourneys"
                         :currentMinutes="currentMinutes"
@@ -66,7 +70,7 @@
 import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import NationalRailRouteLinks from "./journeys/NationalRailRouteLinks.vue";
-import JourneyTimeline from "./journeys/JourneyTimeline.vue";
+import JourneyTimelines from "./journeys/JourneyTimelines.vue";
 import OtherJourneys from "./journeys/OtherJourneys.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";
 import {useTrainServicesStore} from "../store/trainServices.store";

@@ -1,54 +1,7 @@
 <template>
-    <div class="relative grid-cols-[max-content_minmax(0,1fr)] gap-x-4">
-        <div
-            v-for="(journey, index) in journeys"
-            :key="`highlight-${journey.id}`"
-            class="pointer-events-none absolute inset-x-0 rounded-lg bg-highlight"
-            :class="journey.recommended ? 'block' : 'hidden'"
-            :style="{
-                top: `${rowStart + index * rowGap - rowGap / 2 + rowMargin}px`,
-                height: `${rowGap - rowMargin * 2}px`,
-            }"
-        />
-
-        <div class="relative z-10">
-            <div :style="{height: `${rowStart - rowGap / 2}px`}" />
-            <div
-                v-for="journey in journeys"
-                :key="journey.id"
-                class="flex max-w-96 items-center gap-2 px-2"
-                :style="{
-                    height: `${rowGap}px`,
-                }"
-            >
-                <i
-                    class="size-2.5 shrink-0 rounded-full"
-                    :style="{
-                        backgroundColor: stationColour(journey.origin),
-                    }"
-                />
-                <div class="min-w-0">
-                    <JourneyDesktopItinerary :journey="journey" />
-                    <span
-                        v-if="
-                            journey.recommended ||
-                            journey.id === mustLeaveJourneyId
-                        "
-                        class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
-                    >
-                        <AppIcon class="size-3.5" name="clock" />
-                        {{ formatMustLeaveMessage(journey, currentMinutes) }}
-                    </span>
-                    <JourneyNationalRailLink
-                        class="mt-1 max-w-full flex-wrap"
-                        :journey="journey"
-                    />
-                </div>
-            </div>
-        </div>
-
+    <div class="relative z-10 min-w-0">
         <svg
-            class="relative z-10 block w-full overflow-visible"
+            class="block w-full overflow-visible"
             width="100%"
             :height="chartHeight"
             role="img"
@@ -173,6 +126,7 @@
                 now
             </text>
         </svg>
+
         <ol :id="chartDescriptionId" class="sr-only">
             <li v-for="journey in journeys" :key="`description-${journey.id}`">
                 <JourneyRouteLabel :journey="journey" />. Leave
@@ -194,34 +148,30 @@
 
 <script setup lang="ts">
 import {computed, useId} from "vue";
-import AppIcon from "@/components/AppIcon.vue";
 import {formatTime} from "@/utilities/time.utility.ts";
 import type {
-    TimetabledJourney,
     SegmentKind,
+    TimetabledJourney,
 } from "../../dto/timetabledJourney.dto";
-import {formatMustLeaveMessage} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
-import JourneyDesktopItinerary from "./JourneyDesktopItinerary.vue";
-import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 const props = defineProps<{
     journeys: TimetabledJourney[];
     currentMinutes: number;
-    mustLeaveJourneyId?: string;
     windowStart: number;
     windowEnd: number;
+    rowStart: number;
+    rowGap: number;
 }>();
 
-const rowGap = 136;
-const rowMargin = 4;
-const rowStart = 55 + rowGap / 2;
 const chartDescriptionId = useId();
-
 const chartBottom = computed(
-    () => rowStart + (props.journeys.length - 1) * rowGap + rowGap / 2
+    () =>
+        props.rowStart +
+        (props.journeys.length - 1) * props.rowGap +
+        props.rowGap / 2
 );
 const chartHeight = computed(() => chartBottom.value + 30);
 const tickInterval = computed(() => {

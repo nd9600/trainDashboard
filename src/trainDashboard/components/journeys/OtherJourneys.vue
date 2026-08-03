@@ -22,7 +22,7 @@
                 <h2 class="mb-2 font-display text-base max-sm:px-4 sm:text-lg">
                     {{ journeyGroup.label }}
                 </h2>
-                <JourneyTimeline
+                <JourneyTimelines
                     v-if="journeyGroup.timetabledJourneys.length"
                     :journeys="journeyGroup.timetabledJourneys"
                     :currentMinutes="currentMinutes"
@@ -51,7 +51,7 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "../../journeys/planning/journeyRoutes";
 import {getRoutesWithoutTimetabledJourneys} from "../../journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
-import JourneyTimeline from "./JourneyTimeline.vue";
+import JourneyTimelines from "./JourneyTimelines.vue";
 import NationalRailRouteLinks from "./NationalRailRouteLinks.vue";
 
 const props = defineProps<{

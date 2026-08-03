@@ -6,7 +6,7 @@
         :mustLeaveJourneyId="mustLeaveJourneyId"
         :flush="flushOnMobile"
     />
-    <JourneyChart
+    <JourneyCharts
         class="hidden sm:grid"
         :journeys="displayedJourneys"
         :currentMinutes="currentMinutes"
@@ -21,7 +21,7 @@ import {computed} from "vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {getTimelineRange} from "../../presentation/journeyPresentation";
 import JourneyCards from "./JourneyCards.vue";
-import JourneyChart from "./JourneyChart.vue";
+import JourneyCharts from "./JourneyCharts.vue";
 
 const props = defineProps<{
     journeys: TimetabledJourney[];
