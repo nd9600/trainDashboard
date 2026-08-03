@@ -1,5 +1,5 @@
 <template>
-    <ol :aria-label="`Itinerary for ${journey.contextLabel}`" class="mt-2">
+    <ol class="mt-2">
         <li
             v-for="step in itinerarySteps"
             :key="step.id"
@@ -8,9 +8,7 @@
             <time class="py-3 text-right text-xs font-semibold text-ink">
                 {{ step.time === undefined ? "" : formatTime(step.time) }}
             </time>
-            <div
-                class="border-l pl-2 py-3 flex gap-2 items-start border-line"
-            >
+            <div class="border-l pl-2 py-3 flex gap-2 items-start border-line">
                 <div
                     class="flex size-4 items-center justify-center rounded-full bg-paper text-primary"
                 >
@@ -19,7 +17,11 @@
                 <div>
                     <p
                         class="leading-tight text-ink-muted"
-                        :class="['change', 'walk'].includes(step.kind) ? 'text-xs' : ''"
+                        :class="
+                            ['change', 'walk'].includes(step.kind)
+                                ? 'text-xs'
+                                : ''
+                        "
                     >
                         {{ step.label }}
                         <strong

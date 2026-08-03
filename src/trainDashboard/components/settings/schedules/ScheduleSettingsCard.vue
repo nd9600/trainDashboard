@@ -57,7 +57,33 @@
         </fieldset>
 
         <p class="rounded bg-surface-muted p-3 text-sm text-ink-muted">
-            {{ schedulePreview }}
+            {{ activeDaysText }}, {{ schedule.startsAt }}–{{ schedule.endsAt }}:
+            <template v-if="primaryJourneyLabels.length">
+                <template
+                    v-for="(details, index) in primaryJourneyLabels"
+                    :key="`primary-${index}`"
+                >
+                    <span v-if="index">; </span>
+                    <JourneyLabel :details="details" />
+                </template>
+                {{ primaryJourneyLabels.length === 1 ? " is" : " are" }}
+                primary.
+            </template>
+            <template v-else>no primary journey is selected.</template>
+            <template v-if="secondaryJourneyLabels.length">
+                {{ " " }}
+                <template
+                    v-for="(details, index) in secondaryJourneyLabels"
+                    :key="`secondary-${index}`"
+                >
+                    <span v-if="index">; </span>
+                    <JourneyLabel :details="details" />
+                </template>
+                {{
+                    secondaryJourneyLabels.length === 1 ? " appears" : " appear"
+                }}
+                under Other journeys.
+            </template>
         </p>
 
         <fieldset class="mt-12 space-y-3">
@@ -91,7 +117,11 @@
                     }}
                 </span>
                 <span class="font-medium">
-                    {{ getJourneyLabel(journey, props.stationGroups) }}
+                    <JourneyLabel
+                        :details="
+                            getJourneyLabelDetails(journey, props.stationGroups)
+                        "
+                    />
                 </span>
                 <span>is</span>
                 <select
@@ -128,7 +158,11 @@ import type {
     StationGroup,
     Journey,
 } from "../../../dto/dashboardConfig.dto";
-import {getJourneyLabel} from "../../../journeys/journeyLabels";
+import {
+    getJourneyLabelDetails,
+    type JourneyLabelDetails,
+} from "../../../journeys/journeyLabels";
+import JourneyLabel from "../../journeys/JourneyLabel.vue";
 
 const props = defineProps<{
     stationGroups: StationGroup[];
@@ -141,30 +175,29 @@ const emit = defineEmits<{
     remove: [];
 }>();
 
-const schedulePreview = computed(() => {
-    const activeDays = days
-        .filter((day) => schedule.value.days.includes(day.value))
-        .map((day) => day.label)
-        .join(", ");
-    const primaryJourneys = props.journeys
+const activeDaysText = computed(
+    () =>
+        days
+            .filter((day) => schedule.value.days.includes(day.value))
+            .map((day) => day.label)
+            .join(", ") || "No days selected"
+);
+
+const primaryJourneyLabels = computed<JourneyLabelDetails[]>(() =>
+    props.journeys
         .filter((journey) =>
             schedule.value.primaryJourneyIds.includes(journey.id)
         )
-        .map((journey) => getJourneyLabel(journey, props.stationGroups));
-    const secondaryJourneys = props.journeys
+        .map((journey) => getJourneyLabelDetails(journey, props.stationGroups))
+);
+
+const secondaryJourneyLabels = computed<JourneyLabelDetails[]>(() =>
+    props.journeys
         .filter((journey) =>
             schedule.value.secondaryJourneyIds.includes(journey.id)
         )
-        .map((journey) => getJourneyLabel(journey, props.stationGroups));
-    const primaryText = primaryJourneys.length
-        ? `${primaryJourneys.join("; ")} is primary`
-        : "no primary journey is selected";
-    const secondaryText = secondaryJourneys.length
-        ? ` ${secondaryJourneys.join("; ")} appears under Other journeys.`
-        : "";
-
-    return `${activeDays || "No days selected"}, ${schedule.value.startsAt}–${schedule.value.endsAt}: ${primaryText}.${secondaryText}`;
-});
+        .map((journey) => getJourneyLabelDetails(journey, props.stationGroups))
+);
 
 type PairPriority = "hidden" | "primary" | "secondary";
 

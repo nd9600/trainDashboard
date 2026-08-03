@@ -8,7 +8,7 @@
                 class="sentenceField"
             >
                 Walking between {{ group.name }} and
-                {{ stationDisplayName(station.crs) }} takes
+                <StationLabel :crs="station.crs" /> takes
                 <input
                     class="appInput sentenceField__control w-20 grow-0"
                     :min="0"
@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import type {StationGroup} from "../../../dto/dashboardConfig.dto";
-import {stationDisplayName} from "../../../stations/stations";
+import StationLabel from "../../stations/StationLabel.vue";
 
 const group = defineModel<StationGroup>("group", {required: true});
 

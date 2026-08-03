@@ -18,7 +18,6 @@ function journeyRoute(origin: string, destination: string): JourneyRoute {
     return {
         id: `home-to-wendys:${origin}-${destination}`,
         journeyId: "home-to-wendys",
-        contextLabel: "Home to Wendy's",
         origin: {crs: origin, locationName: "Home"},
         destination: {crs: destination, locationName: "Wendy's"},
     };
@@ -27,9 +26,11 @@ function journeyRoute(origin: string, destination: string): JourneyRoute {
 function journey(origin: string, destination: string): TimetabledJourney {
     return {
         id: `${origin}-${destination}:1700`,
+        journeyId: "home-to-wendys",
         origin,
+        originLocationName: "Home",
         destination,
-        contextLabel: "Home to Wendy's",
+        destinationLocationName: "Wendy's",
         railArrivalTime: "18:00",
         walkingTimesKnown: false,
         segments: [{kind: "train", start: 17 * 60, end: 18 * 60}],

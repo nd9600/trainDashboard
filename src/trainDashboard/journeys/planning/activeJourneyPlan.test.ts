@@ -72,7 +72,7 @@ describe("getActiveJourneyPlan", () => {
         ).toEqual(["ANL-GLQ"]);
     });
 
-    it("preserves the configured route name on journey routes", () => {
+    it("preserves the configured connecting station on journey routes", () => {
         const config = structuredClone(defaultDashboardConfig);
         config.journeys[0]!.viaCrs = "GLQ";
 
@@ -86,9 +86,6 @@ describe("getActiveJourneyPlan", () => {
             "GLQ",
             "GLQ",
         ]);
-        expect(activePlan.primaryRoutes[0]?.contextLabel).toBe(
-            "Home, through Anniesland (ANL) → Work, changing at Glasgow Queen Street (GLQ)"
-        );
     });
 
     it("prioritises travel from home to Glasgow at weekends", () => {

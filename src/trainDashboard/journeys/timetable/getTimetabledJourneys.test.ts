@@ -20,9 +20,11 @@ describe("getTimetabledJourneys", () => {
         );
 
         expect(journeys[0]).toMatchObject({
+            journeyId: "journeys",
             origin: "ANL",
+            originLocationName: "Home",
             destination: "CHC",
-            contextLabel: "Home to Work",
+            destinationLocationName: "Work",
             arrivalLabel: "Work",
             arrivalTime: "8:44",
             walkingTimesKnown: true,
@@ -330,7 +332,6 @@ function journeyRoute(
     return {
         id: `journeys:${origin}-${destination}`,
         journeyId: "journeys",
-        contextLabel: "Home to Work",
         origin: {
             crs: origin,
             walkMinutes: originWalkMinutes,

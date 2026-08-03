@@ -3,7 +3,6 @@ import type {
     StationGroup,
     Journey,
 } from "../../dto/dashboardConfig.dto";
-import {getJourneyLabel} from "../journeyLabels";
 
 export interface StationEndpoint {
     crs: string;
@@ -14,7 +13,6 @@ export interface StationEndpoint {
 export interface JourneyRoute {
     id: string;
     journeyId: string;
-    contextLabel: string;
     origin: StationEndpoint;
     destination: StationEndpoint;
     viaCrs?: string;
@@ -50,7 +48,6 @@ export function getRoutesForJourneys(
                 .map((destination) => ({
                     id: `${journey.id}:${origin.crs}-${destination.crs}`,
                     journeyId: journey.id,
-                    contextLabel: getJourneyLabel(journey, stationGroups),
                     origin,
                     destination,
                     viaCrs: journey.viaCrs,

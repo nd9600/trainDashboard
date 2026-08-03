@@ -16,9 +16,11 @@ export interface TrainLeg {
 
 export interface TimetabledJourney {
     id: string;
+    journeyId: string;
     origin: string;
+    originLocationName: string;
     destination: string;
-    contextLabel: string;
+    destinationLocationName: string;
     railArrivalTime: string;
     arrivalLabel?: string;
     arrivalTime?: string;

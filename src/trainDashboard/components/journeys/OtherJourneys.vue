@@ -31,7 +31,10 @@
                             class="appButton appButton--quiet max-w-full px-2 py-1 text-left text-xs"
                             :href="`#${journeyGroup.anchorId}`"
                         >
-                            {{ index + 1 }}. {{ journeyGroup.label }}
+                            {{ index + 1 }}.
+                            <JourneyLabel
+                                :details="journeyGroup.labelDetails"
+                            />
                         </a>
                     </li>
                 </ol>
@@ -43,8 +46,10 @@
                 class="scroll-mt-6 max-sm:py-4 not-last:border-b-1 border-casa pb-8"
             >
                 <div class="flex justify-between max-w-full">
-                    <h2 class="mb-2 font-display text-base max-sm:px-4 sm:text-lg">
-                        {{ journeyGroup.label }}
+                    <h2
+                        class="mb-2 font-display text-base max-sm:px-4 sm:text-lg"
+                    >
+                        <JourneyLabel :details="journeyGroup.labelDetails" />
                     </h2>
                     <a
                         class="appButton appButton--quiet px-2 py-1 text-left text-xl"
@@ -82,7 +87,9 @@ import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "../../journeys/planning/journeyRoutes";
+import {getRouteLabelDetails} from "../../journeys/journeyLabels";
 import {getRoutesWithoutTimetabledJourneys} from "../../journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
+import JourneyLabel from "./JourneyLabel.vue";
 import JourneyTimelines from "./JourneyTimelines.vue";
 import NationalRailRouteLinks from "./NationalRailRouteLinks.vue";
 
@@ -96,7 +103,7 @@ const firstSecondaryJourneyId = computed(
     () => props.timetabledJourneys.at(0)?.id
 );
 const journeyGroups = computed(() => {
-    const stationGroups = new Map<
+    const journeyGroupsById = new Map<
         string,
         {
             routes: JourneyRoute[];
@@ -105,12 +112,12 @@ const journeyGroups = computed(() => {
     >();
 
     for (const route of props.journeyRoutes) {
-        const group = stationGroups.get(route.contextLabel);
+        const group = journeyGroupsById.get(route.journeyId);
 
         if (group) {
             group.routes.push(route);
         } else {
-            stationGroups.set(route.contextLabel, {
+            journeyGroupsById.set(route.journeyId, {
                 routes: [route],
                 timetabledJourneys: [],
             });
@@ -118,21 +125,25 @@ const journeyGroups = computed(() => {
     }
 
     for (const journey of props.timetabledJourneys) {
-        const group = stationGroups.get(journey.contextLabel);
+        const group = journeyGroupsById.get(journey.journeyId);
 
         if (group) {
             group.timetabledJourneys.push(journey);
         }
     }
 
-    return Array.from(stationGroups, ([label, group]) => ({
-        label,
-        anchorId: `other-journey-${group.routes.at(0)!.journeyId}`,
-        ...group,
-        missingRoutes: getRoutesWithoutTimetabledJourneys(
-            group.routes,
-            group.timetabledJourneys
-        ),
-    }));
+    return Array.from(journeyGroupsById, ([journeyId, group]) => {
+        const firstRoute = group.routes.at(0)!;
+
+        return {
+            anchorId: `other-journey-${journeyId}`,
+            labelDetails: getRouteLabelDetails(firstRoute),
+            ...group,
+            missingRoutes: getRoutesWithoutTimetabledJourneys(
+                group.routes,
+                group.timetabledJourneys
+            ),
+        };
+    });
 });
 </script>

@@ -6,9 +6,11 @@ describe("getJourneyTimelineRange", () => {
     it("covers the earliest segment start and latest segment end", () => {
         const journey: TimetabledJourney = {
             id: "connected",
+            journeyId: "home-to-wendys",
             origin: "KVD",
+            originLocationName: "Home",
             destination: "EDB",
-            contextLabel: "Home to Wendy's",
+            destinationLocationName: "Wendy's",
             railArrivalTime: "18:00",
             walkingTimesKnown: true,
             segments: [

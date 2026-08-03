@@ -3,30 +3,93 @@ import type {
     LocationReference,
     StationGroup,
 } from "../dto/dashboardConfig.dto";
-import {stationDisplayName} from "../stations/stations";
+import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
+import type {JourneyRoute} from "./planning/journeyRoutes";
+import {stationName} from "../stations/stations";
 
-export function getLocationLabel(
-    location: LocationReference,
-    stationGroups: StationGroup[]
-): string {
-    const group = stationGroups.find(
-        (candidate) => candidate.id === location.groupId
-    );
-
-    if (location.type === "station") {
-        return `${group?.name ?? "Missing group"}, through ${stationDisplayName(location.crs)}`;
-    }
-
-    return group?.name ?? "Missing group";
+export interface JourneyLabelEndpoint {
+    name: string;
+    stationCrs?: string;
 }
 
-export function getJourneyLabel(
+export interface JourneyLabelDetails {
+    origin: JourneyLabelEndpoint;
+    destination: JourneyLabelEndpoint;
+    connectingStationCrs?: string;
+}
+
+export function getJourneyLabelDetails(
     journey: Journey,
     stationGroups: StationGroup[]
-): string {
-    const route = `${getLocationLabel(journey.origin, stationGroups)} → ${getLocationLabel(journey.destination, stationGroups)}`;
+): JourneyLabelDetails {
+    const stationGroupsById = new Map(
+        stationGroups.map((group) => [group.id, group])
+    );
 
-    return journey.viaCrs
-        ? `${route}, changing at ${stationDisplayName(journey.viaCrs)}`
-        : route;
+    return {
+        origin: getEndpointDetails(journey.origin, stationGroupsById),
+        destination: getEndpointDetails(journey.destination, stationGroupsById),
+        connectingStationCrs: journey.viaCrs,
+    };
+}
+
+export function getRouteLabelDetails(route: JourneyRoute): JourneyLabelDetails {
+    return {
+        origin: {name: route.origin.locationName},
+        destination: {name: route.destination.locationName},
+        connectingStationCrs: route.viaCrs,
+    };
+}
+
+export function getTimetabledJourneyLabelDetails(
+    journey: TimetabledJourney
+): JourneyLabelDetails {
+    return {
+        origin: {name: journey.originLocationName},
+        destination: {name: journey.destinationLocationName},
+        connectingStationCrs:
+            journey.trainLegs.length > 1
+                ? journey.trainLegs.at(0)?.destination
+                : undefined,
+    };
+}
+
+export function getJourneyLabelText(details: JourneyLabelDetails): string {
+    const origin = getEndpointText(details.origin, "origin");
+    const destination = getEndpointText(details.destination, "destination");
+    const connection = details.connectingStationCrs
+        ? `, connecting through ${stationName(details.connectingStationCrs)}`
+        : "";
+
+    return `${origin} → ${destination}${connection}`;
+}
+
+function getEndpointDetails(
+    location: LocationReference,
+    stationGroupsById: Map<string, StationGroup>
+): JourneyLabelEndpoint {
+    const group = stationGroupsById.get(location.groupId)!;
+
+    return {
+        name: group.name,
+        stationCrs:
+            location.type === "station" && group.stations.length > 1
+                ? location.crs
+                : undefined,
+    };
+}
+
+function getEndpointText(
+    endpoint: JourneyLabelEndpoint,
+    position: "origin" | "destination"
+): string {
+    if (!endpoint.stationCrs) {
+        return endpoint.name;
+    }
+
+    const station = stationName(endpoint.stationCrs);
+
+    return position === "origin"
+        ? `${endpoint.name}, through ${station}`
+        : `${endpoint.name}, arriving at ${station}`;
 }

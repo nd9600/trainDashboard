@@ -10,7 +10,13 @@
             ]"
             :style="{borderLeftColor: stationColour(journey.origin)}"
         >
-            <h3 class="sr-only">{{ journey.contextLabel }}</h3>
+            <h3 class="sr-only">
+                {{
+                    getJourneyLabelText(
+                        getTimetabledJourneyLabelDetails(journey)
+                    )
+                }}
+            </h3>
             <p
                 v-if="journey.recommended || journey.id === mustLeaveJourneyId"
                 class="mb-2 flex items-center gap-1 text-xs font-bold text-danger"
@@ -32,6 +38,10 @@
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
+import {
+    getJourneyLabelText,
+    getTimetabledJourneyLabelDetails,
+} from "../../journeys/journeyLabels";
 import {getMustLeaveMessage} from "../../journeys/journeyTimes";
 import {stationColour} from "../../stations/stationColours";
 import JourneyItinerary from "./JourneyItinerary.vue";

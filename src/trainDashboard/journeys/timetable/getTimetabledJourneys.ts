@@ -270,9 +270,11 @@ function createJourney(
 
     return {
         id: `${route.id}:${serviceLegs.map((leg) => leg.serviceId).join(":")}`,
+        journeyId: route.journeyId,
         origin: route.origin.crs,
+        originLocationName: route.origin.locationName,
         destination: route.destination.crs,
-        contextLabel: route.contextLabel,
+        destinationLocationName: route.destination.locationName,
         railArrivalTime: formatTime(lastLeg.arrival),
         arrivalLabel:
             route.destination.walkMinutes === undefined

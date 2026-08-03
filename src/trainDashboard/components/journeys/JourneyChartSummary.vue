@@ -3,10 +3,6 @@
         class="flex max-w-96 items-center gap-2 px-2"
         :style="{height: `${height}px`}"
     >
-        <i
-            class="size-2.5 shrink-0 rounded-full"
-            :style="{backgroundColor: stationColour(journey.origin)}"
-        />
         <div class="min-w-0">
             <JourneyDesktopItinerary :journey="journey" />
             <span
