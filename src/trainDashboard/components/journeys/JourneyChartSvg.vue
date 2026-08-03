@@ -159,6 +159,7 @@
 </template>
 
 <script setup lang="ts">
+import {scaleLinear} from "d3-scale";
 import {computed, useId} from "vue";
 import {formatTime} from "@/utilities/time.utility.ts";
 import type {
@@ -186,24 +187,10 @@ const chartBottom = computed(
         props.rowGap / 2
 );
 const chartHeight = computed(() => chartBottom.value + 30);
-const tickInterval = computed(() => {
-    const targetInterval = (props.windowEnd - props.windowStart) / 8;
-
-    return (
-        [5, 10, 15, 30, 60].find((interval) => interval >= targetInterval) ?? 60
-    );
-});
-const ticks = computed(() => {
-    const interval = tickInterval.value;
-    const firstTick = Math.ceil(props.windowStart / interval) * interval;
-    const numberOfTicks =
-        Math.floor((props.windowEnd - firstTick) / interval) + 1;
-
-    return Array.from(
-        {length: numberOfTicks},
-        (_, index) => firstTick + index * interval
-    );
-});
+const timelineScale = computed(() =>
+    scaleLinear().domain([props.windowStart, props.windowEnd]).range([0, 85])
+);
+const ticks = computed(() => timelineScale.value.ticks(8));
 
 const segmentClasses: Record<SegmentKind, string> = {
     wait: "[stroke-width:3] [stroke-dasharray:4_5]",
@@ -212,10 +199,7 @@ const segmentClasses: Record<SegmentKind, string> = {
 };
 
 function xAt(minutes: number): string {
-    const progress =
-        (minutes - props.windowStart) / (props.windowEnd - props.windowStart);
-
-    return `${progress * 85}%`;
+    return `${timelineScale.value(minutes)}%`;
 }
 
 function timelineLabelClasses(journey: TimetabledJourney): string[] {
