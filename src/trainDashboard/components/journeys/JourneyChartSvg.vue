@@ -72,21 +72,33 @@
                     v-for="(leg, legIndex) in journey.trainLegs.slice(0, -1)"
                     :key="`connection-${legIndex}`"
                 >
+                    <line
+                        class="stroke-ink-subtle [stroke-width:1]"
+                        :x1="xAt(leg.arrival)"
+                        y1="-4"
+                        :x2="xAt(leg.arrival)"
+                        y2="-25"
+                    />
+                    <line
+                        class="stroke-ink-subtle [stroke-width:1]"
+                        :x1="xAt(journey.trainLegs[legIndex + 1]!.departure)"
+                        y1="-4"
+                        :x2="xAt(journey.trainLegs[legIndex + 1]!.departure)"
+                        y2="-7"
+                    />
                     <text
                         :class="timelineLabelClasses(journey)"
                         :x="xAt(leg.arrival)"
-                        dx="-6"
-                        y="-12"
-                        text-anchor="end"
+                        y="-32"
+                        text-anchor="middle"
                     >
                         {{ formatTime(leg.arrival) }}a
                     </text>
                     <text
                         :class="timelineLabelClasses(journey)"
                         :x="xAt(journey.trainLegs[legIndex + 1]!.departure)"
-                        dx="6"
-                        y="-12"
-                        text-anchor="start"
+                        y="-14"
+                        text-anchor="middle"
                     >
                         d{{
                             formatTime(
