@@ -6,8 +6,8 @@
             class="pointer-events-none absolute inset-x-0 rounded-lg bg-highlight"
             :class="journey.recommended ? 'block' : 'hidden'"
             :style="{
-                top: `${rowStart + index * rowGap - 32}px`,
-                height: '72px',
+                top: `${rowStart + index * rowGap - rowGap / 2 + rowMargin}px`,
+                height: `${rowGap - rowMargin * 2}px`,
             }"
         />
 
@@ -16,7 +16,7 @@
             <div
                 v-for="journey in journeys"
                 :key="journey.id"
-                class="flex items-center gap-2 whitespace-nowrap px-2 text-sm font-semibold"
+                class="flex max-w-96 items-center gap-2 px-2"
                 :style="{
                     height: `${rowGap}px`,
                 }"
@@ -27,8 +27,8 @@
                         backgroundColor: stationColour(journey.origin),
                     }"
                 />
-                <div class="relative leading-tight">
-                    <JourneyRouteLabel :journey="journey" />
+                <div class="min-w-0">
+                    <JourneyDesktopItinerary :journey="journey" />
                     <span
                         v-if="
                             journey.recommended ||
@@ -40,7 +40,7 @@
                         {{ formatMustLeaveMessage(journey, currentMinutes) }}
                     </span>
                     <JourneyNationalRailLink
-                        class="absolute top-full left-0 max-w-full flex-wrap whitespace-normal"
+                        class="mt-1 max-w-full flex-wrap"
                         :journey="journey"
                     />
                 </div>
@@ -203,6 +203,7 @@ import type {
 import {formatMustLeaveMessage} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
+import JourneyDesktopItinerary from "./JourneyDesktopItinerary.vue";
 import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
@@ -214,12 +215,13 @@ const props = defineProps<{
     windowEnd: number;
 }>();
 
-const rowStart = 85;
-const rowGap = 96;
+const rowGap = 136;
+const rowMargin = 4;
+const rowStart = 55 + rowGap / 2;
 const chartDescriptionId = useId();
 
 const chartBottom = computed(
-    () => rowStart + (props.journeys.length - 1) * rowGap + 35
+    () => rowStart + (props.journeys.length - 1) * rowGap + rowGap / 2
 );
 const chartHeight = computed(() => chartBottom.value + 30);
 const tickInterval = computed(() => {

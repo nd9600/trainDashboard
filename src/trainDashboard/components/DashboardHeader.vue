@@ -19,7 +19,24 @@
             >
                 {{ stationName(recommendedJourney.origin) }}
             </span>
-            {{ journeySummary }}
+            · train
+            {{ formatTime(recommendedJourney.trainLegs[0]!.departure) }} ·
+            arrive
+            <span
+                class="font-semibold"
+                :style="{
+                    color: stationColour(recommendedJourney.destination),
+                }"
+            >
+                {{ stationName(recommendedJourney.destination) }}
+            </span>
+            {{
+                recommendedJourney.arrivalTime ??
+                recommendedJourney.railArrivalTime
+            }}
+            <template v-if="changeCount">
+                · {{ changeCount }} change{{ changeCount === 1 ? "" : "s" }}
+            </template>
         </p>
         <p class="mt-1 mb-0 text-sm text-ink-subtle">
             It is now {{ formatTime(currentMinutes) }}
@@ -89,18 +106,7 @@ const shouldWalk = computed(() => {
     return firstSegment?.kind === "walk";
 });
 
-const journeySummary = computed(() => {
-    const journey = recommendedJourney.value;
-
-    if (!journey) {
-        return "";
-    }
-
-    const firstTrain = journey.trainLegs.at(0);
-    const finalArrival = journey.arrivalTime ?? journey.railArrivalTime;
-    const changeCount = journey.trainLegs.length - 1;
-    const changes = changeCount === 0 ? "" : `· ${changeCount} change`;
-
-    return `· train ${formatTime(firstTrain!.departure)} · arrive ${stationName(journey.destination)} ${finalArrival}${changes}`;
-});
+const changeCount = computed(
+    () => (recommendedJourney.value?.trainLegs.length ?? 1) - 1
+);
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <main class="min-h-screen">
+    <main class="min-h-screen bg-wh">
         <div class="mx-auto w-full max-w-dashboard pt-8 pb-8">
             <div class="flex justify-between max-sm:px-2">
                 <DashboardHeader />
