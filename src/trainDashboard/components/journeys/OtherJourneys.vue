@@ -99,9 +99,6 @@ const props = defineProps<{
     currentMinutes: number;
 }>();
 
-const firstSecondaryJourneyId = computed(
-    () => props.timetabledJourneys.at(0)?.id
-);
 const journeyGroups = computed(() => {
     const journeyGroupsById = new Map<
         string,
@@ -144,6 +141,27 @@ const journeyGroups = computed(() => {
                 group.timetabledJourneys
             ),
         };
+    }).sort((first, second) => {
+        const firstJourney = first.timetabledJourneys.at(0);
+        const secondJourney = second.timetabledJourneys.at(0);
+
+        if (!firstJourney) {
+            return secondJourney ? 1 : 0;
+        }
+
+        if (!secondJourney) {
+            return -1;
+        }
+
+        return (
+            firstJourney.segments.at(-1)!.end -
+                secondJourney.segments.at(-1)!.end ||
+            firstJourney.segments.at(0)!.start -
+                secondJourney.segments.at(0)!.start
+        );
     });
 });
+const firstSecondaryJourneyId = computed(
+    () => journeyGroups.value.at(0)?.timetabledJourneys.at(0)?.id
+);
 </script>

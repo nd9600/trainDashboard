@@ -1,6 +1,16 @@
 <template>
     <div class="text-sm leading-snug text-ink-muted">
         <p
+            v-if="journey.segments.at(0)?.kind === 'walk'"
+            class="flex items-baseline gap-1"
+        >
+            Leave
+            <time class="font-semibold text-ink">
+                {{ formatTime(journey.segments.at(0)!.start) }}
+            </time>
+        </p>
+
+        <p
             v-for="leg in journey.trainLegs"
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
             class="flex min-w-0 items-baseline gap-x-1 whitespace-nowrap"
