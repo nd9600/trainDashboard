@@ -1,13 +1,14 @@
 <template>
     <div class="space-y-4 rounded-lg border border-line bg-paper p-4 shadow-sm">
-        <div class="flex items-start gap-3">
-            <label class="sentenceField grow">
-                Call this schedule
+        <div class="flex justify-between items-start gap-3">
+            <label class="sentenceField">
+                The
                 <input
                     v-model="schedule.name"
-                    class="appInput sentenceField__control min-w-52 grow"
+                    class="appInput sentenceField__control w-fit"
                     required
                 />
+                schedule should be active on
             </label>
             <button
                 class="appButton appButton--quiet shrink-0 px-2 py-1 text-danger hover:text-danger-dark"
@@ -21,7 +22,6 @@
 
         <fieldset class="sentenceField whitespace-normal flex-col items-start">
             <legend class="sr-only">Schedule days</legend>
-            <p>Use this schedule on</p>
             <div class="flex flex-wrap gap-2 sm:gap-4">
                 <label
                     v-for="day in days"
@@ -76,7 +76,7 @@
 
             <section class="space-y-2">
                 <h4
-                    class="inline-flex rounded-full bg-japonica px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white"
+                    class="inline-flex rounded-full bg-japonica px-2 py-0.5 text-sm font-bold tracking-wide text-white"
                 >
                     Primary
                 </h4>
@@ -98,7 +98,7 @@
 
             <section class="space-y-2">
                 <h4
-                    class="inline-flex rounded-full bg-saffron px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-ink"
+                    class="inline-flex rounded-full bg-saffron px-2 py-0.5 text-sm font-bold tracking-wide text-white"
                 >
                     Other journeys
                 </h4>
