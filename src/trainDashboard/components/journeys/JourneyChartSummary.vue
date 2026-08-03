@@ -16,10 +16,6 @@
                 <AppIcon class="size-3.5" name="clock" />
                 {{ getMustLeaveMessage(journey, currentMinutes) }}
             </span>
-            <JourneyNationalRailLink
-                class="mt-1 max-w-full flex-wrap"
-                :journey="journey"
-            />
         </div>
     </div>
 </template>
@@ -30,7 +26,6 @@ import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {getMustLeaveMessage} from "../../journeys/journeyTimes";
 import {stationColour} from "../../stations/stationColours";
 import JourneyDesktopItinerary from "./JourneyDesktopItinerary.vue";
-import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
 
 defineProps<{
     journey: TimetabledJourney;

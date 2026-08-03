@@ -47,7 +47,7 @@ defineProps<{
     windowEnd: number;
 }>();
 
-const rowGap = 136;
+const rowGap = 112;
 const rowMargin = 4;
 const rowStart = 55 + rowGap / 2;
 </script>

@@ -44,7 +44,7 @@
                     :key="segmentIndex"
                     :class="segmentClasses[segment.kind]"
                     :style="{
-                        stroke: stationColour(journey.origin),
+                        stroke: getSegmentColour(journey, segment),
                         strokeOpacity: segment.kind === 'walk' ? 0.55 : 1,
                     }"
                     :x1="xAt(segment.start)"
@@ -207,6 +207,23 @@ function timelineLabelClasses(journey: TimetabledJourney): string[] {
         "fill-ink text-xs font-medium [paint-order:stroke] [stroke-linejoin:round] [stroke-width:6]",
         journey.recommended ? "stroke-highlight" : "stroke-canvas",
     ];
+}
+
+function getSegmentColour(
+    journey: TimetabledJourney,
+    segment: TimetabledJourney["segments"][number]
+): string {
+    const stationCrs =
+        segment.kind === "train"
+            ? journey.trainLegs.find(
+                  (leg) =>
+                      leg.departure === segment.start &&
+                      leg.arrival === segment.end
+              )?.origin
+            : journey.trainLegs.find((leg) => leg.arrival === segment.start)
+                  ?.destination;
+
+    return stationColour(stationCrs ?? journey.origin);
 }
 
 function orderedSegments(

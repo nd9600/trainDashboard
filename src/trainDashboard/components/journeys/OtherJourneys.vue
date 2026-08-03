@@ -14,14 +14,46 @@
             Other journeys
         </summary>
         <div class="space-y-6 border-t border-line bg-canvas sm:p-4">
+            <nav
+                v-if="journeyGroups.length > 1"
+                class="border-b border-line px-4 pt-4 pb-4 sm:px-0 sm:pt-0"
+                aria-label="Other journey sections"
+            >
+                <p class="mb-2 text-xs font-semibold text-ink-subtle">
+                    Jump to a journey:
+                </p>
+                <ol>
+                    <li
+                        v-for="(journeyGroup, index) in journeyGroups"
+                        :key="`link-${journeyGroup.anchorId}`"
+                    >
+                        <a
+                            class="appButton appButton--quiet max-w-full px-2 py-1 text-left text-xs"
+                            :href="`#${journeyGroup.anchorId}`"
+                        >
+                            {{ index + 1 }}. {{ journeyGroup.label }}
+                        </a>
+                    </li>
+                </ol>
+            </nav>
             <section
                 v-for="journeyGroup in journeyGroups"
-                :key="journeyGroup.label"
-                class="max-sm:py-4"
+                :id="journeyGroup.anchorId"
+                :key="journeyGroup.anchorId"
+                class="scroll-mt-6 max-sm:py-4 not-last:border-b-1 border-casa pb-8"
             >
-                <h2 class="mb-2 font-display text-base max-sm:px-4 sm:text-lg">
-                    {{ journeyGroup.label }}
-                </h2>
+                <div class="flex justify-between max-w-full">
+                    <h2 class="mb-2 font-display text-base max-sm:px-4 sm:text-lg">
+                        {{ journeyGroup.label }}
+                    </h2>
+                    <a
+                        class="appButton appButton--quiet px-2 py-1 text-left text-xl"
+                        href="#"
+                    >
+                        ⇑
+                    </a>
+                </div>
+
                 <JourneyTimelines
                     v-if="journeyGroup.timetabledJourneys.length"
                     :journeys="journeyGroup.timetabledJourneys"
@@ -95,6 +127,7 @@ const journeyGroups = computed(() => {
 
     return Array.from(stationGroups, ([label, group]) => ({
         label,
+        anchorId: `other-journey-${group.routes.at(0)!.journeyId}`,
         ...group,
         missingRoutes: getRoutesWithoutTimetabledJourneys(
             group.routes,

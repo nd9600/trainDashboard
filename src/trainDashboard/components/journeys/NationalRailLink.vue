@@ -8,15 +8,17 @@
                 departureMinutes
             )
         "
-        :aria-label="`${label} on National Rail Enquiries`"
+        :aria-label="ariaLabel ?? `${label} on National Rail Enquiries`"
         rel="noopener noreferrer"
         target="_blank"
     >
-        {{ label }} ↗
+        {{ label }}
+        <AppIcon v-if="!isDesktop" class="size-3" name="external-link" />
     </a>
 </template>
 
 <script setup lang="ts">
+import AppIcon from "@/components/AppIcon.vue";
 import {getNationalRailJourneyUrl} from "../../journeys/nationalRailUrls";
 
 withDefaults(
@@ -25,9 +27,12 @@ withDefaults(
         destinationCrs: string;
         departureMinutes: number;
         label?: string;
+        ariaLabel?: string;
+        isDesktop?: boolean;
     }>(),
     {
         label: "NRE",
+        isDesktop: false
     }
 );
 </script>

@@ -50,6 +50,12 @@
             <path d="m11 12 8-8M15 8l2 2M17 6l2 2" />
         </template>
 
+        <template v-else-if="name === 'external-link'">
+            <path
+                d="M14 3h7v7M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+            />
+        </template>
+
         <template v-else-if="name === 'map-pin'">
             <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
             <circle cx="12" cy="10" r="2.5" />
@@ -77,6 +83,7 @@ defineProps<{
         | "chevron"
         | "close"
         | "clock"
+        | "external-link"
         | "home"
         | "key"
         | "map-pin"
