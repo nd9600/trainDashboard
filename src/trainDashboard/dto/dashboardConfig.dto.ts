@@ -35,6 +35,11 @@ const idSchema = z
         "Use lowercase letters, numbers, and hyphens."
     );
 
+const locationGroupIdSchema = z
+    .string()
+    .min(1, "Choose a station or group.")
+    .pipe(idSchema);
+
 export const stationGroupSchema = z.object({
     id: idSchema,
     name: z.string().trim().min(1, "Enter a group name."),
@@ -51,12 +56,12 @@ export const stationGroupSchema = z.object({
 export const locationReferenceSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.literal("station"),
-        groupId: idSchema,
+        groupId: locationGroupIdSchema,
         crs: crsCodeSchema,
     }),
     z.object({
         type: z.literal("group"),
-        groupId: idSchema,
+        groupId: locationGroupIdSchema,
     }),
 ]);
 
@@ -74,7 +79,7 @@ export const displayScheduleSchema = z
         days: z.array(daySchema).min(1, "Select at least one day."),
         startsAt: timeSchema,
         endsAt: timeSchema,
-        primaryJourneyIds: z.array(idSchema),
+        primaryJourneyId: idSchema,
         secondaryJourneyIds: z.array(idSchema),
     })
     .refine(
@@ -87,7 +92,7 @@ export const displayScheduleSchema = z
     );
 
 const dashboardConfigBaseSchema = z.object({
-    version: z.literal(1),
+    version: z.literal(2),
     stationGroups: z.array(stationGroupSchema),
     journeys: z.array(journeySchema).min(1, "Add at least one journey."),
     schedules: z
@@ -128,6 +133,10 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
                 ["origin", journey.origin],
                 ["destination", journey.destination],
             ] as const) {
+                if (endpoint.groupId === "") {
+                    continue;
+                }
+
                 const group = stationGroupsById.get(endpoint.groupId);
 
                 if (!group) {
@@ -154,9 +163,35 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
             }
         });
 
+        const journeyIndexesByStationPair = new Map<string, number>();
+
+        config.journeys.forEach((journey, journeyIndex) => {
+            if (
+                !stationGroupsById.has(journey.origin.groupId) ||
+                !stationGroupsById.has(journey.destination.groupId)
+            ) {
+                return;
+            }
+
+            const stationPair = getStationPairKey(journey, stationGroupsById);
+            const existingJourneyIndex =
+                journeyIndexesByStationPair.get(stationPair);
+
+            if (existingJourneyIndex !== undefined) {
+                context.addIssue({
+                    code: "custom",
+                    message: `This station pair is already used by Journey ${existingJourneyIndex + 1}.`,
+                    path: ["journeys", journeyIndex],
+                });
+                return;
+            }
+
+            journeyIndexesByStationPair.set(stationPair, journeyIndex);
+        });
+
         config.schedules.forEach((schedule, scheduleIndex) => {
             const selectedJourneyIds = [
-                ...schedule.primaryJourneyIds,
+                schedule.primaryJourneyId,
                 ...schedule.secondaryJourneyIds,
             ];
 
@@ -170,9 +205,8 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
                 }
             });
 
-            const primaryJourneyIds = new Set(schedule.primaryJourneyIds);
             const duplicateJourneyId = schedule.secondaryJourneyIds.find(
-                (journeyId) => primaryJourneyIds.has(journeyId)
+                (journeyId) => journeyId === schedule.primaryJourneyId
             );
 
             if (duplicateJourneyId) {
@@ -180,6 +214,23 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
                     code: "custom",
                     message: `Journey "${duplicateJourneyId}" cannot be primary and secondary.`,
                     path: ["schedules", scheduleIndex],
+                });
+            }
+        });
+
+        const scheduledJourneyIds = new Set(
+            config.schedules.flatMap((schedule) => [
+                schedule.primaryJourneyId,
+                ...schedule.secondaryJourneyIds,
+            ])
+        );
+
+        config.journeys.forEach((journey, journeyIndex) => {
+            if (!scheduledJourneyIds.has(journey.id)) {
+                context.addIssue({
+                    code: "custom",
+                    message: "Journey must be used by at least one schedule.",
+                    path: ["journeys", journeyIndex],
                 });
             }
         });
@@ -202,6 +253,23 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
     }
 );
 
+function getStationPairKey(
+    journey: Journey,
+    stationGroupsById: Map<string, StationGroup>
+): string {
+    return [journey.origin, journey.destination]
+        .map((location) => {
+            const group = stationGroupsById.get(location.groupId);
+
+            if (location.type === "group" || group?.stations.length === 1) {
+                return `group:${location.groupId}`;
+            }
+
+            return `station:${location.groupId}:${location.crs}`;
+        })
+        .join("->");
+}
+
 export type Day = z.output<typeof daySchema>;
 export type StationGroup = z.output<typeof stationGroupSchema>;
 export type LocationReference = z.output<typeof locationReferenceSchema>;
@@ -211,9 +279,58 @@ export type DashboardConfig = z.output<typeof dashboardConfigSchema>;
 
 export function dashboardConfigErrorMessages(error: z.ZodError): string[] {
     return error.issues.map((issue) => {
-        const location = issue.path.join(".");
+        const location = getErrorLocation(issue.path);
         return location ? `${location}: ${issue.message}` : issue.message;
     });
+}
+
+function getErrorLocation(path: PropertyKey[]): string {
+    const [section, itemIndex, field, nestedIndex, nestedField] = path;
+
+    if (section === "stationGroups" && typeof itemIndex === "number") {
+        const stationGroup = `Station group ${itemIndex + 1}`;
+
+        if (field === "stations" && typeof nestedIndex === "number") {
+            const station = `${stationGroup}, station ${nestedIndex + 1}`;
+
+            return nestedField === "walkMinutes"
+                ? `${station} walk time`
+                : station;
+        }
+
+        return field === "name" ? `${stationGroup} name` : stationGroup;
+    }
+
+    if (section === "journeys" && typeof itemIndex === "number") {
+        const journey = `Journey ${itemIndex + 1}`;
+        const journeyFields: Record<string, string> = {
+            origin: "start",
+            destination: "destination",
+            viaCrs: "connecting station",
+        };
+        const fieldLabel =
+            typeof field === "string" ? journeyFields[field] : undefined;
+
+        return fieldLabel ? `${journey} ${fieldLabel}` : journey;
+    }
+
+    if (section === "schedules" && typeof itemIndex === "number") {
+        const schedule = `Schedule ${itemIndex + 1}`;
+        const scheduleFields: Record<string, string> = {
+            name: "name",
+            days: "days",
+            startsAt: "start time",
+            endsAt: "end time",
+            primaryJourneyId: "primary journey",
+            secondaryJourneyIds: "Other journeys",
+        };
+        const fieldLabel =
+            typeof field === "string" ? scheduleFields[field] : undefined;
+
+        return fieldLabel ? `${schedule} ${fieldLabel}` : schedule;
+    }
+
+    return "";
 }
 
 export function timeToMinutes(time: string): number {

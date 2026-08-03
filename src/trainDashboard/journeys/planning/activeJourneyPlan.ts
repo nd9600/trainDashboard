@@ -43,10 +43,9 @@ export function getActiveJourneyPlan(
     return {
         schedule,
         primaryRoutes: getRoutesForJourneys(
-            schedule.primaryJourneyIds.flatMap((journeyId) => {
-                const journey = journeysById.get(journeyId);
-                return journey ? [journey] : [];
-            }),
+            [journeysById.get(schedule.primaryJourneyId)].filter(
+                (journey) => journey !== undefined
+            ),
             config.stationGroups
         ),
         secondaryRoutes: getRoutesForJourneys(

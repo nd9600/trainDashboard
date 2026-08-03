@@ -7,7 +7,7 @@
         >
             <ComboboxInput
                 v-bind="$attrs"
-                class="appInput pr-9"
+                class="appInput text-xs sm:text-base pr-9"
                 aria-label="Station"
                 :aria-invalid="!isValidStation"
                 :displayValue="displayStation"

@@ -88,6 +88,32 @@ describe("getActiveJourneyPlan", () => {
         ]);
     });
 
+    it("ends at the connecting station when it is also a destination", () => {
+        const journey = structuredClone(defaultDashboardConfig.journeys[0]!);
+        journey.origin = {
+            type: "station",
+            groupId: "work",
+            crs: "CHC",
+        };
+        journey.destination = {type: "group", groupId: "home"};
+        journey.viaCrs = "ANL";
+
+        const routes = getRoutesForJourneys(
+            [journey],
+            defaultDashboardConfig.stationGroups
+        );
+
+        expect(
+            routes.map((route) => ({
+                stations: `${route.origin.crs}-${route.destination.crs}`,
+                viaCrs: route.viaCrs,
+            }))
+        ).toEqual([
+            {stations: "CHC-ANL", viaCrs: undefined},
+            {stations: "CHC-KVD", viaCrs: "ANL"},
+        ]);
+    });
+
     it("prioritises travel from home to Glasgow at weekends", () => {
         const activePlan = getActiveJourneyPlan(defaultDashboardConfig, {
             day: 6,
@@ -155,7 +181,7 @@ describe("getActiveJourneyPlan", () => {
             days: [1],
             startsAt: "11:00",
             endsAt: "13:00",
-            primaryJourneyIds: ["home-to-work"],
+            primaryJourneyId: "home-to-work",
             secondaryJourneyIds: [],
         });
 

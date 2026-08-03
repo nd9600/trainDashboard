@@ -4,10 +4,10 @@
             v-if="journey.segments.at(0)?.kind === 'walk'"
             class="flex items-baseline gap-1"
         >
-            Leave
             <time class="font-semibold text-ink">
                 {{ formatTime(journey.segments.at(0)!.start) }}
             </time>
+            Leave
         </p>
 
         <p
@@ -45,10 +45,10 @@
         </p>
 
         <p v-if="journey.arrivalLabel && journey.arrivalTime">
-            {{ journey.arrivalLabel }}
             <time class="font-semibold text-ink">
                 {{ journey.arrivalTime }}
             </time>
+            {{ journey.arrivalLabel }}
         </p>
     </div>
 </template>

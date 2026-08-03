@@ -36,23 +36,26 @@ export function getRoutesForJourneys(
             stationGroupsById
         );
 
-        return origins.flatMap((origin) =>
-            destinations
-                .filter((destination) => destination.crs !== origin.crs)
-                .filter(
-                    (destination) =>
-                        journey.viaCrs === undefined ||
-                        (origin.crs !== journey.viaCrs &&
-                            destination.crs !== journey.viaCrs)
-                )
-                .map((destination) => ({
-                    id: `${journey.id}:${origin.crs}-${destination.crs}`,
-                    journeyId: journey.id,
-                    origin,
-                    destination,
-                    viaCrs: journey.viaCrs,
-                }))
-        );
+        return origins
+            .filter(
+                (origin) =>
+                    journey.viaCrs === undefined ||
+                    origin.crs !== journey.viaCrs
+            )
+            .flatMap((origin) =>
+                destinations
+                    .filter((destination) => destination.crs !== origin.crs)
+                    .map((destination) => ({
+                        id: `${journey.id}:${origin.crs}-${destination.crs}`,
+                        journeyId: journey.id,
+                        origin,
+                        destination,
+                        viaCrs:
+                            destination.crs === journey.viaCrs
+                                ? undefined
+                                : journey.viaCrs,
+                    }))
+            );
     });
 }
 

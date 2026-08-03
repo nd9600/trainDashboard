@@ -41,7 +41,7 @@
                     <AppIcon class="size-4" name="trash" />
                 </button>
                 <label
-                    class="col-span-2 flex flex-wrap items-baseline gap-2 pr-11 pl-3 text-sm text-ink-muted"
+                    class="col-span-2 flex flex-wrap items-baseline gap-2 px-3 text-sm text-ink-muted"
                 >
                     Walking here takes
                     <input

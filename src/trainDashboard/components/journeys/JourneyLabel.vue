@@ -1,5 +1,5 @@
 <template>
-    <span>
+    <span class="whitespace-normal">
         {{ details.origin.name }}<template v-if="details.origin.stationCrs">
             <span>, through </span>
             <StationLabel :crs="details.origin.stationCrs" />

@@ -1,0 +1,60 @@
+import {describe, expect, it} from "vitest";
+import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
+import {
+    dashboardConfigErrorMessages,
+    dashboardConfigSchema,
+} from "./dashboardConfig.dto";
+
+describe("dashboardConfigSchema", () => {
+    it("rejects a journey that is not used by a schedule", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        const journeyId = config.journeys.at(0)!.id;
+
+        for (const schedule of config.schedules) {
+            if (schedule.primaryJourneyId === journeyId) {
+                schedule.primaryJourneyId = config.journeys.at(1)!.id;
+            }
+            schedule.secondaryJourneyIds = schedule.secondaryJourneyIds.filter(
+                (candidate) => candidate !== journeyId
+            );
+        }
+
+        const result = dashboardConfigSchema.safeParse(config);
+
+        expect(result.success).toBe(false);
+        expect(result.error?.issues).toContainEqual(
+            expect.objectContaining({
+                message: "Journey must be used by at least one schedule.",
+                path: ["journeys", 0],
+            })
+        );
+    });
+
+    it("describes an invalid station without exposing its data path", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        config.stationGroups[0]!.stations[0]!.crs = "not-a-station";
+
+        const result = dashboardConfigSchema.safeParse(config);
+
+        expect(result.success).toBe(false);
+        expect(dashboardConfigErrorMessages(result.error!)).toContain(
+            "Station group 1, station 1: Enter a valid CRS station code."
+        );
+    });
+
+    it("rejects journeys with the same station pair", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        config.journeys[1]!.origin = config.journeys[0]!.origin;
+        config.journeys[1]!.destination = config.journeys[0]!.destination;
+
+        const result = dashboardConfigSchema.safeParse(config);
+
+        expect(result.success).toBe(false);
+        expect(result.error?.issues).toContainEqual(
+            expect.objectContaining({
+                message: "This station pair is already used by Journey 1.",
+                path: ["journeys", 1],
+            })
+        );
+    });
+});

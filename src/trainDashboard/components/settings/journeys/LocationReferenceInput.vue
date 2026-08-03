@@ -2,13 +2,13 @@
     <label class="sentenceField">
         {{ label }}
         <select
+            v-model="selectedLocationKey"
             class="appInput sentenceField__control min-w-52 grow"
-            :value="selectedLocationKey"
             required
-            @change="selectLocation"
         >
+            <option value="">Choose a station or group</option>
             <option v-if="locationOptions.length === 0" disabled value="">
-                Add a station group first
+                No stations or groups are available
             </option>
             <option
                 v-for="option in locationOptions"
@@ -34,6 +34,7 @@ const props = defineProps<{
     stationGroups: StationGroup[];
     excludedGroupId?: string;
     excludedCrs?: string;
+    excludedLocationKeys?: string[];
     label: string;
 }>();
 
@@ -47,19 +48,34 @@ interface JourneyLocationOption {
     value: LocationReference;
 }
 
-const selectedLocationKey = computed(() => {
-    const selectedGroup = props.stationGroups.find(
-        (group) => group.id === props.modelValue.groupId
-    );
+const selectedLocationKey = computed({
+    get: () => {
+        if (props.modelValue.groupId === "") {
+            return "";
+        }
 
-    if (selectedGroup?.stations.length === 1) {
-        return locationKey({
-            type: "group",
-            groupId: selectedGroup.id,
-        });
-    }
+        const selectedGroup = props.stationGroups.find(
+            (group) => group.id === props.modelValue.groupId
+        );
 
-    return locationKey(props.modelValue);
+        if (selectedGroup?.stations.length === 1) {
+            return locationKey({
+                type: "group",
+                groupId: selectedGroup.id,
+            });
+        }
+
+        return locationKey(props.modelValue);
+    },
+    set: (key: string) => {
+        const selectedOption = locationOptions.value.find(
+            (option) => option.key === key
+        );
+
+        if (selectedOption) {
+            emit("update:modelValue", selectedOption.value);
+        }
+    },
 });
 
 const locationOptions = computed<JourneyLocationOption[]>(() => {
@@ -106,31 +122,20 @@ const locationOptions = computed<JourneyLocationOption[]>(() => {
                         crs: station.crs,
                     },
                 })),
-        ].filter(
-            (option) =>
-                option.key === selectedKey ||
-                (!isExcludedGroup &&
-                    (option.value.type !== "station" ||
-                        option.value.crs !== props.excludedCrs))
-        );
+        ].filter((option) => {
+            if (option.key === selectedKey) {
+                return true;
+            }
+
+            return (
+                !isExcludedGroup &&
+                !props.excludedLocationKeys?.includes(option.key) &&
+                (option.value.type !== "station" ||
+                    option.value.crs !== props.excludedCrs)
+            );
+        });
     });
 });
-
-function selectLocation(event: Event): void {
-    const selectedOption = locationOptions.value.find(
-        (option) => option.key === getSelectValue(event)
-    );
-
-    if (!selectedOption) {
-        return;
-    }
-
-    emit("update:modelValue", selectedOption.value);
-}
-
-function getSelectValue(event: Event): string {
-    return (event.target as HTMLSelectElement).value;
-}
 
 function locationKey(location: LocationReference): string {
     return location.type === "group"
