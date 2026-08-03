@@ -1,7 +1,7 @@
 <template>
     <details
         v-if="journeyGroups.length"
-        class="group mt-8 overflow-auto rounded-lg border border-line bg-surface"
+        class="group mt-8 overflow-auto rounded-lg border border-line bg-surface max-sm:rounded-none max-sm:border-x-0"
     >
         <summary
             class="flex cursor-pointer list-none items-center gap-2 px-4 py-3 font-semibold text-ink-muted"
@@ -13,12 +13,13 @@
             <AppIcon class="size-4" name="train" />
             Other journeys
         </summary>
-        <div class="space-y-6 border-t border-line bg-canvas p-4">
+        <div class="space-y-6 border-t border-line bg-canvas sm:p-4">
             <section
                 v-for="journeyGroup in journeyGroups"
                 :key="journeyGroup.label"
+                class="max-sm:py-4"
             >
-                <h2 class="mb-2 font-display text-base sm:text-lg">
+                <h2 class="mb-2 font-display text-base max-sm:px-4 sm:text-lg">
                     {{ journeyGroup.label }}
                 </h2>
                 <JourneyTimeline
@@ -26,14 +27,16 @@
                     :journeys="journeyGroup.timetabledJourneys"
                     :currentMinutes="currentMinutes"
                     :mustLeaveJourneyId="firstSecondaryJourneyId"
+                    :flushOnMobile="true"
                 />
                 <NationalRailRouteLinks
                     v-if="journeyGroup.missingRoutes.length"
-                    :class="
+                    :class="[
+                        'max-sm:mx-4',
                         journeyGroup.timetabledJourneys.length
                             ? 'mt-4'
-                            : undefined
-                    "
+                            : undefined,
+                    ]"
                     :journeyRoutes="journeyGroup.missingRoutes"
                     :departureMinutes="currentMinutes"
                 />

@@ -1,68 +1,30 @@
 <template>
-    <div class="space-y-2 sm:hidden">
+    <div class="space-y-2">
         <article
             v-for="journey in journeys"
             :key="journey.id"
-            class="rounded-lg px-3 py-2.5"
-            :class="journey.recommended ? 'bg-highlight' : 'bg-surface'"
+            class="rounded-lg border-l-4 py-3"
+            :class="[
+                journey.recommended ? 'bg-highlight' : 'bg-surface',
+                flush ? 'rounded-none px-4' : 'px-3',
+            ]"
+            :style="{borderLeftColor: stationColour(journey.origin)}"
         >
-            <div class="flex items-start gap-2">
-                <i
-                    class="mt-1.5 size-2.5 shrink-0 rounded-full"
-                    :style="{
-                        backgroundColor: stationColour(journey.origin),
-                    }"
-                />
-                <div class="min-w-0 grow">
-                    <p
-                        class="font-semibold text-sm"
-                        :style="{color: stationColour(journey.origin)}"
-                    >
-                        <JourneyRouteLabel :journey="journey" />
-                    </p>
-                    <p class="mt-1 text-xs text-ink-muted">
-                        {{
-                            journey.arrivalLabel && journey.arrivalTime
-                                ? journey.arrivalLabel
-                                : "Train arrives"
-                        }}
-                        <strong
-                            v-if="
-                                journey.boldArrivalTime && journey.arrivalTime
-                            "
-                        >
-                            {{ journey.arrivalTime }}
-                        </strong>
-                        <span v-else>
-                            {{ journey.arrivalTime ?? journey.railArrivalTime }}
-                        </span>
-                    </p>
-                    <p class="mt-1 text-xs text-ink-subtle">
-                        Leaves
-                        {{ formatTime(journey.trainLegs[0]!.departure) }} ·
-                        {{ stationName(journey.origin) }} ·
-                        {{
-                            journey.trainLegs.length === 1
-                                ? "direct"
-                                : `${journey.trainLegs.length - 1} change${journey.trainLegs.length === 2 ? "" : "s"}`
-                        }}
-                        <span v-if="!journey.walkingTimesKnown">
-                            · walking time unknown
-                        </span>
-                    </p>
-                    <p
-                        v-if="
-                            journey.recommended ||
-                            journey.id === mustLeaveJourneyId
-                        "
-                        class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
-                    >
-                        <AppIcon class="size-3.5" name="clock" />
-                        {{ formatMustLeaveMessage(journey, currentMinutes) }}
-                    </p>
-                    <JourneyNationalRailLink class="mt-1" :journey="journey" />
-                </div>
-            </div>
+            <h3 class="sr-only">{{ journey.contextLabel }}</h3>
+            <p
+                v-if="journey.recommended || journey.id === mustLeaveJourneyId"
+                class="mb-2 flex items-center gap-1 text-xs font-bold text-danger"
+            >
+                <AppIcon class="size-3.5" name="clock" />
+                {{ formatMustLeaveMessage(journey, currentMinutes) }}
+            </p>
+            <p
+                v-if="!journey.walkingTimesKnown"
+                class="mb-2 text-xs text-ink-subtle"
+            >
+                Walking time is not configured for this journey.
+            </p>
+            <JourneyItinerary :journey="journey" />
         </article>
     </div>
 </template>
@@ -72,14 +34,12 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {formatMustLeaveMessage} from "../../presentation/journeyPresentation";
 import {stationColour} from "../../stations/stationColours";
-import {stationName} from "../../stations/stations";
-import {formatTime} from "@/utilities/time.utility.ts";
-import JourneyNationalRailLink from "./JourneyNationalRailLink.vue";
-import JourneyRouteLabel from "./JourneyRouteLabel.vue";
+import JourneyItinerary from "./JourneyItinerary.vue";
 
 defineProps<{
     journeys: TimetabledJourney[];
     currentMinutes: number;
     mustLeaveJourneyId?: string;
+    flush?: boolean;
 }>();
 </script>

@@ -1,7 +1,5 @@
 <template>
-    <div
-        class="relative hidden sm:grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4"
-    >
+    <div class="relative grid-cols-[max-content_minmax(0,1fr)] gap-x-4">
         <div
             v-for="(journey, index) in journeys"
             :key="`highlight-${journey.id}`"
@@ -9,7 +7,7 @@
             :class="journey.recommended ? 'block' : 'hidden'"
             :style="{
                 top: `${rowStart + index * rowGap - 32}px`,
-                height: '64px',
+                height: '72px',
             }"
         />
 
@@ -21,7 +19,6 @@
                 class="flex items-center gap-2 whitespace-nowrap px-2 text-sm font-semibold"
                 :style="{
                     height: `${rowGap}px`,
-                    color: stationColour(journey.origin),
                 }"
             >
                 <i

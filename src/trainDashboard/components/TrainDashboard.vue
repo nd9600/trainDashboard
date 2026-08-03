@@ -1,7 +1,7 @@
 <template>
     <main class="min-h-screen">
-        <div class="mx-auto w-full max-w-dashboard px-6 pt-8 pb-8">
-            <div class="flex justify-between">
+        <div class="mx-auto w-full max-w-dashboard pt-8 pb-8">
+            <div class="flex justify-between max-sm:px-2">
                 <DashboardHeader />
                 <TrainDashboardSettingsModal ref="settingsModal" />
             </div>
@@ -34,11 +34,15 @@
                         Open API settings
                     </button>
                 </p>
-                <section class="flex flex-col gap-4 border-b-1 border-casa pb-8">
+                <section
+                    class="flex flex-col gap-4"
+                    :class="activeJourneyPlan.secondaryRoutes.length > 0 ? ' border-b-1 border-casa pb-8' : ''"
+                >
                     <JourneyTimeline
                         v-if="primaryJourneys.length"
                         :journeys="primaryJourneys"
                         :currentMinutes="currentMinutes"
+                        :flushOnMobile="true"
                     />
                     <NationalRailRouteLinks
                         v-if="primaryRoutesWithoutTimetabledJourneys.length"
@@ -48,6 +52,7 @@
                 </section>
 
                 <OtherJourneys
+                    v-if="activeJourneyPlan.secondaryRoutes.length > 0"
                     :journeyRoutes="activeJourneyPlan.secondaryRoutes"
                     :timetabledJourneys="secondaryJourneys"
                     :currentMinutes="currentMinutes"

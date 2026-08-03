@@ -1,10 +1,13 @@
 <template>
     <JourneyCards
+        class="sm:hidden"
         :journeys="displayedJourneys"
         :currentMinutes="currentMinutes"
         :mustLeaveJourneyId="mustLeaveJourneyId"
+        :flush="flushOnMobile"
     />
     <JourneyChart
+        class="hidden sm:grid"
         :journeys="displayedJourneys"
         :currentMinutes="currentMinutes"
         :mustLeaveJourneyId="mustLeaveJourneyId"
@@ -24,6 +27,7 @@ const props = defineProps<{
     journeys: TimetabledJourney[];
     currentMinutes: number;
     mustLeaveJourneyId?: string;
+    flushOnMobile?: boolean;
 }>();
 
 const displayedJourneys = computed(() => props.journeys.slice(0, 6));
