@@ -16,7 +16,7 @@
                 @change="updateQuery"
             />
             <ComboboxButton
-                class="appButton appButton--quiet px-2 absolute inset-y-0 right-0 text-ink-subtle hover:text-ink"
+                class="appButton appButton--quiet px-1 py-1 absolute right-[5px] top-[5px] text-ink-subtle hover:text-ink"
                 type="button"
                 aria-label="Show station options"
             >
