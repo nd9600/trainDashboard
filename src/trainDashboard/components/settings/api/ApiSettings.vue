@@ -12,14 +12,34 @@
             <span class="mb-1 block text-xs text-ink-subtle">
                 Consumer key
             </span>
-            <input
-                v-model="draft.consumerKey"
-                class="appInput"
-                autocomplete="off"
-                placeholder="Enter your Consumer key"
-                type="password"
-                @input="handleChange"
-            />
+            <span class="relative block">
+                <input
+                    v-model="draft.consumerKey"
+                    class="appInput pr-11"
+                    autocomplete="off"
+                    placeholder="Enter your Consumer key"
+                    :type="isConsumerKeyVisible ? 'text' : 'password'"
+                    @input="handleChange"
+                />
+                <button
+                    class="appButton appButton--quiet px-0.5 py-0.5 absolute right-[5px] top-[5px]"
+                    :class="
+                        isConsumerKeyVisible
+                            ? 'text-primary'
+                            : 'text-ink-subtle'
+                    "
+                    type="button"
+                    :aria-label="
+                        isConsumerKeyVisible
+                            ? 'Hide Consumer key'
+                            : 'Show Consumer key'
+                    "
+                    :aria-pressed="isConsumerKeyVisible"
+                    @click="isConsumerKeyVisible = !isConsumerKeyVisible"
+                >
+                    <AppIcon class="size-5" name="eye" />
+                </button>
+            </span>
         </label>
 
         <p class="mt-3 text-xs text-ink-subtle">
@@ -33,11 +53,13 @@
 
 <script setup lang="ts">
 import {ref} from "vue";
+import AppIcon from "@/components/AppIcon.vue";
 import type {RailDataApiSettings} from "../../../dto/railDataApiSettings.dto";
 import {useRailDataApiStore} from "../../../store/railDataApi.store";
 
 const apiStore = useRailDataApiStore();
 const draft = ref<RailDataApiSettings>(cloneSettings(apiStore.settings));
+const isConsumerKeyVisible = ref(false);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
 });
@@ -50,11 +72,13 @@ function handleChange(): void {
 function save(): void {
     apiStore.saveSettings(draft.value);
     draft.value = cloneSettings(apiStore.settings);
+    isConsumerKeyVisible.value = false;
     hasUnsavedChanges.value = false;
 }
 
 function cancel(): void {
     draft.value = cloneSettings(apiStore.settings);
+    isConsumerKeyVisible.value = false;
     hasUnsavedChanges.value = false;
 }
 

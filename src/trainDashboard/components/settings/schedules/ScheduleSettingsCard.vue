@@ -1,13 +1,23 @@
 <template>
     <div class="space-y-4 rounded-lg border border-line bg-paper p-4 shadow-sm">
-        <label class="sentenceField">
-            Call this schedule
-            <input
-                v-model="schedule.name"
-                class="appInput sentenceField__control min-w-52 grow"
-                required
-            />
-        </label>
+        <div class="flex items-start gap-3">
+            <label class="sentenceField grow">
+                Call this schedule
+                <input
+                    v-model="schedule.name"
+                    class="appInput sentenceField__control min-w-52 grow"
+                    required
+                />
+            </label>
+            <button
+                class="appButton appButton--quiet shrink-0 px-2 py-1 text-danger hover:text-danger-dark"
+                type="button"
+                @click="emit('remove')"
+            >
+                <AppIcon class="size-4" name="trash" />
+                <span class="max-sm:sr-only">Remove schedule</span>
+            </button>
+        </div>
 
         <fieldset>
             <legend>Use this schedule on</legend>
@@ -56,96 +66,83 @@
             </label>
         </fieldset>
 
-        <p class="rounded bg-surface-muted p-3 text-sm text-ink-muted">
-            {{ activeDaysText }}, {{ schedule.startsAt }}–{{ schedule.endsAt }}:
-            <template v-if="primaryJourneyLabels.length">
-                <template
-                    v-for="(details, index) in primaryJourneyLabels"
-                    :key="`primary-${index}`"
-                >
-                    <span v-if="index">; </span>
-                    <JourneyLabel :details="details" />
-                </template>
-                {{ primaryJourneyLabels.length === 1 ? " is" : " are" }}
-                primary.
-            </template>
-            <template v-else>no primary journey is selected.</template>
-            <template v-if="secondaryJourneyLabels.length">
-                {{ " " }}
-                <template
-                    v-for="(details, index) in secondaryJourneyLabels"
-                    :key="`secondary-${index}`"
-                >
-                    <span v-if="index">; </span>
-                    <JourneyLabel :details="details" />
-                </template>
-                {{
-                    secondaryJourneyLabels.length === 1 ? " appears" : " appear"
-                }}
-                under Other journeys.
-            </template>
+        <p class="text-sm font-medium text-ink-muted">
+            {{ activeDaysText }} · {{ schedule.startsAt }}–{{ schedule.endsAt }}
         </p>
 
-        <fieldset class="mt-12 space-y-3">
-            <legend class="mb-1 font-semibold">
-                Set how each journey appears
-            </legend>
-            <label
-                v-for="journey in props.journeys"
-                :key="journey.id"
-                class="sentenceField"
-                :class="
-                    journeyPriority(journey.id) === 'hidden' ? 'opacity-50' : ''
-                "
-            >
-                <span
-                    class="size-6 text-white rounded-full flex justify-center items-center font-bold"
-                    :class="{
-                        'bg-japonica':
-                            journeyPriority(journey.id) === 'primary',
-                        'bg-saffron':
-                            journeyPriority(journey.id) === 'secondary',
-                        'bg-casa': journeyPriority(journey.id) === 'hidden',
-                    }"
+        <fieldset class="space-y-5 border-t border-line pt-4">
+            <legend class="mb-3 font-semibold">Journey priorities</legend>
+
+            <section class="space-y-2">
+                <h4
+                    class="inline-flex rounded-full bg-japonica px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white"
                 >
-                    {{
-                        journeyPriority(journey.id) === "primary"
-                            ? 1
-                            : journeyPriority(journey.id) === "secondary"
-                              ? 2
-                              : ""
-                    }}
-                </span>
-                <span class="font-medium">
-                    <JourneyLabel
-                        :details="
-                            getJourneyLabelDetails(journey, props.stationGroups)
+                    Primary
+                </h4>
+                <p
+                    v-if="primaryJourneys.length === 0"
+                    class="text-sm text-ink-subtle"
+                >
+                    No primary journey is selected.
+                </p>
+                <ScheduleJourneyPriorityInput
+                    v-for="journey in primaryJourneys"
+                    :key="journey.id"
+                    :journey="journey"
+                    :stationGroups="stationGroups"
+                    priority="primary"
+                    @priorityChange="updateJourneyPriority(journey.id, $event)"
+                />
+            </section>
+
+            <section class="space-y-2">
+                <h4
+                    class="inline-flex rounded-full bg-saffron px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-ink"
+                >
+                    Other journeys
+                </h4>
+                <p
+                    v-if="secondaryJourneys.length === 0"
+                    class="text-sm text-ink-subtle"
+                >
+                    No other journeys are selected.
+                </p>
+                <ScheduleJourneyPriorityInput
+                    v-for="journey in secondaryJourneys"
+                    :key="journey.id"
+                    :journey="journey"
+                    :stationGroups="stationGroups"
+                    priority="secondary"
+                    @priorityChange="updateJourneyPriority(journey.id, $event)"
+                />
+            </section>
+
+            <details v-if="hiddenJourneys.length" class="group">
+                <summary
+                    class="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-ink-muted"
+                >
+                    <AppIcon
+                        class="size-4 transition-transform group-open:rotate-90"
+                        name="chevron"
+                    />
+                    {{ hiddenJourneys.length }} hidden
+                    {{ hiddenJourneys.length === 1 ? "journey" : "journeys" }}
+                </summary>
+                <div class="mt-3 space-y-3">
+                    <ScheduleJourneyPriorityInput
+                        v-for="journey in hiddenJourneys"
+                        :key="journey.id"
+                        class="opacity-50"
+                        :journey="journey"
+                        :stationGroups="stationGroups"
+                        priority="hidden"
+                        @priorityChange="
+                            updateJourneyPriority(journey.id, $event)
                         "
                     />
-                </span>
-                <span>is</span>
-                <select
-                    class="appInput sentenceField__control min-w-52 grow"
-                    :value="journeyPriority(journey.id)"
-                    @change="updateJourneyPriority(journey.id, $event)"
-                >
-                    <option value="primary">a primary journey</option>
-                    <option value="secondary">
-                        shown under Other journeys
-                    </option>
-                    <option value="hidden">hidden during this schedule</option>
-                </select>
-            </label>
+                </div>
+            </details>
         </fieldset>
-
-        <button
-            class="appButton appButton--danger px-2 py-1"
-            type="button"
-            @click="emit('remove')"
-        >
-            <AppIcon class="size-4" name="trash" />
-            Remove schedule
-        </button>
     </div>
 </template>
 
@@ -158,11 +155,7 @@ import type {
     StationGroup,
     Journey,
 } from "../../../dto/dashboardConfig.dto";
-import {
-    getJourneyLabelDetails,
-    type JourneyLabelDetails,
-} from "../../../journeys/journeyLabels";
-import JourneyLabel from "../../journeys/JourneyLabel.vue";
+import ScheduleJourneyPriorityInput from "./ScheduleJourneyPriorityInput.vue";
 
 const props = defineProps<{
     stationGroups: StationGroup[];
@@ -175,28 +168,22 @@ const emit = defineEmits<{
     remove: [];
 }>();
 
-const activeDaysText = computed(
-    () =>
-        days
-            .filter((day) => schedule.value.days.includes(day.value))
-            .map((day) => day.label)
-            .join(", ") || "No days selected"
+const activeDaysText = computed(() => getActiveDaysText(schedule.value.days));
+
+const primaryJourneys = computed(() =>
+    props.journeys.filter((journey) =>
+        schedule.value.primaryJourneyIds.includes(journey.id)
+    )
 );
 
-const primaryJourneyLabels = computed<JourneyLabelDetails[]>(() =>
-    props.journeys
-        .filter((journey) =>
-            schedule.value.primaryJourneyIds.includes(journey.id)
-        )
-        .map((journey) => getJourneyLabelDetails(journey, props.stationGroups))
+const secondaryJourneys = computed(() =>
+    props.journeys.filter((journey) =>
+        schedule.value.secondaryJourneyIds.includes(journey.id)
+    )
 );
 
-const secondaryJourneyLabels = computed<JourneyLabelDetails[]>(() =>
-    props.journeys
-        .filter((journey) =>
-            schedule.value.secondaryJourneyIds.includes(journey.id)
-        )
-        .map((journey) => getJourneyLabelDetails(journey, props.stationGroups))
+const hiddenJourneys = computed(() =>
+    props.journeys.filter((journey) => journeyPriority(journey.id) === "hidden")
 );
 
 type PairPriority = "hidden" | "primary" | "secondary";
@@ -223,9 +210,10 @@ function journeyPriority(journeyId: string): PairPriority {
     return "hidden";
 }
 
-function updateJourneyPriority(journeyId: string, event: Event): void {
-    const priority = (event.target as HTMLSelectElement).value as PairPriority;
-
+function updateJourneyPriority(
+    journeyId: string,
+    priority: PairPriority
+): void {
     schedule.value.primaryJourneyIds = schedule.value.primaryJourneyIds.filter(
         (selectedPairId) => selectedPairId !== journeyId
     );
@@ -241,5 +229,44 @@ function updateJourneyPriority(journeyId: string, event: Event): void {
     if (priority === "secondary") {
         schedule.value.secondaryJourneyIds.push(journeyId);
     }
+}
+
+function getActiveDaysText(activeDays: Day[]): string {
+    const selectedDays = days.filter((day) => activeDays.includes(day.value));
+
+    if (selectedDays.length === 0) {
+        return "No days selected";
+    }
+
+    if (selectedDays.length === days.length) {
+        return "Every day";
+    }
+
+    const ranges: Array<(typeof days)[number][]> = [];
+
+    selectedDays.forEach((day) => {
+        const currentRange = ranges.at(-1);
+        const previousDay = currentRange?.at(-1);
+        const daysAreConsecutive =
+            previousDay && days.indexOf(day) === days.indexOf(previousDay) + 1;
+
+        if (currentRange && daysAreConsecutive) {
+            currentRange.push(day);
+            return;
+        }
+
+        ranges.push([day]);
+    });
+
+    return ranges
+        .map((range) => {
+            const firstDay = range.at(0)!;
+            const lastDay = range.at(-1)!;
+
+            return range.length === 1
+                ? firstDay.label
+                : `${firstDay.label}–${lastDay.label}`;
+        })
+        .join(", ");
 }
 </script>

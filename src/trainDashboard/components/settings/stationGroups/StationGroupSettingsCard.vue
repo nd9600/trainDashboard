@@ -21,7 +21,7 @@
             <div
                 v-for="(station, stationIndex) in group.stations"
                 :key="stationIndex"
-                class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2"
+                class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-2 gap-y-2"
             >
                 <div>
                     <span class="mb-1 block text-xs text-ink-subtle">
@@ -40,6 +40,21 @@
                 >
                     <AppIcon class="size-4" name="trash" />
                 </button>
+                <label
+                    class="col-span-2 flex flex-wrap items-baseline gap-2 pr-11 pl-3 text-sm text-ink-muted"
+                >
+                    Walking here takes
+                    <input
+                        class="appInput w-20 grow-0"
+                        :min="0"
+                        placeholder="Not set"
+                        :step="1"
+                        :value="station.walkMinutes ?? ''"
+                        type="number"
+                        @input="updateWalkMinutes(stationIndex, $event)"
+                    />
+                    minutes.
+                </label>
             </div>
         </div>
 
@@ -74,5 +89,11 @@ function addStation(): void {
 function removeStation(stationIndex: number): void {
     group.value.stations.splice(stationIndex, 1);
     emit("changed");
+}
+
+function updateWalkMinutes(stationIndex: number, event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    const station = group.value.stations[stationIndex]!;
+    station.walkMinutes = value === "" ? undefined : Number(value);
 }
 </script>

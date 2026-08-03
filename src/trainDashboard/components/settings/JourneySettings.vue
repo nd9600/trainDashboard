@@ -12,23 +12,18 @@
             variant="card"
         />
 
-        <JourneysSettings
-            v-if="activeEditorSection === 'journeys'"
-            v-model:journeys="draft.journeys"
-            :stationGroups="draft.stationGroups"
-            @changed="handleChange"
-            @remove="removeJourney"
-        />
         <StationGroupsSettings
-            v-else-if="activeEditorSection === 'stationGroups'"
+            v-if="activeEditorSection === 'stationGroups'"
             v-model:stationGroups="draft.stationGroups"
             @changed="handleChange"
             @remove="removeGroup"
         />
-        <WalkTimesSettings
-            v-else-if="activeEditorSection === 'walk-times'"
-            v-model:stationGroups="draft.stationGroups"
+        <JourneysSettings
+            v-else-if="activeEditorSection === 'journeys'"
+            v-model:journeys="draft.journeys"
+            :stationGroups="draft.stationGroups"
             @changed="handleChange"
+            @remove="removeJourney"
         />
         <SchedulesSettings
             v-else-if="activeEditorSection === 'schedules'"
@@ -72,7 +67,6 @@ import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import JourneysSettings from "./journeys/JourneysSettings.vue";
 import SchedulesSettings from "./schedules/SchedulesSettings.vue";
 import StationGroupsSettings from "./stationGroups/StationGroupsSettings.vue";
-import WalkTimesSettings from "./walkTimes/WalkTimesSettings.vue";
 
 const dashboardConfigStore = useDashboardConfigStore();
 const draft = ref<DashboardConfig>(cloneConfig(dashboardConfigStore.config));
@@ -89,9 +83,8 @@ const emit = defineEmits<{
 
 const activeEditorSection = ref("journeys");
 const editorSections = [
+    {value: "stationGroups", label: "Stations", icon: "map-pin" as const},
     {value: "journeys", label: "Journeys", icon: "train" as const},
-    {value: "stationGroups", label: "Station groups", icon: "map-pin" as const},
-    {value: "walk-times", label: "Walk times", icon: "walk" as const},
     {value: "schedules", label: "Schedules", icon: "clock" as const},
 ];
 function save(): void {

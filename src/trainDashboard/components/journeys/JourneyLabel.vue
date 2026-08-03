@@ -1,17 +1,13 @@
 <template>
     <span>
-        {{ details.origin.name }}
-
-        <template v-if="details.origin.stationCrs">
+        {{ details.origin.name }}<template v-if="details.origin.stationCrs">
             <span>, through </span>
             <StationLabel :crs="details.origin.stationCrs" />
         </template>
 
         <span> → </span>
 
-        {{ details.destination.name }}
-
-        <template v-if="details.destination.stationCrs">
+        {{ details.destination.name }}<template v-if="details.destination.stationCrs">
             <span>, arriving at </span>
             <StationLabel :crs="details.destination.stationCrs" />
         </template>

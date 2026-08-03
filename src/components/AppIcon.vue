@@ -56,6 +56,11 @@
             />
         </template>
 
+        <template v-else-if="name === 'eye'">
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+            <circle cx="12" cy="12" r="3" />
+        </template>
+
         <template v-else-if="name === 'map-pin'">
             <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
             <circle cx="12" cy="10" r="2.5" />
@@ -83,6 +88,7 @@ defineProps<{
         | "chevron"
         | "close"
         | "clock"
+        | "eye"
         | "external-link"
         | "home"
         | "key"
