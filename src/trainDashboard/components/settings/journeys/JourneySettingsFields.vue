@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-2">
-        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-3">
+        <div class="flex flex-wrap items-end gap-x-2 gap-y-3">
             <LocationReferenceInput
                 v-model="journey.origin"
                 :stationGroups="stationGroups"
@@ -60,7 +60,7 @@
             @click="emit('remove')"
         >
             <AppIcon class="size-3.5" name="trash" />
-            Remove from schedule
+            Remove journey from schedule
         </button>
     </div>
 </template>
