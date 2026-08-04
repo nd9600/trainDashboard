@@ -72,7 +72,7 @@ describe("getActiveJourneyPlan", () => {
         ).toEqual(["ANL-GLQ"]);
     });
 
-    it("preserves the configured connecting station on journey routes", () => {
+    it("includes direct and configured connecting routes", () => {
         const config = structuredClone(defaultDashboardConfig);
         config.journeys[0]!.viaCrs = "GLQ";
 
@@ -81,9 +81,11 @@ describe("getActiveJourneyPlan", () => {
             minutes: 8 * 60,
         });
 
-        expect(activePlan.primaryRoutes).toHaveLength(2);
+        expect(activePlan.primaryRoutes).toHaveLength(4);
         expect(activePlan.primaryRoutes.map((route) => route.viaCrs)).toEqual([
+            undefined,
             "GLQ",
+            undefined,
             "GLQ",
         ]);
     });
@@ -110,6 +112,7 @@ describe("getActiveJourneyPlan", () => {
             }))
         ).toEqual([
             {stations: "CHC-ANL", viaCrs: undefined},
+            {stations: "CHC-KVD", viaCrs: undefined},
             {stations: "CHC-KVD", viaCrs: "ANL"},
         ]);
     });

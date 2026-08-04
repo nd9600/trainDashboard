@@ -13,7 +13,7 @@
         </template>
 
         <template v-if="details.connectingStationCrs">
-            <span>, connecting through </span>
+            <span>, possibly connecting through </span>
             <StationLabel :crs="details.connectingStationCrs" />
         </template>
     </span>

@@ -36,27 +36,44 @@ export function getRoutesForJourneys(
             stationGroupsById
         );
 
-        return origins
-            .filter(
-                (origin) =>
-                    journey.viaCrs === undefined ||
-                    origin.crs !== journey.viaCrs
-            )
-            .flatMap((origin) =>
-                destinations
-                    .filter((destination) => destination.crs !== origin.crs)
-                    .map((destination) => ({
-                        id: `${journey.id}:${origin.crs}-${destination.crs}`,
-                        journeyId: journey.id,
-                        origin,
-                        destination,
-                        viaCrs:
-                            destination.crs === journey.viaCrs
-                                ? undefined
-                                : journey.viaCrs,
-                    }))
-            );
+        return origins.flatMap((origin) =>
+            destinations
+                .filter((destination) => destination.crs !== origin.crs)
+                .flatMap((destination) =>
+                    getRouteOptions(journey, origin, destination)
+                )
+        );
     });
+}
+
+function getRouteOptions(
+    journey: Journey,
+    origin: StationEndpoint,
+    destination: StationEndpoint
+): JourneyRoute[] {
+    const routeId = `${journey.id}:${origin.crs}-${destination.crs}`;
+    const route = {
+        journeyId: journey.id,
+        origin,
+        destination,
+    };
+
+    if (
+        journey.viaCrs === undefined ||
+        journey.viaCrs === origin.crs ||
+        journey.viaCrs === destination.crs
+    ) {
+        return [{id: routeId, ...route}];
+    }
+
+    return [
+        {id: `${routeId}:direct`, ...route},
+        {
+            id: `${routeId}:via-${journey.viaCrs}`,
+            ...route,
+            viaCrs: journey.viaCrs,
+        },
+    ];
 }
 
 function getStationsForLocation(

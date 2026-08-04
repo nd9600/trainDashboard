@@ -127,7 +127,7 @@ describe("getJourneyLabelText", () => {
                 connectingStationCrs: "GLQ",
             })
         ).toBe(
-            "Home, through Kelvindale → Work, arriving at Charing Cross (Glasgow), connecting through Glasgow Queen Street"
+            "Home, through Kelvindale → Work, arriving at Charing Cross (Glasgow), possibly connecting through Glasgow Queen Street"
         );
     });
 });

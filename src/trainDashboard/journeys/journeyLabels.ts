@@ -58,7 +58,7 @@ export function getJourneyLabelText(details: JourneyLabelDetails): string {
     const origin = getEndpointText(details.origin, "origin");
     const destination = getEndpointText(details.destination, "destination");
     const connection = details.connectingStationCrs
-        ? `, connecting through ${stationName(details.connectingStationCrs)}`
+        ? `, possibly connecting through ${stationName(details.connectingStationCrs)}`
         : "";
 
     return `${origin} → ${destination}${connection}`;

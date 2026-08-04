@@ -20,7 +20,7 @@
 
             <template v-if="journey.viaCrs !== undefined">
                 <label class="sentenceField">
-                    connecting through
+                    possibly connecting through
                     <StationInput
                         v-model="journey.viaCrs"
                         class="sentenceField__control min-w-52 grow"
