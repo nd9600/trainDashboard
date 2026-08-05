@@ -101,7 +101,7 @@ export async function getTimetabledJourneys(
                     );
 
                     // 3. Use the latest catchable first train.
-                    const firstTrainLeg = [...catchableFirstTrainLegs]
+                    const orderedFirstTrainLegs = catchableFirstTrainLegs
                         // 4. Exclude a false transfer onto the same service.
                         .filter(
                             (candidate) =>
@@ -110,15 +110,16 @@ export async function getTimetabledJourneys(
                         .sort(
                             (first, second) =>
                                 second.departure - first.departure
-                        )
-                        .at(0);
+                        );
+                    const firstTrainLeg = orderedFirstTrainLegs.at(0);
 
                     return firstTrainLeg
                         ? [
-                              createJourney(route, [
-                                  firstTrainLeg,
-                                  onwardTrainLeg,
-                              ]),
+                              createJourney(
+                                  route,
+                                  [firstTrainLeg, onwardTrainLeg],
+                                  orderedFirstTrainLegs.slice(1)
+                              ),
                           ]
                         : [];
                 });
@@ -231,7 +232,8 @@ function createServiceLeg(
 
 function createJourney(
     route: JourneyRoute,
-    serviceLegs: ServiceLeg[]
+    serviceLegs: ServiceLeg[],
+    alternativeFirstTrainLegs: ServiceLeg[] = []
 ): TimetabledJourney {
     const firstLeg = serviceLegs.at(0)!;
     const lastLeg = serviceLegs.at(-1)!;
@@ -306,6 +308,14 @@ function createJourney(
         walkingTimesKnown,
         segments,
         trainLegs: serviceLegs.map(
+            ({origin, destination, departure, arrival}) => ({
+                origin,
+                destination,
+                departure,
+                arrival,
+            })
+        ),
+        alternativeFirstTrainLegs: alternativeFirstTrainLegs.map(
             ({origin, destination, departure, arrival}) => ({
                 origin,
                 destination,

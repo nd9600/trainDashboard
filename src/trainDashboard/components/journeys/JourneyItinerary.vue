@@ -40,6 +40,11 @@
                         :departureMinutes="step.trainLeg.departure"
                         :label="`${stationName(step.trainLeg.origin)} → ${stationName(step.trainLeg.destination)}, NRE`"
                     />
+                    <AlternativeFirstTrainLink
+                        v-if="step.alternativeFirstTrainLeg"
+                        class="mt-1 flex"
+                        :trainLeg="step.alternativeFirstTrainLeg"
+                    />
                 </div>
             </div>
         </li>
@@ -56,6 +61,7 @@ import type {
 } from "../../dto/timetabledJourney.dto";
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
+import AlternativeFirstTrainLink from "./AlternativeFirstTrainLink.vue";
 import NationalRailLink from "./NationalRailLink.vue";
 
 const props = defineProps<{
@@ -72,6 +78,7 @@ interface ItineraryStep {
     suffix?: string;
     time?: number;
     trainLeg?: TrainLeg;
+    alternativeFirstTrainLeg?: TrainLeg;
 }
 
 const itinerarySteps = computed<ItineraryStep[]>(() => {
@@ -99,6 +106,10 @@ const itinerarySteps = computed<ItineraryStep[]>(() => {
             label: "Train from",
             stationCrs: leg.origin,
             trainLeg: leg,
+            alternativeFirstTrainLeg:
+                index === 0
+                    ? journey.alternativeFirstTrainLegs?.at(0)
+                    : undefined,
         });
         steps.push({
             id: `arrival-${index}`,

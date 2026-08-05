@@ -264,7 +264,7 @@ describe("getTimetabledJourneys", () => {
 
     it("orders every catchable onward train by final arrival time", async () => {
         mockDepartureBoards({
-            "ANL-GLQ": [service("feeder", "10:05", "GLQ", "10:20")],
+            "ANL-GLQ": [service("first-train", "10:05", "GLQ", "10:20")],
             "GLQ-EDB": [
                 service("slower", "10:25", "EDB", "11:30"),
                 service("faster", "10:35", "EDB", "11:20"),
@@ -289,11 +289,11 @@ describe("getTimetabledJourneys", () => {
         ]);
     });
 
-    it("uses the latest feeder train for the same onward service", async () => {
+    it("uses the latest first train for the same onward service", async () => {
         mockDepartureBoards({
             "ANL-GLQ": [
-                service("early-feeder", "10:05", "GLQ", "10:20"),
-                service("late-feeder", "10:15", "GLQ", "10:30"),
+                service("early-first-train", "10:05", "GLQ", "10:20"),
+                service("late-first-train", "10:15", "GLQ", "10:30"),
             ],
             "GLQ-EDB": [service("onward", "10:40", "EDB", "11:20")],
         });
@@ -307,6 +307,9 @@ describe("getTimetabledJourneys", () => {
 
         expect(journeys).toHaveLength(1);
         expect(journeys[0]!.trainLegs[0]!.departure).toBe(10 * 60 + 15);
+        expect(journeys[0]!.alternativeFirstTrainLegs).toEqual([
+            expect.objectContaining({departure: 10 * 60 + 5}),
+        ]);
     });
 
     it("does not treat one through service as a connection to itself", async () => {

@@ -10,39 +10,51 @@
             Leave
         </p>
 
-        <p
-            v-for="leg in journey.trainLegs"
+        <template
+            v-for="(leg, legIndex) in journey.trainLegs"
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
-            class="flex min-w-0 items-baseline gap-x-1 whitespace-nowrap"
         >
-            <NationalRailLink
-                class="shrink-0 text-sm! font-semibold! text-ink!"
-                :originCrs="leg.origin"
-                :destinationCrs="leg.destination"
-                :departureMinutes="leg.departure"
-                :label="formatTime(leg.departure)"
-                :ariaLabel="`View the ${formatTime(leg.departure)} ${stationName(leg.origin)} to ${stationName(leg.destination)} journey on National Rail Enquiries`"
-                :isDesktop="true"
-            />
-            <strong
-                class="min-w-0 truncate"
-                :style="{color: stationColour(leg.origin)}"
-                :title="stationName(leg.origin)"
+            <p class="flex min-w-0 items-baseline gap-x-1 whitespace-nowrap">
+                <NationalRailLink
+                    class="shrink-0 text-sm! font-semibold! text-ink!"
+                    :originCrs="leg.origin"
+                    :destinationCrs="leg.destination"
+                    :departureMinutes="leg.departure"
+                    :label="formatTime(leg.departure)"
+                    :ariaLabel="`View the ${formatTime(leg.departure)} ${stationName(leg.origin)} to ${stationName(leg.destination)} journey on National Rail Enquiries`"
+                    :isDesktop="true"
+                />
+                <strong
+                    class="min-w-0 truncate"
+                    :style="{color: stationColour(leg.origin)}"
+                    :title="stationName(leg.origin)"
+                >
+                    {{ stationName(leg.origin) }}
+                </strong>
+                <span class="shrink-0">→</span>
+                <strong
+                    class="min-w-0 truncate"
+                    :style="{color: stationColour(leg.destination)}"
+                    :title="stationName(leg.destination)"
+                >
+                    {{ stationName(leg.destination) }}
+                </strong>
+                <time class="shrink-0 font-semibold text-ink">
+                    {{ formatTime(leg.arrival) }}
+                </time>
+            </p>
+            <p
+                v-if="
+                    legIndex === 0 && journey.alternativeFirstTrainLegs?.at(0)
+                "
+                class="flex justify-end"
             >
-                {{ stationName(leg.origin) }}
-            </strong>
-            <span class="shrink-0">→</span>
-            <strong
-                class="min-w-0 truncate"
-                :style="{color: stationColour(leg.destination)}"
-                :title="stationName(leg.destination)"
-            >
-                {{ stationName(leg.destination) }}
-            </strong>
-            <time class="shrink-0 font-semibold text-ink">
-                {{ formatTime(leg.arrival) }}
-            </time>
-        </p>
+                <AlternativeFirstTrainLink
+                    :trainLeg="journey.alternativeFirstTrainLegs[0]!"
+                    :isDesktop="true"
+                />
+            </p>
+        </template>
 
         <p v-if="journey.arrivalLabel && journey.arrivalTime">
             <time class="font-semibold text-ink">
@@ -58,6 +70,7 @@ import {formatTime} from "@/utilities/time.utility.ts";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
+import AlternativeFirstTrainLink from "./AlternativeFirstTrainLink.vue";
 import NationalRailLink from "./NationalRailLink.vue";
 
 defineProps<{

@@ -29,4 +29,5 @@ export interface TimetabledJourney {
     recommended?: boolean;
     segments: Segment[];
     trainLegs: TrainLeg[];
+    alternativeFirstTrainLegs?: TrainLeg[];
 }
