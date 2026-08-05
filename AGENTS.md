@@ -112,18 +112,6 @@
 
   > The deployment did not start because the branch has uncommitted changes. Commit or stash the changes, and try again.
 
-  ### Review
-
-  Before you finish applicable text, confirm that:
-
-  - each sentence has one clear meaning;
-  - each instruction has one main action;
-  - terminology is consistent;
-  - conditions and warnings occur before their related actions;
-  - pronoun references are unambiguous;
-  - unnecessary words and repeated information are removed;
-  - exact technical text remains unchanged;
-
 ## Journey-planning documentation
 
 Keep `docs/journey-planning.md` consistent with the current journey-planning code.
@@ -138,83 +126,6 @@ Update its sequence diagram, call graph, and source map when a change affects:
 - catchability filtering or journey sorting;
 - the number of journeys shown;
 - the files or functions named in the document.
-  
-## English Prose Style
-
-  Apply these principles when the user requests:
-
-  - an essay;
-  - narrative or descriptive prose;
-  - criticism or commentary;
-  - persuasive writing;
-  - an introduction, speech, or article;
-  - polished prose with a distinct voice.
-
-  Do not apply this style automatically to:
-
-  - technical procedures;
-  - safety information;
-  - API documentation;
-  - error messages;
-  - code comments;
-  - short factual answers;
-  - text governed by the Simplified Technical English rules.
-
-  The requested genre, audience, and tone take precedence.
-
-  ### Vocabulary
-
-  - Choose the word that expresses the intended meaning most precisely.
-  - Consider denotation, connotation, imagery, rhythm, and sound.
-  - Do not prefer a short word only because it is short.
-  - Do not prefer a long or obscure word only because it is impressive.
-  - Use an uncommon word when it is exact, appropriate, and effective.
-  - Do not replace a precise technical or scientific term with an inaccurate familiar term.
-  - Avoid clichés, stale metaphors, empty jargon, and fashionable abstractions.
-  - Do not treat thesaurus entries as interchangeable synonyms.
-  - Check the definition and normal usage of an unfamiliar word before you use it.
-  - Use foreign words or phrases only when they express the idea more precisely or elegantly than the available English.
-
-  ### Style
-
-  - Balance clarity with beauty, rhythm, wit, and expressive force.
-  - Use simplicity and complexity as effects, not as universal rules.
-  - Do not remove a word only because the sentence remains grammatical without it.
-  - Remove a word when it weakens the meaning, rhythm, or intended effect.
-  - Use nouns, verbs, adjectives, and adverbs when they serve the sentence.
-  - Use the active or passive voice according to emphasis, agency, and rhythm.
-  - Keep related ideas structurally clear, but do not force every modifier beside the word it modifies.
-  - Use imagery and ornament when they strengthen the passage.
-  - Do not add ornament that obscures the subject or produces unintended parody.
-  - Let important passages have a recognizable voice. Do not make all prose uniformly plain.
-  - Use semicolons and dashes when they express relationships that a period or comma would express less effectively.
-  - Vary sentence length and structure to control pace and emphasis.
-
-  ### Audience and effect
-
-  - Respect the reader’s intelligence.
-  - Do not avoid an exact word only because some readers might need to look it up.
-  - Give the reader pleasure as well as information when the genre permits it.
-  - Match the scale of the language to the scale of the subject.
-  - Reserve grand effects for moments that can support them.
-  - Do not imitate another writer so closely that the result loses its own voice.
-  - Prefer a deliberate stylistic choice over a mechanical style rule.
-
-  ### Review
-
-  Before you finish expressive prose:
-
-  - read it aloud;
-  - revise phrases that are awkward to say;
-  - confirm that unusual words have the intended meaning;
-  - remove accidental clichés and unnecessary jargon;
-  - check that each elaborate sentence remains intelligible;
-  - check that simple and complex sentences form a deliberate rhythm;
-  - confirm that imagery and ornament support the subject;
-  - confirm that the prose fits the audience and requested genre;
-  - confirm that technical accuracy was not sacrificed for elegance.
-
-  If clarity and elegance conflict, first rewrite the passage to preserve both. Sacrifice clarity only when ambiguity or difficulty is an intentional part of the requested literary effect.
 
 ## Memory
 
