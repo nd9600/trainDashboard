@@ -12,7 +12,7 @@ import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";
 import {getDepartureBoards} from "./timetable/departureBoards";
 import {getTrainOptions} from "./timetable/trainOptions";
 import {
-    addJourneySections,
+    makeTimetabledJourneys,
     getCatchableJourneys,
     markRecommendedJourney,
     sortJourneysByArrival,
@@ -76,18 +76,18 @@ export async function getDashboardJourneys(
         ),
     };
 
-    const journeysWithSections = {
-        primary: addJourneySections(trainOptions.primary),
-        secondary: addJourneySections(trainOptions.secondary),
+    const timetabledJourneys = {
+        primary: makeTimetabledJourneys(trainOptions.primary),
+        secondary: makeTimetabledJourneys(trainOptions.secondary),
     };
 
     const catchableJourneys = {
         primary: getCatchableJourneys(
-            journeysWithSections.primary,
+            timetabledJourneys.primary,
             currentClock.minutes
         ),
         secondary: getCatchableJourneys(
-            journeysWithSections.secondary,
+            timetabledJourneys.secondary,
             currentClock.minutes
         ),
     };

@@ -2,7 +2,7 @@ import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {formatTime} from "@/utilities/time.utility.ts";
 import type {TrainOption} from "./trainOptions";
 
-export function addJourneySections(
+export function makeTimetabledJourneys(
     trainOptions: TrainOption[]
 ): TimetabledJourney[] {
     return trainOptions.map((trainOption) => {

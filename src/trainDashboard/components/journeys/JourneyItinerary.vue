@@ -41,6 +41,7 @@
                         >
                             {{ stationName(step.stationCrs) }}
                         </strong>
+                        <span v-if="step.kind === 'train' && step.trainLeg?.platform">, platform {{ step.trainLeg?.platform }}</span>
                         {{ step.suffix }}
                     </p>
 

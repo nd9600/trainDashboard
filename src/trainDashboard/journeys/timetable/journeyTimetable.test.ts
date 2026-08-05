@@ -8,7 +8,7 @@ import {
 } from "./departureBoards";
 import {getTrainOptions} from "./trainOptions";
 import {
-    addJourneySections,
+    makeTimetabledJourneys,
     getCatchableJourneys,
     markRecommendedJourney,
     sortJourneysByArrival,
@@ -506,7 +506,7 @@ async function getTimetabledJourneys(
         departureBoards,
         currentMinutes
     );
-    const journeysWithSections = addJourneySections(trainOptions);
+    const journeysWithSections = makeTimetabledJourneys(trainOptions);
     const catchableJourneys = getCatchableJourneys(
         journeysWithSections,
         currentMinutes
