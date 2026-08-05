@@ -30,8 +30,48 @@ const props = defineProps<{
     flushOnMobile?: boolean;
 }>();
 
+const routesWithVaryingPlatforms = computed(() => {
+    const platformsByRoute = new Map<string, Set<string>>();
+
+    props.journeys
+        .flatMap((journey) => [
+            ...journey.trainLegs,
+            ...(journey.alternativeFirstTrainLegs ?? []),
+        ])
+        .forEach((leg) => {
+            if (!leg.platform) {
+                return;
+            }
+
+            const route = `${leg.origin}-${leg.destination}`;
+            const platforms = platformsByRoute.get(route) ?? new Set<string>();
+            platforms.add(leg.platform);
+            platformsByRoute.set(route, platforms);
+        });
+
+    return new Set(
+        Array.from(platformsByRoute)
+            .filter(([, platforms]) => platforms.size > 1)
+            .map(([route]) => route)
+    );
+});
+
 // 7. Limit the sorted journeys only after the planning steps are complete.
-const firstSixJourneys = computed(() => props.journeys.slice(0, 6));
+const firstSixJourneys = computed(() =>
+    props.journeys.slice(0, 6).map((journey) => ({
+        ...journey,
+        trainLegs: journey.trainLegs.map((leg) => ({
+            ...leg,
+            platform: !leg.platform
+                ? null
+                : routesWithVaryingPlatforms.value.has(
+                        `${leg.origin}-${leg.destination}`
+                    )
+                  ? leg.platform
+                  : undefined,
+        })),
+    }))
+);
 const timelineRange = computed(() =>
     getJourneyTimelineRange(firstSixJourneys.value, props.currentMinutes)
 );

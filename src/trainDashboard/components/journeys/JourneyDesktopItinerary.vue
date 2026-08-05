@@ -31,10 +31,11 @@
                     {{ stationName(leg.origin) }}
                 </strong>
                 <span
-                    v-if="leg.platform"
-                    class="shrink-0 text-xs font-semibold text-primary"
+                    v-if="leg.platform !== undefined"
+                    class="shrink-0 text-xs font-semibold"
+                    :style="{color: stationColour(leg.origin)}"
                 >
-                    p{{ leg.platform }}
+                    p{{ leg.platform ?? "_" }}
                 </span>
                 <span class="shrink-0">→</span>
                 <strong

@@ -13,10 +13,7 @@
                 :departureMinutes="step.trainLeg.departure"
                 :label="formatTime(step.time)"
             />
-            <time
-                v-else
-                class="py-3 text-right text-xs font-semibold text-ink"
-            >
+            <time v-else class="py-3 text-right text-xs font-semibold text-ink">
                 {{ step.time === undefined ? "" : formatTime(step.time) }}
             </time>
             <div class="border-l pl-2 py-3 flex gap-2 items-start border-line">
@@ -41,7 +38,16 @@
                         >
                             {{ stationName(step.stationCrs) }}
                         </strong>
-                        <span v-if="step.kind === 'train' && step.trainLeg?.platform">, platform {{ step.trainLeg?.platform }}</span>
+                        <span
+                            v-if="
+                                step.kind === 'train' &&
+                                step.trainLeg?.platform !== undefined
+                            "
+                            class="ml-1 whitespace-nowrap text-xs font-semibold"
+                            :style="{color: stationColour(step.trainLeg.origin)}"
+                        >
+                            p{{ step.trainLeg.platform ?? "_" }}
+                        </span>
                         {{ step.suffix }}
                     </p>
 
