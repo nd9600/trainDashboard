@@ -10,12 +10,17 @@ describe("useLocalStorageTyped", () => {
     });
 
     it("loads valid stored data", () => {
-        localStorage.setItem("settings", JSON.stringify({name: "Home"}));
+        localStorage.setItem(
+            "settings",
+            JSON.stringify({name: "Heaton Chapel"})
+        );
         const storage = useLocalStorageTyped("settings", schema, {
             name: "Default",
         });
 
-        expect(storage.loadFromLocalStorage()).toEqual({name: "Home"});
+        expect(storage.loadFromLocalStorage()).toEqual({
+            name: "Heaton Chapel",
+        });
     });
 
     it("removes invalid stored data and returns the default", () => {
@@ -33,10 +38,10 @@ describe("useLocalStorageTyped", () => {
             name: "Default",
         });
 
-        storage.saveToLocalStorage({name: "Work"});
+        storage.saveToLocalStorage({name: "Manchester Piccadilly"});
 
         expect(localStorage.getItem("settings")).toBe(
-            JSON.stringify({name: "Work"})
+            JSON.stringify({name: "Manchester Piccadilly"})
         );
     });
 });

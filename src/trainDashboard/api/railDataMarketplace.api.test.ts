@@ -10,16 +10,16 @@ describe("fetchDepartureBoard", () => {
         const fetchSpy = vi.fn().mockResolvedValue(
             new Response(
                 JSON.stringify({
-                    crs: "ANL",
-                    filtercrs: "CHC",
+                    crs: "HTC",
+                    filtercrs: "EDY",
                     trainServices: [],
                 })
             )
         );
         vi.stubGlobal("fetch", fetchSpy);
         await fetchDepartureBoard("test-consumer-key", {
-            originCrs: "anl",
-            destinationCrs: "chc",
+            originCrs: "htc",
+            destinationCrs: "edy",
             numberOfRows: 6,
             timeOffsetMinutes: 12,
             timeWindowMinutes: 90,
@@ -28,7 +28,7 @@ describe("fetchDepartureBoard", () => {
         expect(fetchSpy).toHaveBeenCalledOnce();
         const [url, options] = fetchSpy.mock.calls[0]!;
         expect(url.toString()).toBe(
-            "https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120/GetDepBoardWithDetails/ANL?numRows=6&filterCrs=CHC&filterType=to&timeOffset=12&timeWindow=90"
+            "https://api1.raildata.org.uk/1010-live-departure-board-dep1_2/LDBWS/api/20220120/GetDepBoardWithDetails/HTC?numRows=6&filterCrs=EDY&filterType=to&timeOffset=12&timeWindow=90"
         );
         expect(options).toEqual({
             headers: {

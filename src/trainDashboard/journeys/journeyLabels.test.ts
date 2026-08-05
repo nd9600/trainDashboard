@@ -12,36 +12,44 @@ import {
 
 const stationGroups: StationGroup[] = [
     {
-        id: "home",
-        name: "Home",
-        stations: [{crs: "ANL"}, {crs: "KVD"}],
+        id: "heaton-chapel",
+        name: "Heaton Chapel",
+        stations: [{crs: "HTC"}, {crs: "BNA"}],
     },
     {
-        id: "work",
-        name: "Work",
-        stations: [{crs: "CHC"}, {crs: "EXG"}],
+        id: "manchester-piccadilly",
+        name: "Manchester Piccadilly",
+        stations: [{crs: "EDY"}, {crs: "MAN"}],
     },
     {
-        id: "wendys",
-        name: "Wendy's",
-        stations: [{crs: "EDB"}],
+        id: "liverpool",
+        name: "Liverpool",
+        stations: [{crs: "LIV"}],
     },
 ];
 
 describe("getJourneyLabelDetails", () => {
     it("includes selected stations for groups with several stations", () => {
         const journey: Journey = {
-            id: "home-to-work",
-            origin: {type: "station", groupId: "home", crs: "KVD"},
-            destination: {type: "station", groupId: "work", crs: "CHC"},
+            id: "heaton-chapel-to-manchester-piccadilly",
+            origin: {type: "station", groupId: "heaton-chapel", crs: "BNA"},
+            destination: {
+                type: "station",
+                groupId: "manchester-piccadilly",
+                crs: "EDY",
+            },
         };
 
         expect(getJourneyLabelDetails(journey, stationGroups)).toEqual({
-            origin: {type: "location", name: "Home", stationCrs: "KVD"},
+            origin: {
+                type: "location",
+                name: "Heaton Chapel",
+                stationCrs: "BNA",
+            },
             destination: {
                 type: "location",
-                name: "Work",
-                stationCrs: "CHC",
+                name: "Manchester Piccadilly",
+                stationCrs: "EDY",
             },
             connectingStationCrs: undefined,
         });
@@ -49,24 +57,24 @@ describe("getJourneyLabelDetails", () => {
 
     it("omits a selected station for a group with one station", () => {
         const journey: Journey = {
-            id: "home-to-wendys",
-            origin: {type: "group", groupId: "home"},
-            destination: {type: "station", groupId: "wendys", crs: "EDB"},
-            viaCrs: "GLQ",
+            id: "heaton-chapel-to-liverpool",
+            origin: {type: "group", groupId: "heaton-chapel"},
+            destination: {type: "station", groupId: "liverpool", crs: "LIV"},
+            viaCrs: "MAN",
         };
 
         expect(getJourneyLabelDetails(journey, stationGroups)).toEqual({
             origin: {
                 type: "location",
-                name: "Home",
+                name: "Heaton Chapel",
                 stationCrs: undefined,
             },
             destination: {
                 type: "location",
-                name: "Wendy's",
+                name: "Liverpool",
                 stationCrs: undefined,
             },
-            connectingStationCrs: "GLQ",
+            connectingStationCrs: "MAN",
         });
     });
 });
@@ -74,17 +82,17 @@ describe("getJourneyLabelDetails", () => {
 describe("getRouteLabelDetails", () => {
     it("uses group names and the configured connecting station", () => {
         const route: JourneyRoute = {
-            id: "home-to-wendys:KVD-EDB",
-            journeyId: "home-to-wendys",
-            origin: {crs: "KVD", locationName: "Home"},
-            destination: {crs: "EDB", locationName: "Wendy's"},
-            viaCrs: "GLQ",
+            id: "heaton-chapel-to-liverpool:BNA-LIV",
+            journeyId: "heaton-chapel-to-liverpool",
+            origin: {crs: "BNA", locationName: "Heaton Chapel"},
+            destination: {crs: "LIV", locationName: "Liverpool"},
+            viaCrs: "MAN",
         };
 
         expect(getRouteLabelDetails(route)).toEqual({
-            origin: {type: "location", name: "Home"},
-            destination: {type: "location", name: "Wendy's"},
-            connectingStationCrs: "GLQ",
+            origin: {type: "location", name: "Heaton Chapel"},
+            destination: {type: "location", name: "Liverpool"},
+            connectingStationCrs: "MAN",
         });
     });
 });
@@ -92,17 +100,17 @@ describe("getRouteLabelDetails", () => {
 describe("getStationRouteLabelDetails", () => {
     it("uses concrete stations and the configured connecting station", () => {
         const route: JourneyRoute = {
-            id: "work-to-home:KVD-EXG",
-            journeyId: "work-to-home",
-            origin: {crs: "KVD", locationName: "Home"},
-            destination: {crs: "EXG", locationName: "Work"},
-            viaCrs: "GLQ",
+            id: "heaton-chapel-to-manchester-piccadilly:BNA-EDY",
+            journeyId: "heaton-chapel-to-manchester-piccadilly",
+            origin: {crs: "BNA", locationName: "Heaton Chapel"},
+            destination: {crs: "EDY", locationName: "Manchester Piccadilly"},
+            viaCrs: "MAN",
         };
 
         expect(getStationRouteLabelDetails(route)).toEqual({
-            origin: {type: "station", stationCrs: "KVD"},
-            destination: {type: "station", stationCrs: "EXG"},
-            connectingStationCrs: "GLQ",
+            origin: {type: "station", stationCrs: "BNA"},
+            destination: {type: "station", stationCrs: "EDY"},
+            connectingStationCrs: "MAN",
         });
     });
 });
@@ -111,39 +119,39 @@ describe("getTimetabledJourneyLabelDetails", () => {
     it("gets the connecting station from a journey with two train legs", () => {
         const journey = getTimetabledJourney([
             {
-                origin: "KVD",
-                destination: "GLQ",
+                origin: "BNA",
+                destination: "MAN",
                 departure: 600,
                 arrival: 620,
             },
             {
-                origin: "GLQ",
-                destination: "EDB",
+                origin: "MAN",
+                destination: "LIV",
                 departure: 630,
                 arrival: 680,
             },
         ]);
 
         expect(getTimetabledJourneyLabelDetails(journey)).toEqual({
-            origin: {type: "location", name: "Home"},
-            destination: {type: "location", name: "Wendy's"},
-            connectingStationCrs: "GLQ",
+            origin: {type: "location", name: "Heaton Chapel"},
+            destination: {type: "location", name: "Liverpool"},
+            connectingStationCrs: "MAN",
         });
     });
 
     it("does not treat the destination of a direct train as a connection", () => {
         const journey = getTimetabledJourney([
             {
-                origin: "KVD",
-                destination: "EDB",
+                origin: "BNA",
+                destination: "LIV",
                 departure: 600,
                 arrival: 680,
             },
         ]);
 
         expect(getTimetabledJourneyLabelDetails(journey)).toEqual({
-            origin: {type: "location", name: "Home"},
-            destination: {type: "location", name: "Wendy's"},
+            origin: {type: "location", name: "Heaton Chapel"},
+            destination: {type: "location", name: "Liverpool"},
             connectingStationCrs: undefined,
         });
     });
@@ -155,18 +163,18 @@ describe("getJourneyLabelText", () => {
             getJourneyLabelText({
                 origin: {
                     type: "location",
-                    name: "Home",
-                    stationCrs: "KVD",
+                    name: "Heaton Chapel",
+                    stationCrs: "BNA",
                 },
                 destination: {
                     type: "location",
-                    name: "Work",
-                    stationCrs: "CHC",
+                    name: "Manchester Piccadilly",
+                    stationCrs: "EDY",
                 },
-                connectingStationCrs: "GLQ",
+                connectingStationCrs: "MAN",
             })
         ).toBe(
-            "Home, from Kelvindale → Work, arriving at Charing Cross (Glasgow), possibly connecting through Glasgow Queen Street"
+            "Heaton Chapel, from Burnage → Manchester Piccadilly, arriving at East Didsbury, possibly connecting through Manchester Piccadilly"
         );
     });
 });
@@ -175,12 +183,12 @@ function getTimetabledJourney(
     trainLegs: TimetabledJourney["trainLegs"]
 ): TimetabledJourney {
     return {
-        id: "home-to-wendys:KVD-EDB:600",
-        journeyId: "home-to-wendys",
-        origin: "KVD",
-        originLocationName: "Home",
-        destination: "EDB",
-        destinationLocationName: "Wendy's",
+        id: "heaton-chapel-to-liverpool:BNA-LIV:600",
+        journeyId: "heaton-chapel-to-liverpool",
+        origin: "BNA",
+        originLocationName: "Heaton Chapel",
+        destination: "LIV",
+        destinationLocationName: "Liverpool",
         railArrivalTime: "11:20",
         walkingTimesKnown: true,
         segments: trainLegs.map((leg) => ({

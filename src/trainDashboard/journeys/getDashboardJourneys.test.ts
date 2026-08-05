@@ -1,5 +1,5 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
+import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
 import * as railDataMarketplaceApi from "../api/railDataMarketplace.api";
 import {getDashboardJourneys} from "./getDashboardJourneys";
 
@@ -10,21 +10,19 @@ describe("getDashboardJourneys", () => {
 
     it("selects and expands configured journeys without an API key", async () => {
         const result = await getDashboardJourneys(
-            defaultDashboardConfig,
+            manchesterDashboardConfig,
             {day: 1, minutes: 8 * 60},
             ""
         );
 
         expect(result.activeSchedule?.id).toBe("weekday-morning");
         expect(result.primaryRoutes.map((route) => route.journeyId)).toEqual([
-            "home-to-work",
-            "home-to-work",
+            "heaton-chapel-to-manchester-piccadilly",
+            "heaton-chapel-to-manchester-piccadilly",
         ]);
         expect(result.secondaryRoutes.map((route) => route.journeyId)).toEqual([
-            "home-to-glasgow",
-            "home-to-glasgow",
-            "home-to-glasgow",
-            "home-to-glasgow",
+            "heaton-chapel-to-liverpool",
+            "heaton-chapel-to-liverpool",
         ]);
         expect(result.primaryJourneys).toEqual([]);
         expect(result.secondaryJourneys).toEqual([]);
@@ -58,7 +56,7 @@ describe("getDashboardJourneys", () => {
         }));
 
         const result = await getDashboardJourneys(
-            defaultDashboardConfig,
+            manchesterDashboardConfig,
             {day: 1, minutes: 8 * 60},
             "test-key"
         );
@@ -67,7 +65,7 @@ describe("getDashboardJourneys", () => {
         expect(
             result.primaryJourneys.find((journey) => journey.recommended)
                 ?.destination
-        ).toBe("CHC");
-        expect(result.secondaryJourneys).toHaveLength(4);
+        ).toBe("EDY");
+        expect(result.secondaryJourneys).toHaveLength(2);
     });
 });

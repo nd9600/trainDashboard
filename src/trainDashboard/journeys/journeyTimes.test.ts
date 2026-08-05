@@ -6,11 +6,11 @@ describe("getJourneyTimelineRange", () => {
     it("covers the earliest segment start and latest segment end", () => {
         const journey: TimetabledJourney = {
             id: "connected",
-            journeyId: "home-to-wendys",
-            origin: "KVD",
-            originLocationName: "Home",
-            destination: "EDB",
-            destinationLocationName: "Wendy's",
+            journeyId: "heaton-chapel-to-liverpool",
+            origin: "BNA",
+            originLocationName: "Heaton Chapel",
+            destination: "LIV",
+            destinationLocationName: "Liverpool",
             railArrivalTime: "18:00",
             walkingTimesKnown: true,
             segments: [
@@ -21,14 +21,14 @@ describe("getJourneyTimelineRange", () => {
             ],
             trainLegs: [
                 {
-                    origin: "KVD",
-                    destination: "GLQ",
+                    origin: "BNA",
+                    destination: "MAN",
                     departure: 15 * 60 + 5,
                     arrival: 15 * 60 + 20,
                 },
                 {
-                    origin: "GLQ",
-                    destination: "EDB",
+                    origin: "MAN",
+                    destination: "LIV",
                     departure: 15 * 60 + 30,
                     arrival: 18 * 60,
                 },

@@ -7,13 +7,13 @@ import {
 
 describe("station lookup", () => {
     it("shows the station name and CRS code", () => {
-        expect(stationDisplayName("ANL")).toBe("Anniesland (ANL)");
+        expect(stationDisplayName("HTC")).toBe("Heaton Chapel (HTC)");
     });
 
-    it.each(["ANL", "Anniesland", "Anniesland (ANL)"])(
-        "finds Anniesland from %s",
+    it.each(["HTC", "Heaton Chapel", "Heaton Chapel (HTC)"])(
+        "finds Heaton Chapel from %s",
         (search) => {
-            expect(stationCodeFromInput(search)).toBe("ANL");
+            expect(stationCodeFromInput(search)).toBe("HTC");
         }
     );
 
@@ -21,11 +21,11 @@ describe("station lookup", () => {
         expect(findStationOptions("a")).toHaveLength(10);
     });
 
-    it.each(["Annies", "ANL"])("searches stations with %s", (search) => {
+    it.each(["Heaton", "HTC"])("searches stations with %s", (search) => {
         expect(findStationOptions(search)).toContainEqual({
-            code: "ANL",
-            label: "Anniesland (ANL)",
-            name: "Anniesland",
+            code: "HTC",
+            label: "Heaton Chapel (HTC)",
+            name: "Heaton Chapel",
         });
     });
 });

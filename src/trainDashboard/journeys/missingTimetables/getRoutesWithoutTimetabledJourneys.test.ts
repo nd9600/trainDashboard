@@ -5,8 +5,8 @@ import {getRoutesWithoutTimetabledJourneys} from "./getRoutesWithoutTimetabledJo
 
 describe("getRoutesWithoutTimetabledJourneys", () => {
     it("returns each journey route that has no loaded journey", () => {
-        const routes = [journeyRoute("ANL", "EDB"), journeyRoute("KVD", "EDB")];
-        const timetabledJourneys = [journey("ANL", "EDB")];
+        const routes = [journeyRoute("HTC", "LIV"), journeyRoute("BNA", "LIV")];
+        const timetabledJourneys = [journey("HTC", "LIV")];
 
         expect(
             getRoutesWithoutTimetabledJourneys(routes, timetabledJourneys)
@@ -14,11 +14,11 @@ describe("getRoutesWithoutTimetabledJourneys", () => {
     });
 
     it("returns one missing route for direct and connected options with the same endpoints", () => {
-        const directRoute = journeyRoute("EXG", "KVD");
+        const directRoute = journeyRoute("EDY", "BNA");
         const connectedRoute = {
-            ...journeyRoute("EXG", "KVD"),
-            id: "work-to-home:EXG-KVD:via-GLQ",
-            viaCrs: "GLQ",
+            ...journeyRoute("EDY", "BNA"),
+            id: "manchester-piccadilly-to-heaton-chapel:EDY-BNA:via-MAN",
+            viaCrs: "MAN",
         };
 
         expect(
@@ -32,21 +32,21 @@ describe("getRoutesWithoutTimetabledJourneys", () => {
 
 function journeyRoute(origin: string, destination: string): JourneyRoute {
     return {
-        id: `home-to-wendys:${origin}-${destination}`,
-        journeyId: "home-to-wendys",
-        origin: {crs: origin, locationName: "Home"},
-        destination: {crs: destination, locationName: "Wendy's"},
+        id: `heaton-chapel-to-liverpool:${origin}-${destination}`,
+        journeyId: "heaton-chapel-to-liverpool",
+        origin: {crs: origin, locationName: "Heaton Chapel"},
+        destination: {crs: destination, locationName: "Liverpool"},
     };
 }
 
 function journey(origin: string, destination: string): TimetabledJourney {
     return {
         id: `${origin}-${destination}:1700`,
-        journeyId: "home-to-wendys",
+        journeyId: "heaton-chapel-to-liverpool",
         origin,
-        originLocationName: "Home",
+        originLocationName: "Heaton Chapel",
         destination,
-        destinationLocationName: "Wendy's",
+        destinationLocationName: "Liverpool",
         railArrivalTime: "18:00",
         walkingTimesKnown: false,
         segments: [{kind: "train", start: 17 * 60, end: 18 * 60}],

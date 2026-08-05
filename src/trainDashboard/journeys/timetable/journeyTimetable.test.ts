@@ -21,18 +21,18 @@ describe("journey timetable stages", () => {
     it("uses the walking times from a configured journey route", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [journeyRoute("ANL", "CHC", 15, 8)],
+            [journeyRoute("HTC", "EDY", 15, 8)],
             8 * 60,
             false
         );
 
         expect(journeys[0]).toMatchObject({
             journeyId: "journeys",
-            origin: "ANL",
-            originLocationName: "Home",
-            destination: "CHC",
-            destinationLocationName: "Work",
-            arrivalLabel: "Work",
+            origin: "HTC",
+            originLocationName: "Heaton Chapel",
+            destination: "EDY",
+            destinationLocationName: "Manchester Piccadilly",
+            arrivalLabel: "Manchester Piccadilly",
             arrivalTime: "8:44",
             walkingTimesKnown: true,
             segments: [
@@ -47,8 +47,8 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
             [
-                journeyRoute("ANL", "CHC", 15, 8),
-                journeyRoute("ANL", "EXG", 15, 15),
+                journeyRoute("HTC", "EDY", 15, 8),
+                journeyRoute("HTC", "MAN", 15, 15),
             ],
             8 * 60,
             true
@@ -59,15 +59,15 @@ describe("journey timetable stages", () => {
         );
         expect(
             journeys.find((journey) => journey.recommended)?.destination
-        ).toBe("CHC");
+        ).toBe("EDY");
     });
 
     it("orders journeys by final arrival time", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
             [
-                journeyRoute("ANL", "EXG", 15, 15),
-                journeyRoute("ANL", "CHC", 15, 8),
+                journeyRoute("HTC", "MAN", 15, 15),
+                journeyRoute("HTC", "EDY", 15, 8),
             ],
             8 * 60,
             false
@@ -75,7 +75,7 @@ describe("journey timetable stages", () => {
 
         expect(
             journeys.slice(0, 2).map((journey) => journey.destination)
-        ).toEqual(["CHC", "EXG"]);
+        ).toEqual(["EDY", "MAN"]);
         expect(
             journeys.slice(0, 2).map((journey) => journey.segments.at(-1)!.end)
         ).toEqual([8 * 60 + 44, 8 * 60 + 48]);
@@ -83,15 +83,15 @@ describe("journey timetable stages", () => {
 
     it("prefers a later departure when journeys finish at the same time", async () => {
         mockDepartureBoards({
-            "ANL-CHC": [
-                service("early", "10:05", "CHC", "10:30"),
-                service("late", "10:15", "CHC", "10:30"),
+            "HTC-EDY": [
+                service("early", "10:05", "EDY", "10:30"),
+                service("late", "10:15", "EDY", "10:30"),
             ],
         });
 
         const journeys = await getTimetabledJourneys(
             "test-key",
-            [journeyRoute("ANL", "CHC", 0, 0)],
+            [journeyRoute("HTC", "EDY", 0, 0)],
             10 * 60,
             false
         );
@@ -104,7 +104,7 @@ describe("journey timetable stages", () => {
     it("does not show a journey when its walk has already started", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [journeyRoute("ANL", "CHC", 25, 8)],
+            [journeyRoute("HTC", "EDY", 25, 8)],
             8 * 60,
             false
         );
@@ -126,7 +126,7 @@ describe("journey timetable stages", () => {
 
         await getTimetabledJourneys(
             "test-key",
-            [journeyRoute("ANL", "CHC", 15, 8)],
+            [journeyRoute("HTC", "EDY", 15, 8)],
             8 * 60,
             false
         );
@@ -140,7 +140,7 @@ describe("journey timetable stages", () => {
         testApiAt(8 * 60);
         const departureBoardRequestCache: DepartureBoardRequestCache =
             new Map();
-        const route = journeyRoute("ANL", "CHC", 15, 8);
+        const route = journeyRoute("HTC", "EDY", 15, 8);
 
         await getTimetabledJourneys(
             "test-key",
@@ -163,7 +163,7 @@ describe("journey timetable stages", () => {
     it("omits a journeys until timetable data is available for it", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(17 * 60),
-            [journeyRoute("EDB", "GLQ", 0, 0)],
+            [journeyRoute("LIV", "MAN", 0, 0)],
             17 * 60,
             false
         );
@@ -174,7 +174,7 @@ describe("journey timetable stages", () => {
     it("shows rail segments without personalised times when walking times are unknown", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [journeyRoute("ANL", "CHC", undefined, undefined)],
+            [journeyRoute("HTC", "EDY", undefined, undefined)],
             8 * 60,
             true
         );
@@ -194,7 +194,7 @@ describe("journey timetable stages", () => {
             railDataMarketplaceApi,
             "fetchDepartureBoard"
         ).mockResolvedValue({
-            crs: "ANL",
+            crs: "HTC",
             trainServices: [
                 {
                     serviceID: "delayed-service",
@@ -205,7 +205,7 @@ describe("journey timetable stages", () => {
                         {
                             callingPoint: [
                                 {
-                                    crs: "CHC",
+                                    crs: "EDY",
                                     st: "08:36",
                                     et: "08:41",
                                 },
@@ -218,7 +218,7 @@ describe("journey timetable stages", () => {
 
         const journeys = await getTimetabledJourneys(
             "test-key",
-            [journeyRoute("ANL", "CHC", 15, 8)],
+            [journeyRoute("HTC", "EDY", 15, 8)],
             8 * 60,
             false
         );
@@ -237,14 +237,14 @@ describe("journey timetable stages", () => {
     it("combines direct services through a configured connecting station", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(15 * 60),
-            [journeyRoute("KVD", "EDB", 5, 0, "GLQ")],
+            [journeyRoute("BNA", "LIV", 5, 0, "MAN")],
             15 * 60,
             false
         );
 
         expect(journeys[0]).toMatchObject({
-            origin: "KVD",
-            destination: "EDB",
+            origin: "BNA",
+            destination: "LIV",
             railArrivalTime: "16:20",
             segments: [
                 {kind: "walk", start: 15 * 60 + 5, end: 15 * 60 + 10},
@@ -254,14 +254,14 @@ describe("journey timetable stages", () => {
             ],
             trainLegs: [
                 {
-                    origin: "KVD",
-                    destination: "GLQ",
+                    origin: "BNA",
+                    destination: "MAN",
                     departure: 15 * 60 + 10,
                     arrival: 15 * 60 + 25,
                 },
                 {
-                    origin: "GLQ",
-                    destination: "EDB",
+                    origin: "MAN",
+                    destination: "LIV",
                     departure: 15 * 60 + 30,
                     arrival: 16 * 60 + 20,
                 },
@@ -271,16 +271,16 @@ describe("journey timetable stages", () => {
 
     it("orders every catchable onward train by final arrival time", async () => {
         mockDepartureBoards({
-            "ANL-GLQ": [service("first-train", "10:05", "GLQ", "10:20")],
-            "GLQ-EDB": [
-                service("slower", "10:25", "EDB", "11:30"),
-                service("faster", "10:35", "EDB", "11:20"),
+            "HTC-MAN": [service("first-train", "10:05", "MAN", "10:20")],
+            "MAN-LIV": [
+                service("slower", "10:25", "LIV", "11:30"),
+                service("faster", "10:35", "LIV", "11:20"),
             ],
         });
 
         const journeys = await getTimetabledJourneys(
             "test-key",
-            [journeyRoute("ANL", "EDB", 0, 0, "GLQ")],
+            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
             10 * 60,
             false
         );
@@ -298,16 +298,16 @@ describe("journey timetable stages", () => {
 
     it("uses the latest first train for the same onward service", async () => {
         mockDepartureBoards({
-            "ANL-GLQ": [
-                service("early-first-train", "10:05", "GLQ", "10:20"),
-                service("late-first-train", "10:15", "GLQ", "10:30"),
+            "HTC-MAN": [
+                service("early-first-train", "10:05", "MAN", "10:20"),
+                service("late-first-train", "10:15", "MAN", "10:30"),
             ],
-            "GLQ-EDB": [service("onward", "10:40", "EDB", "11:20")],
+            "MAN-LIV": [service("onward", "10:40", "LIV", "11:20")],
         });
 
         const journeys = await getTimetabledJourneys(
             "test-key",
-            [journeyRoute("ANL", "EDB", 0, 0, "GLQ")],
+            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
             10 * 60,
             false
         );
@@ -321,16 +321,16 @@ describe("journey timetable stages", () => {
 
     it("does not treat one through service as a connection to itself", async () => {
         mockDepartureBoards({
-            "ANL-GLQ": [service("through", "10:05", "GLQ", "10:20")],
-            "GLQ-EDB": [
-                service("through", "10:25", "EDB", "11:20"),
-                service("connection", "10:30", "EDB", "11:30"),
+            "HTC-MAN": [service("through", "10:05", "MAN", "10:20")],
+            "MAN-LIV": [
+                service("through", "10:25", "LIV", "11:20"),
+                service("connection", "10:30", "LIV", "11:30"),
             ],
         });
 
         const journeys = await getTimetabledJourneys(
             "test-key",
-            [journeyRoute("ANL", "EDB", 0, 0, "GLQ")],
+            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
             10 * 60,
             false
         );
@@ -340,9 +340,17 @@ describe("journey timetable stages", () => {
     });
 
     it("requires three minutes to change trains", async () => {
+        mockDepartureBoards({
+            "HTC-MAN": [service("first-train", "15:10", "MAN", "15:30")],
+            "MAN-LIV": [
+                service("too-soon", "15:30", "LIV", "16:20"),
+                service("catchable", "16:00", "LIV", "16:50"),
+            ],
+        });
+
         const journeys = await getTimetabledJourneys(
-            testApiAt(15 * 60),
-            [journeyRoute("ANL", "EDB", 0, 0, "GLQ")],
+            "test-key",
+            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
             15 * 60,
             false
         );
@@ -356,11 +364,10 @@ describe("journey timetable stages", () => {
 
 function testApiAt(now: number): string {
     const routes: Record<string, {departureAfter: number; duration: number}> = {
-        "ANL-CHC": {departureAfter: 20, duration: 16},
-        "ANL-EXG": {departureAfter: 20, duration: 13},
-        "ANL-GLQ": {departureAfter: 10, duration: 20},
-        "GLQ-EDB": {departureAfter: 30, duration: 50},
-        "KVD-GLQ": {departureAfter: 10, duration: 15},
+        "HTC-EDY": {departureAfter: 20, duration: 16},
+        "HTC-MAN": {departureAfter: 20, duration: 13},
+        "MAN-LIV": {departureAfter: 30, duration: 50},
+        "BNA-MAN": {departureAfter: 10, duration: 15},
     };
 
     vi.spyOn(railDataMarketplaceApi, "fetchDepartureBoard").mockImplementation(
@@ -471,12 +478,12 @@ function journeyRoute(
         origin: {
             crs: origin,
             walkMinutes: originWalkMinutes,
-            locationName: "Home",
+            locationName: "Heaton Chapel",
         },
         destination: {
             crs: destination,
             walkMinutes: destinationWalkMinutes,
-            locationName: "Work",
+            locationName: "Manchester Piccadilly",
         },
         viaCrs,
     };

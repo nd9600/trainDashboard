@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {defaultDashboardConfig} from "../config/defaultDashboardConfig";
+import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
 import {
     dashboardConfigErrorMessages,
     dashboardConfigSchema,
@@ -7,7 +7,7 @@ import {
 
 describe("dashboardConfigSchema", () => {
     it("rejects a journey that is not used by a schedule", () => {
-        const config = structuredClone(defaultDashboardConfig);
+        const config = structuredClone(manchesterDashboardConfig);
         const journeyId = config.journeys.at(0)!.id;
 
         for (const schedule of config.schedules) {
@@ -31,7 +31,7 @@ describe("dashboardConfigSchema", () => {
     });
 
     it("describes an invalid station without exposing its data path", () => {
-        const config = structuredClone(defaultDashboardConfig);
+        const config = structuredClone(manchesterDashboardConfig);
         config.stationGroups[0]!.stations[0]!.crs = "not-a-station";
 
         const result = dashboardConfigSchema.safeParse(config);
@@ -43,8 +43,8 @@ describe("dashboardConfigSchema", () => {
     });
 
     it("rejects duplicate stations in one group", () => {
-        const config = structuredClone(defaultDashboardConfig);
-        config.stationGroups[0]!.stations[1]!.crs = "ANL";
+        const config = structuredClone(manchesterDashboardConfig);
+        config.stationGroups[0]!.stations[1]!.crs = "HTC";
 
         const result = dashboardConfigSchema.safeParse(config);
 
@@ -59,7 +59,7 @@ describe("dashboardConfigSchema", () => {
     });
 
     it("rejects journeys with the same station pair", () => {
-        const config = structuredClone(defaultDashboardConfig);
+        const config = structuredClone(manchesterDashboardConfig);
         config.journeys[1]!.origin = config.journeys[0]!.origin;
         config.journeys[1]!.destination = config.journeys[0]!.destination;
 
