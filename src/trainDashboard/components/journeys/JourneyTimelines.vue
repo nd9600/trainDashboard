@@ -30,8 +30,8 @@ const props = defineProps<{
     flushOnMobile?: boolean;
 }>();
 
-const routesWithVaryingPlatforms = computed(() => {
-    const platformsByRoute = new Map<string, Set<string>>();
+const routesWithConsistentPlatforms = computed(() => {
+    const servicesByRoute = new Map<string, Map<string, string>>();
 
     props.journeys
         .flatMap((journey) => [
@@ -44,14 +44,18 @@ const routesWithVaryingPlatforms = computed(() => {
             }
 
             const route = `${leg.origin}-${leg.destination}`;
-            const platforms = platformsByRoute.get(route) ?? new Set<string>();
-            platforms.add(leg.platform);
-            platformsByRoute.set(route, platforms);
+            const services =
+                servicesByRoute.get(route) ?? new Map<string, string>();
+            services.set(`${leg.serviceId}:${leg.departure}`, leg.platform);
+            servicesByRoute.set(route, services);
         });
 
     return new Set(
-        Array.from(platformsByRoute)
-            .filter(([, platforms]) => platforms.size > 1)
+        Array.from(servicesByRoute)
+            .filter(
+                ([, services]) =>
+                    services.size > 1 && new Set(services.values()).size === 1
+            )
             .map(([route]) => route)
     );
 });
@@ -64,11 +68,11 @@ const firstSixJourneys = computed(() =>
             ...leg,
             platform: !leg.platform
                 ? null
-                : routesWithVaryingPlatforms.value.has(
+                : routesWithConsistentPlatforms.value.has(
                         `${leg.origin}-${leg.destination}`
                     )
-                  ? leg.platform
-                  : undefined,
+                  ? undefined
+                  : leg.platform,
         })),
     }))
 );
