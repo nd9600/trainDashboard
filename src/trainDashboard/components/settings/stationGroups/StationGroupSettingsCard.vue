@@ -30,6 +30,7 @@
                     <StationInput
                         v-model="station.crs"
                         :id="`group-${group.id}-station-${stationIndex}`"
+                        :excludedCrsCodes="getOtherStationCodes(stationIndex)"
                     />
                 </div>
                 <button
@@ -95,5 +96,11 @@ function updateWalkMinutes(stationIndex: number, event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     const station = group.value.stations[stationIndex]!;
     station.walkMinutes = value === "" ? undefined : Number(value);
+}
+
+function getOtherStationCodes(stationIndex: number): string[] {
+    return group.value.stations.flatMap((station, index) =>
+        index === stationIndex ? [] : [station.crs]
+    );
 }
 </script>

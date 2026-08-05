@@ -11,10 +11,16 @@ export function getRoutesWithoutTimetabledJourneys(
         )
     );
 
-    return routes.filter(
-        (route) =>
-            !timetabledRoutes.has(
-                `${route.origin.crs}-${route.destination.crs}`
-            )
-    );
+    const missingRouteKeys = new Set<string>();
+
+    return routes.filter((route) => {
+        const routeKey = `${route.origin.crs}-${route.destination.crs}`;
+
+        if (timetabledRoutes.has(routeKey) || missingRouteKeys.has(routeKey)) {
+            return false;
+        }
+
+        missingRouteKeys.add(routeKey);
+        return true;
+    });
 }

@@ -40,10 +40,13 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const recommendedJourney = computed(() =>
         primaryJourneys.value.find((journey) => journey.recommended)
     );
-    const primaryRoutesWithoutTimetabledJourneys = computed(() =>
+    const routesWithoutTimetabledJourneys = computed(() =>
         getRoutesWithoutTimetabledJourneys(
-            activeJourneyPlan.value.primaryRoutes,
-            primaryJourneys.value
+            [
+                ...activeJourneyPlan.value.primaryRoutes,
+                ...activeJourneyPlan.value.secondaryRoutes,
+            ],
+            [...primaryJourneys.value, ...secondaryJourneys.value]
         )
     );
 
@@ -109,7 +112,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         journeyLoadError,
         currentMinutes,
         primaryJourneys,
-        primaryRoutesWithoutTimetabledJourneys,
+        routesWithoutTimetabledJourneys,
         recommendedJourney,
         secondaryJourneys,
     };

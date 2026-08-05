@@ -42,6 +42,22 @@ describe("dashboardConfigSchema", () => {
         );
     });
 
+    it("rejects duplicate stations in one group", () => {
+        const config = structuredClone(defaultDashboardConfig);
+        config.stationGroups[0]!.stations[1]!.crs = "ANL";
+
+        const result = dashboardConfigSchema.safeParse(config);
+
+        expect(result.success).toBe(false);
+        expect(result.error?.issues).toContainEqual(
+            expect.objectContaining({
+                message:
+                    "Choose a different station. This station is already in the group.",
+                path: ["stationGroups", 0, "stations", 1, "crs"],
+            })
+        );
+    });
+
     it("rejects journeys with the same station pair", () => {
         const config = structuredClone(defaultDashboardConfig);
         config.journeys[1]!.origin = config.journeys[0]!.origin;

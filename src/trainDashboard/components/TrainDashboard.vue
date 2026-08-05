@@ -30,7 +30,9 @@
                         <p
                             class="mt-3 border-l-2 border-japonica pl-3 text-sm text-ink-muted"
                         >
-                            For example: add “Home” with Manchester Piccadilly, add “Work” with Euston and Kings Cross, then schedule Home → Work on weekday mornings.
+                            For example: add “Home” with Manchester Piccadilly,
+                            add “Work” with Euston and Kings Cross, then
+                            schedule Home → Work on weekday mornings.
                         </p>
                         <button
                             class="appButton appButton--primary mt-4"
@@ -92,11 +94,6 @@
                     >
                         There is no primary journey.
                     </p>
-                    <NationalRailRouteLinks
-                        v-if="primaryRoutesWithoutTimetabledJourneys.length > 0"
-                        :journeyRoutes="primaryRoutesWithoutTimetabledJourneys"
-                        :departureMinutes="currentMinutes"
-                    />
                 </section>
 
                 <OtherJourneys
@@ -104,6 +101,12 @@
                     :journeyRoutes="activeJourneyPlan.secondaryRoutes"
                     :timetabledJourneys="secondaryJourneys"
                     :currentMinutes="currentMinutes"
+                />
+
+                <NationalRailRouteLinks
+                    v-if="routesWithoutTimetabledJourneys.length > 0"
+                    :journeyRoutes="routesWithoutTimetabledJourneys"
+                    :departureMinutes="currentMinutes"
                 />
             </div>
         </div>
@@ -134,7 +137,7 @@ const {
     journeyLoadError,
     currentMinutes,
     primaryJourneys,
-    primaryRoutesWithoutTimetabledJourneys,
+    routesWithoutTimetabledJourneys,
     secondaryJourneys,
 } = storeToRefs(trainServicesStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);

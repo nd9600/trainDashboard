@@ -66,17 +66,6 @@
                     :mustLeaveJourneyId="firstSecondaryJourneyId"
                     :flushOnMobile="true"
                 />
-                <NationalRailRouteLinks
-                    v-if="journeyGroup.missingRoutes.length"
-                    :class="[
-                        'max-sm:mx-4',
-                        journeyGroup.timetabledJourneys.length
-                            ? 'mt-4'
-                            : undefined,
-                    ]"
-                    :journeyRoutes="journeyGroup.missingRoutes"
-                    :departureMinutes="currentMinutes"
-                />
             </section>
         </div>
     </details>
@@ -88,10 +77,8 @@ import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "../../journeys/planning/journeyRoutes";
 import {getRouteLabelDetails} from "../../journeys/journeyLabels";
-import {getRoutesWithoutTimetabledJourneys} from "../../journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
 import JourneyLabel from "./JourneyLabel.vue";
 import JourneyTimelines from "./JourneyTimelines.vue";
-import NationalRailRouteLinks from "./NationalRailRouteLinks.vue";
 
 const props = defineProps<{
     journeyRoutes: JourneyRoute[];
@@ -136,10 +123,6 @@ const journeyGroups = computed(() => {
             anchorId: `other-journey-${journeyId}`,
             labelDetails: getRouteLabelDetails(firstRoute),
             ...group,
-            missingRoutes: getRoutesWithoutTimetabledJourneys(
-                group.routes,
-                group.timetabledJourneys
-            ),
         };
     }).sort((first, second) => {
         const firstJourney = first.timetabledJourneys.at(0);
@@ -156,8 +139,8 @@ const journeyGroups = computed(() => {
         return (
             firstJourney.segments.at(-1)!.end -
                 secondJourney.segments.at(-1)!.end ||
-            firstJourney.segments.at(0)!.start -
-                secondJourney.segments.at(0)!.start
+            secondJourney.segments.at(0)!.start -
+                firstJourney.segments.at(0)!.start
         );
     });
 });

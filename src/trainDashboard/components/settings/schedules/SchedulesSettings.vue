@@ -1,53 +1,65 @@
 <template>
     <section
         id="journey-settings-panel-schedules"
-        class="space-y-4"
         aria-labelledby="journey-settings-tab-schedules"
         role="tabpanel"
     >
-        <div>
-            <h2 class="font-semibold">Priority schedules</h2>
-            <p class="mt-1 text-sm text-ink-subtle">
-                A schedule says which journeys are prioritised at that time of
-                day.
-            </p>
-        </div>
-
-        <p
-            v-if="stationGroups.length < 2"
-            class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
-            role="status"
-        >
-            Add at least two station groups before you create a journey.
-        </p>
-
-        <ScheduleSettingsCard
-            v-for="(schedule, scheduleIndex) in schedules"
-            :key="schedule.id"
-            v-model:schedule="schedules[scheduleIndex]!"
+        <ScheduleDetails
+            v-if="selectedScheduleEntry"
+            v-model:schedule="schedules[selectedScheduleEntry.index]!"
             v-model:journeys="journeys"
             :stationGroups="stationGroups"
             :schedules="schedules"
-            :initiallyOpen="schedule.id === newScheduleId"
+            @back="closeSchedule"
             @changed="emit('changed')"
-            @remove="removeSchedule(scheduleIndex)"
-            @removeJourney="removeJourneyFromSchedule(scheduleIndex, $event)"
+            @remove="removeSchedule(selectedScheduleEntry.index)"
+            @removeJourney="
+                removeJourneyFromSchedule(selectedScheduleEntry.index, $event)
+            "
         />
 
-        <button
-            class="appButton appButton--secondary hover:bg-surface-muted"
-            type="button"
-            :disabled="stationGroups.length < 2"
-            @click="addSchedule"
-        >
-            <AppIcon class="size-4" name="plus" />
-            Add priority schedule
-        </button>
+        <div v-else class="space-y-4">
+            <div>
+                <h2 class="font-semibold">Priority schedules</h2>
+                <p class="mt-1 text-sm text-ink-subtle">
+                    A schedule says which journeys are prioritised at that time
+                    of day.
+                </p>
+            </div>
+
+            <p
+                v-if="stationGroups.length < 2"
+                class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
+                role="status"
+            >
+                Add at least two station groups before you create a journey.
+            </p>
+
+            <ScheduleSettingsCard
+                v-for="schedule in schedules"
+                :key="schedule.id"
+                :schedule="schedule"
+                :journeys="journeys"
+                :stationGroups="stationGroups"
+                @edit="selectedScheduleId = schedule.id"
+            />
+
+            <button
+                class="appButton appButton--secondary hover:bg-surface-muted"
+                type="button"
+                :disabled="stationGroups.length < 2"
+                @click="addSchedule"
+            >
+                <AppIcon class="size-4" name="plus" />
+                Add priority schedule
+            </button>
+        </div>
     </section>
 </template>
 
 <script setup lang="ts">
-import {ref} from "vue";
+import {computed, ref} from "vue";
+import AppIcon from "@/components/AppIcon.vue";
 import type {
     DisplaySchedule,
     StationGroup,
@@ -57,9 +69,9 @@ import {
     getJourneyLabelDetails,
     getJourneyLabelText,
 } from "../../../journeys/journeyLabels";
-import AppIcon from "@/components/AppIcon.vue";
+import ScheduleDetails from "./ScheduleDetails.vue";
 import ScheduleSettingsCard from "./ScheduleSettingsCard.vue";
-import {createEmptyJourney} from "./scheduleSettings";
+import {createEmptyJourney, hasJourneyEndpoints} from "./scheduleSettings";
 
 const props = defineProps<{
     stationGroups: StationGroup[];
@@ -69,11 +81,21 @@ const schedules = defineModel<DisplaySchedule[]>("schedules", {
     required: true,
 });
 const journeys = defineModel<Journey[]>("journeys", {required: true});
+const selectedScheduleId = ref<string>();
 
 const emit = defineEmits<{
     changed: [];
 }>();
-const newScheduleId = ref<string>();
+
+const selectedScheduleEntry = computed(() => {
+    const index = schedules.value.findIndex(
+        (schedule) => schedule.id === selectedScheduleId.value
+    );
+
+    return index === -1
+        ? undefined
+        : {schedule: schedules.value[index]!, index};
+});
 
 function addSchedule(): void {
     const journey = createEmptyJourney();
@@ -92,8 +114,12 @@ function addSchedule(): void {
             secondaryJourneyIds: [],
         },
     ];
-    newScheduleId.value = scheduleId;
+    selectedScheduleId.value = scheduleId;
     emit("changed");
+}
+
+function closeSchedule(): void {
+    selectedScheduleId.value = undefined;
 }
 
 function removeSchedule(scheduleIndex: number): void {
@@ -129,6 +155,7 @@ function removeSchedule(scheduleIndex: number): void {
     journeys.value = journeys.value.filter(
         (journey) => !deletedJourneyIds.includes(journey.id)
     );
+    closeSchedule();
     emit("changed");
 }
 
@@ -153,17 +180,19 @@ function removeJourneyFromSchedule(
     );
     const consequence = schedulesUsingJourney.length
         ? ""
-        : " - it will be deleted, because no other schedule uses it.";
+        : " It will be deleted because no other schedule uses it.";
 
     if (
         !window.confirm(
-            `Remove journey “${journeyLabel(journey)}” from “${schedule.name}?${consequence}`
+            `Remove journey “${journeyLabel(journey)}” from “${schedule.name}”?${consequence}`
         )
     ) {
         return;
     }
 
-    removeJourneyId(schedule, journeyId);
+    schedule.secondaryJourneyIds = schedule.secondaryJourneyIds.filter(
+        (candidate) => candidate !== journeyId
+    );
 
     if (schedulesUsingJourney.length === 0) {
         journeys.value = journeys.value.filter(
@@ -172,12 +201,6 @@ function removeJourneyFromSchedule(
     }
 
     emit("changed");
-}
-
-function removeJourneyId(schedule: DisplaySchedule, journeyId: string): void {
-    schedule.secondaryJourneyIds = schedule.secondaryJourneyIds.filter(
-        (candidate) => candidate !== journeyId
-    );
 }
 
 function scheduleUsesJourney(
@@ -191,6 +214,10 @@ function scheduleUsesJourney(
 }
 
 function journeyLabel(journey: Journey): string {
+    if (!hasJourneyEndpoints(journey, props.stationGroups)) {
+        return "New journey";
+    }
+
     return getJourneyLabelText(
         getJourneyLabelDetails(journey, props.stationGroups)
     );

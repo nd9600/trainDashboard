@@ -77,6 +77,7 @@ defineOptions({
 
 const props = defineProps<{
     modelValue: string;
+    excludedCrsCodes?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -88,7 +89,11 @@ const query = ref("");
 const selectedCode = ref<string | null>(
     stationNames[props.modelValue] ? props.modelValue : null
 );
-const filteredStations = computed(() => findStationOptions(query.value));
+const filteredStations = computed(() =>
+    findStationOptions(query.value).filter(
+        (station) => !props.excludedCrsCodes?.includes(station.code)
+    )
+);
 const isValidStation = computed(
     () => stationNames[props.modelValue] !== undefined
 );

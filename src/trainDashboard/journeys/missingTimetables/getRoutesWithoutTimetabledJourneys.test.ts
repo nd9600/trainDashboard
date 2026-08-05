@@ -12,6 +12,22 @@ describe("getRoutesWithoutTimetabledJourneys", () => {
             getRoutesWithoutTimetabledJourneys(routes, timetabledJourneys)
         ).toEqual([routes[1]]);
     });
+
+    it("returns one missing route for direct and connected options with the same endpoints", () => {
+        const directRoute = journeyRoute("EXG", "KVD");
+        const connectedRoute = {
+            ...journeyRoute("EXG", "KVD"),
+            id: "work-to-home:EXG-KVD:via-GLQ",
+            viaCrs: "GLQ",
+        };
+
+        expect(
+            getRoutesWithoutTimetabledJourneys(
+                [directRoute, connectedRoute],
+                []
+            )
+        ).toEqual([directRoute]);
+    });
 });
 
 function journeyRoute(origin: string, destination: string): JourneyRoute {

@@ -30,6 +30,7 @@ const props = defineProps<{
     flushOnMobile?: boolean;
 }>();
 
+// 7. Limit the sorted journeys only after the planning steps are complete.
 const displayedJourneys = computed(() => props.journeys.slice(0, 6));
 const timelineRange = computed(() =>
     getJourneyTimelineRange(displayedJourneys.value, props.currentMinutes)

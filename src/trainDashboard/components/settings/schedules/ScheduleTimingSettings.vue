@@ -1,16 +1,6 @@
 <template>
     <section class="space-y-4">
-        <div class="flex items-start justify-between gap-3">
-            <h4 class="font-semibold">Schedule details</h4>
-            <button
-                class="appButton appButton--quiet shrink-0 px-2 py-1 text-danger hover:text-danger-dark"
-                type="button"
-                @click="emit('remove')"
-            >
-                <AppIcon class="size-4" name="trash" />
-                <span class="max-sm:sr-only">Remove schedule</span>
-            </button>
-        </div>
+        <h3 class="font-semibold">Schedule details</h3>
 
         <label class="sentenceField">
             The
@@ -76,13 +66,8 @@
 </template>
 
 <script setup lang="ts">
-import AppIcon from "@/components/AppIcon.vue";
 import type {DisplaySchedule} from "../../../dto/dashboardConfig.dto";
 import {scheduleDays} from "./scheduleSettings";
 
 const schedule = defineModel<DisplaySchedule>("schedule", {required: true});
-
-const emit = defineEmits<{
-    remove: [];
-}>();
 </script>

@@ -1,66 +1,39 @@
 <template>
-    <details
-        class="group rounded-lg border border-line bg-paper shadow-sm"
-        :open="isOpen"
-        @toggle="updateOpenState"
+    <button
+        class="flex w-full cursor-pointer items-center justify-between gap-4 rounded-lg border border-line bg-paper p-4 text-left shadow-sm transition-colors hover:border-primary hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        type="button"
+        @click="emit('edit')"
     >
-        <summary class="flex cursor-pointer list-none items-center gap-3 p-4">
-            <AppIcon
-                class="size-4 shrink-0 transition-transform group-open:rotate-90"
-                name="chevron"
-            />
-            <span class="min-w-0">
-                <strong class="block truncate">
-                    {{ schedule.name || "Unnamed schedule" }}
-                </strong>
-                <span class="block text-xs text-ink-subtle">
-                    {{ activeDaysText }} · {{ schedule.startsAt }}–{{ schedule.endsAt }}
-                </span>
-                <span
-                    v-if="primaryJourneyIsComplete"
-                    class="mt-1 block truncate text-sm"
-                >
-                    Primary:
-                    <JourneyLabel
-                        :details="
-                            getJourneyLabelDetails(
-                                primaryJourney!,
-                                stationGroups
-                            )
-                        "
-                    />
-                </span>
+        <span class="min-w-0">
+            <strong class="block truncate">
+                {{ schedule.name || "Unnamed schedule" }}
+            </strong>
+            <span class="block text-xs text-ink-subtle">
+                {{ getActiveDaysText(schedule.days) }} ·
+                {{ schedule.startsAt }}–{{ schedule.endsAt }}
             </span>
-        </summary>
+            <span
+                v-if="primaryJourneyIsComplete"
+                class="mt-2 block truncate text-sm"
+            >
+                <span class="text-ink-subtle">Primary:</span>
+                <JourneyLabel
+                    :details="
+                        getJourneyLabelDetails(primaryJourney!, stationGroups)
+                    "
+                />
+            </span>
+            <span v-else class="mt-2 block text-sm text-danger-dark">
+                Choose a primary journey.
+            </span>
+        </span>
 
-        <div class="space-y-5 border-t border-line p-4">
-            <ScheduleTimingSettings
-                v-model:schedule="schedule"
-                @remove="emit('remove')"
-            />
-
-            <PrimaryJourneySettings
-                v-model:schedule="schedule"
-                v-model:journeys="journeys"
-                :stationGroups="stationGroups"
-                :schedules="schedules"
-                @changed="emit('changed')"
-            />
-
-            <OtherJourneySettings
-                v-model:schedule="schedule"
-                v-model:journeys="journeys"
-                :stationGroups="stationGroups"
-                :schedules="schedules"
-                @changed="emit('changed')"
-                @removeJourney="emit('removeJourney', $event)"
-            />
-        </div>
-    </details>
+        <AppIcon class="size-4 shrink-0" name="chevron" />
+    </button>
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {
     DisplaySchedule,
@@ -69,33 +42,21 @@ import type {
 } from "../../../dto/dashboardConfig.dto";
 import {getJourneyLabelDetails} from "../../../journeys/journeyLabels";
 import JourneyLabel from "../../journeys/JourneyLabel.vue";
-import OtherJourneySettings from "./OtherJourneySettings.vue";
-import PrimaryJourneySettings from "./PrimaryJourneySettings.vue";
-import ScheduleTimingSettings from "./ScheduleTimingSettings.vue";
 import {getActiveDaysText, hasJourneyEndpoints} from "./scheduleSettings";
 
-const props = withDefaults(
-    defineProps<{
-        stationGroups: StationGroup[];
-        schedules: DisplaySchedule[];
-        initiallyOpen?: boolean;
-    }>(),
-    {initiallyOpen: false}
-);
-
-const schedule = defineModel<DisplaySchedule>("schedule", {required: true});
-const journeys = defineModel<Journey[]>("journeys", {required: true});
-const isOpen = ref(props.initiallyOpen);
+const props = defineProps<{
+    schedule: DisplaySchedule;
+    journeys: Journey[];
+    stationGroups: StationGroup[];
+}>();
 
 const emit = defineEmits<{
-    changed: [];
-    remove: [];
-    removeJourney: [journeyId: string];
+    edit: [];
 }>();
 
 const primaryJourney = computed(() =>
-    journeys.value.find(
-        (journey) => journey.id === schedule.value.primaryJourneyId
+    props.journeys.find(
+        (journey) => journey.id === props.schedule.primaryJourneyId
     )
 );
 const primaryJourneyIsComplete = computed(
@@ -103,9 +64,4 @@ const primaryJourneyIsComplete = computed(
         primaryJourney.value !== undefined &&
         hasJourneyEndpoints(primaryJourney.value, props.stationGroups)
 );
-const activeDaysText = computed(() => getActiveDaysText(schedule.value.days));
-
-function updateOpenState(event: Event): void {
-    isOpen.value = (event.target as HTMLDetailsElement).open;
-}
 </script>

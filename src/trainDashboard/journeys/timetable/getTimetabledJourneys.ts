@@ -67,7 +67,7 @@ export async function getTimetabledJourneys(
                     ).map((leg) => createJourney(route, [leg]));
                 }
 
-                const [firstBoard, secondBoard] = await Promise.all([
+                const [firstTrainBoard, onwardTrainBoard] = await Promise.all([
                     fetchBoard(
                         route.origin.crs,
                         route.viaCrs,
@@ -75,28 +75,51 @@ export async function getTimetabledJourneys(
                     ),
                     fetchBoard(route.viaCrs, route.destination.crs, 0),
                 ]);
-                const firstLegs = directLegs(
-                    firstBoard,
+                const firstTrainLegs = directLegs(
+                    firstTrainBoard,
                     route.origin.crs,
                     route.viaCrs,
                     currentMinutes
                 );
-                const secondLegs = directLegs(
-                    secondBoard,
+                const onwardTrainLegs = directLegs(
+                    onwardTrainBoard,
                     route.viaCrs,
                     route.destination.crs,
                     currentMinutes
                 );
 
-                return firstLegs.flatMap((firstLeg) => {
-                    const secondLeg = secondLegs.find(
+                // 1. Consider every catchable onward train.
+                return onwardTrainLegs.flatMap((onwardTrainLeg) => {
+                    // 2. Require at least three minutes to change trains.
+                    const catchableFirstTrainLegs = firstTrainLegs.filter(
                         (candidate) =>
-                            candidate.departure >=
-                            firstLeg.arrival + minimumTransferMinutes
+                            candidate.arrival + minimumTransferMinutes <=
+                                onwardTrainLeg.departure &&
+                            candidate.departure -
+                                (route.origin.walkMinutes ?? 0) >=
+                                currentMinutes
                     );
 
-                    return secondLeg
-                        ? [createJourney(route, [firstLeg, secondLeg])]
+                    // 3. Use the latest catchable first train.
+                    const firstTrainLeg = [...catchableFirstTrainLegs]
+                        // 4. Exclude a false transfer onto the same service.
+                        .filter(
+                            (candidate) =>
+                                candidate.serviceId !== onwardTrainLeg.serviceId
+                        )
+                        .sort(
+                            (first, second) =>
+                                second.departure - first.departure
+                        )
+                        .at(0);
+
+                    return firstTrainLeg
+                        ? [
+                              createJourney(route, [
+                                  firstTrainLeg,
+                                  onwardTrainLeg,
+                              ]),
+                          ]
                         : [];
                 });
             })
@@ -104,42 +127,35 @@ export async function getTimetabledJourneys(
     )
         .flat()
         .filter((journey) => journey.segments.at(0)!.start >= currentMinutes)
-        .sort((first, second) => {
-            const arrivalDifference =
-                first.segments.at(-1)!.end - second.segments.at(-1)!.end;
-
-            return (
-                arrivalDifference ||
-                first.segments.at(0)!.start - second.segments.at(0)!.start
-            );
-        });
+        // 5. Sort all journeys by final arrival time.
+        .sort(compareJourneys);
 
     if (!recommendJourney) {
         return timetabledJourneys;
     }
 
-    const recommendedJourney = [...timetabledJourneys]
-        .filter(
-            (journey) =>
-                journey.walkingTimesKnown &&
-                journey.segments.at(0)!.start >= currentMinutes
-        )
-        .sort((first, second) => {
-            const arrivalDifference =
-                first.segments.at(-1)!.end - second.segments.at(-1)!.end;
-
-            if (arrivalDifference !== 0) {
-                return arrivalDifference;
-            }
-
-            return first.segments.at(0)!.start - second.segments.at(0)!.start;
-        })
-        .at(0);
+    const recommendedJourney = timetabledJourneys.find(
+        (journey) => journey.walkingTimesKnown
+    );
 
     return timetabledJourneys.map((journey) => ({
         ...journey,
         recommended: journey === recommendedJourney,
     }));
+}
+
+function compareJourneys(
+    first: TimetabledJourney,
+    second: TimetabledJourney
+): number {
+    const arrivalDifference =
+        first.segments.at(-1)!.end - second.segments.at(-1)!.end;
+
+    // 6. Prefer the later start when final arrival times are equal.
+    return (
+        arrivalDifference ||
+        second.segments.at(0)!.start - first.segments.at(0)!.start
+    );
 }
 
 function directLegs(

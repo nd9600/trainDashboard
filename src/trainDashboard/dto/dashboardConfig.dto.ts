@@ -40,18 +40,35 @@ const locationGroupIdSchema = z
     .min(1, "Choose a station or group.")
     .pipe(idSchema);
 
-export const stationGroupSchema = z.object({
-    id: idSchema,
-    name: z.string().trim().min(1, "Enter a group name."),
-    stations: z
-        .array(
-            z.object({
-                crs: crsCodeSchema,
-                walkMinutes: z.number().int().min(0).optional(),
-            })
-        )
-        .min(1, "Add at least one station."),
-});
+export const stationGroupSchema = z
+    .object({
+        id: idSchema,
+        name: z.string().trim().min(1, "Enter a group name."),
+        stations: z
+            .array(
+                z.object({
+                    crs: crsCodeSchema,
+                    walkMinutes: z.number().int().min(0).optional(),
+                })
+            )
+            .min(1, "Add at least one station."),
+    })
+    .superRefine((group, context) => {
+        const stationCodes = new Set<string>();
+
+        group.stations.forEach((station, stationIndex) => {
+            if (stationCodes.has(station.crs)) {
+                context.addIssue({
+                    code: "custom",
+                    message:
+                        "Choose a different station. This station is already in the group.",
+                    path: ["stations", stationIndex, "crs"],
+                });
+            }
+
+            stationCodes.add(station.crs);
+        });
+    });
 
 export const locationReferenceSchema = z.discriminatedUnion("type", [
     z.object({

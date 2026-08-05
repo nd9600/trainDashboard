@@ -3,7 +3,9 @@ export function getNationalRailJourneyUrl(
     destinationCrs: string,
     departureMinutes: number
 ): string {
-    return `https://ojp.nationalrail.co.uk/service/timesandfares/${encodeURIComponent(originCrs)}/${encodeURIComponent(destinationCrs)}/today/${formatNationalRailDepartureTime(departureMinutes)}/dep`;
+    const day = departureMinutes >= 24 * 60 ? "tomorrow" : "today";
+
+    return `https://ojp.nationalrail.co.uk/service/timesandfares/${encodeURIComponent(originCrs)}/${encodeURIComponent(destinationCrs)}/${day}/${formatNationalRailDepartureTime(departureMinutes)}/dep`;
 }
 
 function formatNationalRailDepartureTime(minutes: number): string {
