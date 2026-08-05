@@ -26,10 +26,16 @@
                 <strong
                     class="min-w-0 truncate"
                     :style="{color: stationColour(leg.origin)}"
-                    :title="stationName(leg.origin) + leg.platform ? ` p${leg.platform}` : ''"
+                    :title="stationName(leg.origin)"
                 >
-                    {{ stationName(leg.origin) }}{{ leg.platform ? ` p${leg.platform}` : '' }}
+                    {{ stationName(leg.origin) }}
                 </strong>
+                <span
+                    v-if="leg.platform"
+                    class="shrink-0 text-xs font-semibold text-primary"
+                >
+                    p{{ leg.platform }}
+                </span>
                 <span class="shrink-0">→</span>
                 <strong
                     class="min-w-0 truncate"
