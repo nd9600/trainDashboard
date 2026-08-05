@@ -1,12 +1,20 @@
 import {describe, expect, it} from "vitest";
 import {defaultDashboardConfig} from "../../config/defaultDashboardConfig";
-import {dashboardConfigSchema, timeSchema} from "../../dto/dashboardConfig.dto";
-import {getActiveJourneyPlan} from "./activeJourneyPlan";
-import {getRoutesForJourneys} from "./journeyRoutes";
+import {
+    dashboardConfigSchema,
+    timeSchema,
+    type DashboardConfig,
+} from "../../dto/dashboardConfig.dto";
+import {
+    getActiveSchedule,
+    type CurrentClock,
+    getJourneysForSchedule,
+} from "./journeySelection";
+import {getStationRoutes} from "./journeyRoutes";
 
-describe("getActiveJourneyPlan", () => {
+describe("journey planning", () => {
     it("prioritises travel from home to work on weekday mornings", () => {
-        const activePlan = getActiveJourneyPlan(defaultDashboardConfig, {
+        const activePlan = getJourneyPlan(defaultDashboardConfig, {
             day: 1,
             minutes: 8 * 60,
         });
@@ -26,7 +34,7 @@ describe("getActiveJourneyPlan", () => {
     });
 
     it("reverses weekday travel after noon", () => {
-        const activePlan = getActiveJourneyPlan(defaultDashboardConfig, {
+        const activePlan = getJourneyPlan(defaultDashboardConfig, {
             day: 3,
             minutes: 12 * 60,
         });
@@ -60,7 +68,7 @@ describe("getActiveJourneyPlan", () => {
             crs: "GLQ",
         };
 
-        const activePlan = getActiveJourneyPlan(config, {
+        const activePlan = getJourneyPlan(config, {
             day: 1,
             minutes: 8 * 60,
         });
@@ -76,7 +84,7 @@ describe("getActiveJourneyPlan", () => {
         const config = structuredClone(defaultDashboardConfig);
         config.journeys[0]!.viaCrs = "GLQ";
 
-        const activePlan = getActiveJourneyPlan(config, {
+        const activePlan = getJourneyPlan(config, {
             day: 1,
             minutes: 8 * 60,
         });
@@ -100,7 +108,7 @@ describe("getActiveJourneyPlan", () => {
         journey.destination = {type: "group", groupId: "home"};
         journey.viaCrs = "ANL";
 
-        const routes = getRoutesForJourneys(
+        const routes = getStationRoutes(
             [journey],
             defaultDashboardConfig.stationGroups
         );
@@ -118,7 +126,7 @@ describe("getActiveJourneyPlan", () => {
     });
 
     it("prioritises travel from home to Glasgow at weekends", () => {
-        const activePlan = getActiveJourneyPlan(defaultDashboardConfig, {
+        const activePlan = getJourneyPlan(defaultDashboardConfig, {
             day: 6,
             minutes: 14 * 60,
         });
@@ -131,7 +139,7 @@ describe("getActiveJourneyPlan", () => {
     });
 
     it("preserves unknown walking times when it expands a station group", () => {
-        const [journeys] = getRoutesForJourneys(
+        const [journeys] = getStationRoutes(
             [defaultDashboardConfig.journeys[2]!],
             defaultDashboardConfig.stationGroups
         );
@@ -151,7 +159,7 @@ describe("getActiveJourneyPlan", () => {
     });
 
     it("uses the selected group name for an individual station", () => {
-        const [journeys] = getRoutesForJourneys(
+        const [journeys] = getStationRoutes(
             [defaultDashboardConfig.journeys[0]!],
             defaultDashboardConfig.stationGroups
         );
@@ -205,3 +213,23 @@ describe("getActiveJourneyPlan", () => {
         }
     );
 });
+
+function getJourneyPlan(config: DashboardConfig, currentClock: CurrentClock) {
+    const schedule = getActiveSchedule(config.schedules, currentClock);
+    const configuredJourneys = getJourneysForSchedule(
+        config.journeys,
+        schedule
+    );
+
+    return {
+        schedule,
+        primaryRoutes: getStationRoutes(
+            configuredJourneys.primaryJourneys,
+            config.stationGroups
+        ),
+        secondaryRoutes: getStationRoutes(
+            configuredJourneys.secondaryJourneys,
+            config.stationGroups
+        ),
+    };
+}

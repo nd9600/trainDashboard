@@ -16,7 +16,7 @@
                 v-if="primaryJourneyIsComplete"
                 class="mt-2 block truncate text-sm"
             >
-                <span class="text-ink-subtle">Primary:</span>
+                <span class="text-ink-subtle">Primary: </span>
                 <JourneyLabel
                     :details="
                         getJourneyLabelDetails(primaryJourney!, stationGroups)

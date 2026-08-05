@@ -18,7 +18,7 @@ export interface JourneyRoute {
     viaCrs?: string;
 }
 
-export function getRoutesForJourneys(
+export function getStationRoutes(
     journeys: Journey[],
     stationGroups: StationGroup[]
 ): JourneyRoute[] {

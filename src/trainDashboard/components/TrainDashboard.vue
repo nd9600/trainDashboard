@@ -76,7 +76,7 @@
                 <section
                     class="flex flex-col gap-4"
                     :class="
-                        activeJourneyPlan.secondaryRoutes.length > 0
+                        secondaryRoutes.length > 0
                             ? ' border-b-1 border-casa pb-8'
                             : ''
                     "
@@ -97,8 +97,8 @@
                 </section>
 
                 <OtherJourneys
-                    v-if="activeJourneyPlan.secondaryRoutes.length > 0"
-                    :journeyRoutes="activeJourneyPlan.secondaryRoutes"
+                    v-if="secondaryRoutes.length > 0"
+                    :journeyRoutes="secondaryRoutes"
                     :timetabledJourneys="secondaryJourneys"
                     :currentMinutes="currentMinutes"
                 />
@@ -124,6 +124,7 @@ import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useDashboardConfigStore} from "../store/dashboardConfig.store";
 import DashboardHeader from "./DashboardHeader.vue";
+import {getRoutesWithoutTimetabledJourneys} from "@/trainDashboard/journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
 
 const trainServicesStore = useTrainServicesStore();
 const dashboardConfigStore = useDashboardConfigStore();
@@ -132,13 +133,13 @@ const settingsModal = ref<{
     openApiSettings: () => void;
 } | null>(null);
 const {
-    activeJourneyPlan,
     isLoadingJourneys,
     journeyLoadError,
     currentMinutes,
     primaryJourneys,
-    routesWithoutTimetabledJourneys,
     secondaryJourneys,
+    primaryRoutes,
+    secondaryRoutes,
 } = storeToRefs(trainServicesStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
 
@@ -152,5 +153,12 @@ const hasNoJourneyConfiguration = computed(
 );
 const apiKeyConfigured = computed(
     () => !journeyLoadError.value?.includes("Consumer key")
+);
+
+const routesWithoutTimetabledJourneys = computed(() =>
+    getRoutesWithoutTimetabledJourneys(
+        [...primaryRoutes.value, ...secondaryRoutes.value],
+        [...primaryJourneys.value, ...secondaryJourneys.value]
+    )
 );
 </script>

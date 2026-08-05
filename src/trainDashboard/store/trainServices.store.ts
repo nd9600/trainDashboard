@@ -1,15 +1,10 @@
 import {defineStore} from "pinia";
 import {computed, ref, watch} from "vue";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
-import {
-    type CurrentClock,
-    getActiveJourneyPlan,
-} from "../journeys/planning/activeJourneyPlan";
-import {
-    getTimetabledJourneys,
-    type DepartureBoardRequestCache,
-} from "../journeys/timetable/getTimetabledJourneys";
-import {getRoutesWithoutTimetabledJourneys} from "../journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
+import type {DisplaySchedule} from "../dto/dashboardConfig.dto";
+import type {JourneyRoute} from "../journeys/planning/journeyRoutes";
+import type {CurrentClock} from "../journeys/planning/journeySelection";
+import {getDashboardJourneys} from "../journeys/getDashboardJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
 import type {Day} from "@/trainDashboard/dto/dashboardConfig.dto.ts";
@@ -25,29 +20,17 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         minutes: currentDate.getHours() * 60 + currentDate.getMinutes(),
     };
     const currentMinutes = ref(currentClock.minutes);
+    const activeSchedule = ref<DisplaySchedule>();
+    const primaryRoutes = ref<JourneyRoute[]>([]);
+    const secondaryRoutes = ref<JourneyRoute[]>([]);
     const primaryJourneys = ref<TimetabledJourney[]>([]);
     const secondaryJourneys = ref<TimetabledJourney[]>([]);
     const isLoadingJourneys = ref(true);
     const journeyLoadError = ref<string>();
 
     ///// getters /////
-    const activeJourneyPlan = computed(() =>
-        getActiveJourneyPlan(dashboardConfigStore.config, {
-            day: currentClock.day,
-            minutes: currentMinutes.value,
-        })
-    );
     const recommendedJourney = computed(() =>
         primaryJourneys.value.find((journey) => journey.recommended)
-    );
-    const routesWithoutTimetabledJourneys = computed(() =>
-        getRoutesWithoutTimetabledJourneys(
-            [
-                ...activeJourneyPlan.value.primaryRoutes,
-                ...activeJourneyPlan.value.secondaryRoutes,
-            ],
-            [...primaryJourneys.value, ...secondaryJourneys.value]
-        )
     );
 
     ///// actions /////
@@ -57,37 +40,26 @@ export const useTrainServicesStore = defineStore("train-services", () => {
 
         const consumerKey = apiStore.settings.consumerKey;
 
-        if (!consumerKey) {
-            primaryJourneys.value = [];
-            secondaryJourneys.value = [];
-            journeyLoadError.value = "Add your Consumer key in Settings → API.";
-            isLoadingJourneys.value = false;
-            return;
-        }
-
         try {
-            const departureBoardRequestCache: DepartureBoardRequestCache =
-                new Map();
-            const [newPrimaryJourneys, newSecondaryJourneys] =
-                await Promise.all([
-                    getTimetabledJourneys(
-                        consumerKey,
-                        activeJourneyPlan.value.primaryRoutes,
-                        currentMinutes.value,
-                        true,
-                        departureBoardRequestCache
-                    ),
-                    getTimetabledJourneys(
-                        consumerKey,
-                        activeJourneyPlan.value.secondaryRoutes,
-                        currentMinutes.value,
-                        false,
-                        departureBoardRequestCache
-                    ),
-                ]);
+            const dashboardJourneys = await getDashboardJourneys(
+                dashboardConfigStore.config,
+                {
+                    day: currentClock.day,
+                    minutes: currentMinutes.value,
+                },
+                consumerKey
+            );
 
-            primaryJourneys.value = newPrimaryJourneys;
-            secondaryJourneys.value = newSecondaryJourneys;
+            activeSchedule.value = dashboardJourneys.activeSchedule;
+            primaryRoutes.value = dashboardJourneys.primaryRoutes;
+            secondaryRoutes.value = dashboardJourneys.secondaryRoutes;
+            primaryJourneys.value = dashboardJourneys.primaryJourneys;
+            secondaryJourneys.value = dashboardJourneys.secondaryJourneys;
+
+            if (!consumerKey) {
+                journeyLoadError.value =
+                    "Add your Consumer key in Settings → API.";
+            }
         } catch {
             primaryJourneys.value = [];
             secondaryJourneys.value = [];
@@ -100,20 +72,25 @@ export const useTrainServicesStore = defineStore("train-services", () => {
 
     ///// effects /////
     watch(
-        [activeJourneyPlan, () => apiStore.settings.consumerKey],
+        [
+            () => dashboardConfigStore.config,
+            () => apiStore.settings.consumerKey,
+            currentMinutes,
+        ],
         refreshJourneys,
         {immediate: true}
     );
 
     ///// public API /////
     return {
-        activeJourneyPlan,
+        activeSchedule,
         isLoadingJourneys,
         journeyLoadError,
         currentMinutes,
         primaryJourneys,
-        routesWithoutTimetabledJourneys,
+        primaryRoutes,
         recommendedJourney,
         secondaryJourneys,
+        secondaryRoutes,
     };
 });

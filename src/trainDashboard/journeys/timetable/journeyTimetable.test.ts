@@ -3,11 +3,18 @@ import type {DepartureBoardRequest} from "../../api/railDataMarketplace.api";
 import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
 import type {JourneyRoute} from "../planning/journeyRoutes";
 import {
-    getTimetabledJourneys,
+    getDepartureBoards,
     type DepartureBoardRequestCache,
-} from "./getTimetabledJourneys";
+} from "./departureBoards";
+import {getTrainOptions} from "./trainOptions";
+import {
+    addJourneySections,
+    getCatchableJourneys,
+    markRecommendedJourney,
+    sortJourneysByArrival,
+} from "./timetabledJourneys";
 
-describe("getTimetabledJourneys", () => {
+describe("journey timetable stages", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -473,4 +480,33 @@ function journeyRoute(
         },
         viaCrs,
     };
+}
+
+async function getTimetabledJourneys(
+    consumerKey: string,
+    stationRoutes: JourneyRoute[],
+    currentMinutes: number,
+    recommendJourney: boolean,
+    requestCache: DepartureBoardRequestCache = new Map()
+) {
+    const departureBoards = await getDepartureBoards(
+        consumerKey,
+        stationRoutes,
+        requestCache
+    );
+    const trainOptions = getTrainOptions(
+        stationRoutes,
+        departureBoards,
+        currentMinutes
+    );
+    const journeysWithSections = addJourneySections(trainOptions);
+    const catchableJourneys = getCatchableJourneys(
+        journeysWithSections,
+        currentMinutes
+    );
+    const journeysSortedByArrival = sortJourneysByArrival(catchableJourneys);
+
+    return recommendJourney
+        ? markRecommendedJourney(journeysSortedByArrival)
+        : journeysSortedByArrival;
 }

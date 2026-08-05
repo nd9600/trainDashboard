@@ -1,14 +1,14 @@
 <template>
     <JourneyCards
         class="sm:hidden"
-        :journeys="displayedJourneys"
+        :journeys="firstSixJourneys"
         :currentMinutes="currentMinutes"
         :mustLeaveJourneyId="mustLeaveJourneyId"
         :flush="flushOnMobile"
     />
     <JourneyCharts
         class="hidden sm:grid"
-        :journeys="displayedJourneys"
+        :journeys="firstSixJourneys"
         :currentMinutes="currentMinutes"
         :mustLeaveJourneyId="mustLeaveJourneyId"
         :windowStart="timelineStart"
@@ -31,9 +31,9 @@ const props = defineProps<{
 }>();
 
 // 7. Limit the sorted journeys only after the planning steps are complete.
-const displayedJourneys = computed(() => props.journeys.slice(0, 6));
+const firstSixJourneys = computed(() => props.journeys.slice(0, 6));
 const timelineRange = computed(() =>
-    getJourneyTimelineRange(displayedJourneys.value, props.currentMinutes)
+    getJourneyTimelineRange(firstSixJourneys.value, props.currentMinutes)
 );
 const timelineStart = computed(() => timelineRange.value.start);
 const timelineEnd = computed(() => timelineRange.value.end);
