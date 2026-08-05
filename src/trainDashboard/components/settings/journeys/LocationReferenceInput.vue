@@ -115,7 +115,7 @@ const locationOptions = computed<JourneyLocationOption[]>(() => {
                         groupId: group.id,
                         crs: station.crs,
                     }),
-                    label: `${group.name} - through ${stationDisplayName(station.crs)}`,
+                    label: `${group.name} - from ${stationDisplayName(station.crs)}`,
                     value: {
                         type: "station" as const,
                         groupId: group.id,

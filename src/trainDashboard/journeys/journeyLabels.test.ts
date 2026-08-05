@@ -6,6 +6,7 @@ import {
     getJourneyLabelDetails,
     getJourneyLabelText,
     getRouteLabelDetails,
+    getStationRouteLabelDetails,
     getTimetabledJourneyLabelDetails,
 } from "./journeyLabels";
 
@@ -36,8 +37,12 @@ describe("getJourneyLabelDetails", () => {
         };
 
         expect(getJourneyLabelDetails(journey, stationGroups)).toEqual({
-            origin: {name: "Home", stationCrs: "KVD"},
-            destination: {name: "Work", stationCrs: "CHC"},
+            origin: {type: "location", name: "Home", stationCrs: "KVD"},
+            destination: {
+                type: "location",
+                name: "Work",
+                stationCrs: "CHC",
+            },
             connectingStationCrs: undefined,
         });
     });
@@ -51,8 +56,16 @@ describe("getJourneyLabelDetails", () => {
         };
 
         expect(getJourneyLabelDetails(journey, stationGroups)).toEqual({
-            origin: {name: "Home", stationCrs: undefined},
-            destination: {name: "Wendy's", stationCrs: undefined},
+            origin: {
+                type: "location",
+                name: "Home",
+                stationCrs: undefined,
+            },
+            destination: {
+                type: "location",
+                name: "Wendy's",
+                stationCrs: undefined,
+            },
             connectingStationCrs: "GLQ",
         });
     });
@@ -69,8 +82,26 @@ describe("getRouteLabelDetails", () => {
         };
 
         expect(getRouteLabelDetails(route)).toEqual({
-            origin: {name: "Home"},
-            destination: {name: "Wendy's"},
+            origin: {type: "location", name: "Home"},
+            destination: {type: "location", name: "Wendy's"},
+            connectingStationCrs: "GLQ",
+        });
+    });
+});
+
+describe("getStationRouteLabelDetails", () => {
+    it("uses concrete stations and the configured connecting station", () => {
+        const route: JourneyRoute = {
+            id: "work-to-home:KVD-EXG",
+            journeyId: "work-to-home",
+            origin: {crs: "KVD", locationName: "Home"},
+            destination: {crs: "EXG", locationName: "Work"},
+            viaCrs: "GLQ",
+        };
+
+        expect(getStationRouteLabelDetails(route)).toEqual({
+            origin: {type: "station", stationCrs: "KVD"},
+            destination: {type: "station", stationCrs: "EXG"},
             connectingStationCrs: "GLQ",
         });
     });
@@ -94,8 +125,8 @@ describe("getTimetabledJourneyLabelDetails", () => {
         ]);
 
         expect(getTimetabledJourneyLabelDetails(journey)).toEqual({
-            origin: {name: "Home"},
-            destination: {name: "Wendy's"},
+            origin: {type: "location", name: "Home"},
+            destination: {type: "location", name: "Wendy's"},
             connectingStationCrs: "GLQ",
         });
     });
@@ -111,8 +142,8 @@ describe("getTimetabledJourneyLabelDetails", () => {
         ]);
 
         expect(getTimetabledJourneyLabelDetails(journey)).toEqual({
-            origin: {name: "Home"},
-            destination: {name: "Wendy's"},
+            origin: {type: "location", name: "Home"},
+            destination: {type: "location", name: "Wendy's"},
             connectingStationCrs: undefined,
         });
     });
@@ -122,12 +153,20 @@ describe("getJourneyLabelText", () => {
     it("uses the agreed endpoint and connection wording without CRS codes", () => {
         expect(
             getJourneyLabelText({
-                origin: {name: "Home", stationCrs: "KVD"},
-                destination: {name: "Work", stationCrs: "CHC"},
+                origin: {
+                    type: "location",
+                    name: "Home",
+                    stationCrs: "KVD",
+                },
+                destination: {
+                    type: "location",
+                    name: "Work",
+                    stationCrs: "CHC",
+                },
                 connectingStationCrs: "GLQ",
             })
         ).toBe(
-            "Home, through Kelvindale → Work, arriving at Charing Cross (Glasgow), possibly connecting through Glasgow Queen Street"
+            "Home, from Kelvindale → Work, arriving at Charing Cross (Glasgow), possibly connecting through Glasgow Queen Street"
         );
     });
 });

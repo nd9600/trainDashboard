@@ -7,10 +7,9 @@ import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "./planning/journeyRoutes";
 import {stationName} from "../stations/stations";
 
-export interface JourneyLabelEndpoint {
-    name: string;
-    stationCrs?: string;
-}
+export type JourneyLabelEndpoint =
+    | {type: "location"; name: string; stationCrs?: string}
+    | {type: "station"; stationCrs: string};
 
 export interface JourneyLabelDetails {
     origin: JourneyLabelEndpoint;
@@ -35,8 +34,18 @@ export function getJourneyLabelDetails(
 
 export function getRouteLabelDetails(route: JourneyRoute): JourneyLabelDetails {
     return {
-        origin: {name: route.origin.locationName},
-        destination: {name: route.destination.locationName},
+        origin: {type: "location", name: route.origin.locationName},
+        destination: {type: "location", name: route.destination.locationName},
+        connectingStationCrs: route.viaCrs,
+    };
+}
+
+export function getStationRouteLabelDetails(
+    route: JourneyRoute
+): JourneyLabelDetails {
+    return {
+        origin: {type: "station", stationCrs: route.origin.crs},
+        destination: {type: "station", stationCrs: route.destination.crs},
         connectingStationCrs: route.viaCrs,
     };
 }
@@ -45,8 +54,11 @@ export function getTimetabledJourneyLabelDetails(
     journey: TimetabledJourney
 ): JourneyLabelDetails {
     return {
-        origin: {name: journey.originLocationName},
-        destination: {name: journey.destinationLocationName},
+        origin: {type: "location", name: journey.originLocationName},
+        destination: {
+            type: "location",
+            name: journey.destinationLocationName,
+        },
         connectingStationCrs:
             journey.trainLegs.length > 1
                 ? journey.trainLegs.at(0)?.destination
@@ -71,6 +83,7 @@ function getEndpointDetails(
     const group = stationGroupsById.get(location.groupId)!;
 
     return {
+        type: "location",
         name: group.name,
         stationCrs:
             location.type === "station" && group.stations.length > 1
@@ -83,6 +96,10 @@ function getEndpointText(
     endpoint: JourneyLabelEndpoint,
     position: "origin" | "destination"
 ): string {
+    if (endpoint.type === "station") {
+        return stationName(endpoint.stationCrs);
+    }
+
     if (!endpoint.stationCrs) {
         return endpoint.name;
     }
@@ -90,6 +107,6 @@ function getEndpointText(
     const station = stationName(endpoint.stationCrs);
 
     return position === "origin"
-        ? `${endpoint.name}, through ${station}`
+        ? `${endpoint.name}, from ${station}`
         : `${endpoint.name}, arriving at ${station}`;
 }

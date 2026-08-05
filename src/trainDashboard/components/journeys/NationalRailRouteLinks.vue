@@ -6,13 +6,20 @@
             No journeys were found for these routes, check them out on National Rail Enquiries:
         </p>
         <ul class="mt-2 space-y-1">
-            <li v-for="route in journeyRoutes" :key="route.id">
+            <li
+                v-for="route in journeyRoutes"
+                :key="route.id"
+                class="flex flex-wrap items-baseline gap-x-1"
+            >
+                <JourneyLabel :details="getStationRouteLabelDetails(route)" />
+                <span>·</span>
                 <NationalRailLink
                     class="text-sm!"
                     :originCrs="route.origin.crs"
                     :destinationCrs="route.destination.crs"
                     :departureMinutes="departureMinutes"
-                    :label="`${stationName(route.origin.crs)} → ${stationName(route.destination.crs)}, NRE`"
+                    label="NRE"
+                    :ariaLabel="`${getJourneyLabelText(getStationRouteLabelDetails(route))} on National Rail Enquiries`"
                 />
             </li>
         </ul>
@@ -21,7 +28,11 @@
 
 <script setup lang="ts">
 import type {JourneyRoute} from "../../journeys/planning/journeyRoutes";
-import {stationName} from "../../stations/stations";
+import {
+    getJourneyLabelText,
+    getStationRouteLabelDetails,
+} from "../../journeys/journeyLabels";
+import JourneyLabel from "./JourneyLabel.vue";
 import NationalRailLink from "./NationalRailLink.vue";
 
 defineProps<{
