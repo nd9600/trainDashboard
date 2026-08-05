@@ -14,6 +14,7 @@ export interface TrainLeg {
     departure: number;
     arrival: number;
     platform?: string | null;
+    alternativeTrainLegs?: TrainLeg[];
 }
 
 export interface TimetabledJourney {
@@ -31,5 +32,4 @@ export interface TimetabledJourney {
     recommended?: boolean;
     segments: Segment[];
     trainLegs: TrainLeg[];
-    alternativeFirstTrainLegs?: TrainLeg[];
 }

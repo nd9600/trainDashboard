@@ -44,18 +44,26 @@
                                 step.trainLeg?.platform !== undefined
                             "
                             class="ml-1 whitespace-nowrap text-xs font-semibold"
-                            :style="{color: stationColour(step.trainLeg.origin)}"
+                            :style="{
+                                color: stationColour(step.trainLeg.origin),
+                            }"
                         >
                             p{{ step.trainLeg.platform ?? "_" }}
                         </span>
                         {{ step.suffix }}
                     </p>
 
-                    <AlternativeFirstTrainLink
-                        v-if="step.alternativeFirstTrainLeg"
-                        class="mt-1 flex"
-                        :trainLeg="step.alternativeFirstTrainLeg"
-                    />
+                    <p
+                        v-if="(step.alternativeTrainLegs ?? []).length > 0"
+                        class="mt-1 inline-flex items-baseline justify-start gap-1 pl-6 text-xs text-ink-subtle"
+                    >
+                        Also at <span
+                            v-for="(alternativeTrainLeg, index) in step.alternativeTrainLegs"
+                            :key="`${alternativeTrainLeg.serviceId}-${alternativeTrainLeg.departure}`"
+                        >
+                            <AlternativeTrainLink :trainLeg="alternativeTrainLeg"/>{{ index < (step.alternativeTrainLegs ?? []).length - 1 ? ", " : "" }}
+                        </span>
+                    </p>
                 </div>
             </div>
         </li>
@@ -72,7 +80,7 @@ import type {
 } from "../../dto/timetabledJourney.dto";
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
-import AlternativeFirstTrainLink from "./AlternativeFirstTrainLink.vue";
+import AlternativeTrainLink from "./AlternativeTrainLink.vue";
 import NationalRailLink from "./NationalRailLink.vue";
 
 const props = defineProps<{
@@ -89,7 +97,7 @@ interface ItineraryStep {
     suffix?: string;
     time?: number;
     trainLeg?: TrainLeg;
-    alternativeFirstTrainLeg?: TrainLeg;
+    alternativeTrainLegs?: TrainLeg[];
 }
 
 const itinerarySteps = computed<ItineraryStep[]>(() => {
@@ -117,10 +125,7 @@ const itinerarySteps = computed<ItineraryStep[]>(() => {
             label: "Train from",
             stationCrs: leg.origin,
             trainLeg: leg,
-            alternativeFirstTrainLeg:
-                index === 0
-                    ? journey.alternativeFirstTrainLegs?.at(0)
-                    : undefined,
+            alternativeTrainLegs: leg.alternativeTrainLegs,
         });
         steps.push({
             id: `arrival-${index}`,

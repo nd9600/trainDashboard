@@ -11,7 +11,7 @@
         </p>
 
         <template
-            v-for="(leg, legIndex) in journey.trainLegs"
+            v-for="leg in journey.trainLegs"
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
         >
             <p class="flex min-w-0 items-baseline gap-x-1 whitespace-nowrap">
@@ -50,14 +50,15 @@
                 </time>
             </p>
             <p
-                v-if="
-                    legIndex === 0 && journey.alternativeFirstTrainLegs?.at(0)
-                "
-                class="flex justify-start"
+                v-if="(leg.alternativeTrainLegs ?? []).length > 0"
+                class="inline-flex items-baseline justify-start gap-1 pl-6 text-xs text-ink-subtle"
             >
-                <AlternativeFirstTrainLink
-                    :trainLeg="journey.alternativeFirstTrainLegs[0]!"
-                />
+                Also at <span
+                    v-for="(alternativeTrainLeg, index) in leg.alternativeTrainLegs"
+                    :key="`${alternativeTrainLeg.serviceId}-${alternativeTrainLeg.departure}`"
+                >
+                    <AlternativeTrainLink :trainLeg="alternativeTrainLeg"/>{{ index < (leg.alternativeTrainLegs ?? []).length - 1 ? ", " : "" }}
+                </span>
             </p>
         </template>
 
@@ -75,7 +76,7 @@ import {formatTime} from "@/utilities/time.utility.ts";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
-import AlternativeFirstTrainLink from "./AlternativeFirstTrainLink.vue";
+import AlternativeTrainLink from "./AlternativeTrainLink.vue";
 import NationalRailLink from "./NationalRailLink.vue";
 
 defineProps<{

@@ -15,6 +15,8 @@ Departure-board requests
       ↓
 Direct trains and valid connections
       ↓
+Alternative trains grouped by shared first train
+      ↓
 Walking and waiting sections
       ↓
 Remove journeys you cannot catch
@@ -44,7 +46,8 @@ sequenceDiagram
     API-->>Boards: Departure-board responses
     Boards-->>Pipeline: Validated departure boards
     Pipeline->>Pipeline: getTrainOptions(...)
-    Pipeline->>Pipeline: addJourneySections(...)
+    Pipeline->>Pipeline: combineAlternativeOnwardTrains(...)
+    Pipeline->>Pipeline: makeTimetabledJourneys(...)
     Pipeline->>Pipeline: getCatchableJourneys(...)
     Pipeline->>Pipeline: sortJourneysByArrival(...)
     Pipeline-->>Store: Routes and timetabled journeys
@@ -53,6 +56,8 @@ sequenceDiagram
 ```
 
 Primary and secondary planning share one departure-board request cache. A station-pair request occurs only once during each refresh.
+
+Connection options that use the same first train are shown as one journey. The option that arrives first remains visible. Other onward trains appear as alternatives on the second leg.
 
 ## Call graph
 
@@ -70,8 +75,9 @@ flowchart TD
     api[fetchDepartureBoard]
     trains[getTrainOptions]
     direct[getDirectTrainLegs]
-    service[getServiceLeg]
-    sections[addJourneySections]
+    service[getTrainLeg]
+    alternatives[combineAlternativeOnwardTrains]
+    sections[makeTimetabledJourneys]
     catchable[getCatchableJourneys]
     sort[sortJourneysByArrival]
     recommended[markRecommendedJourney]
@@ -92,6 +98,7 @@ flowchart TD
     boards --> api
     pipeline --> trains
     trains --> direct
+    trains --> alternatives
     direct --> service
     pipeline --> sections
     pipeline --> catchable

@@ -6,7 +6,7 @@ export function makeTimetabledJourneys(
     trainOptions: TrainOption[]
 ): TimetabledJourney[] {
     return trainOptions.map((trainOption) => {
-        const {route, trainLegs, alternativeFirstTrainLegs} = trainOption;
+        const {route, trainLegs} = trainOption;
         const firstLeg = trainLegs.at(0)!;
         const lastLeg = trainLegs.at(-1)!;
         const walkingTimesKnown =
@@ -80,7 +80,6 @@ export function makeTimetabledJourneys(
             walkingTimesKnown,
             segments,
             trainLegs,
-            alternativeFirstTrainLegs,
         };
     });
 }

@@ -9,7 +9,6 @@ import {getDepartureBoard, type DepartureBoards} from "./departureBoards";
 export interface TrainOption {
     route: JourneyRoute;
     trainLegs: TrainLeg[];
-    alternativeFirstTrainLegs: TrainLeg[];
 }
 
 const minimumTransferMinutes = 3;
@@ -36,7 +35,6 @@ export function getTrainOptions(
             ).map((leg) => ({
                 route,
                 trainLegs: [leg],
-                alternativeFirstTrainLegs: [],
             }));
         }
 
@@ -69,7 +67,7 @@ function getConnectionOptions(
     );
 
     // 1. Consider every catchable onward train.
-    return onwardTrainLegs.flatMap((onwardTrainLeg) => {
+    const connectionOptions = onwardTrainLegs.flatMap((onwardTrainLeg) => {
         // 2. Require at least three minutes to change trains.
         // 3. Use the latest catchable first train.
         const orderedFirstTrainLegs = firstTrainLegs
@@ -91,11 +89,57 @@ function getConnectionOptions(
             ? [
                   {
                       route,
-                      trainLegs: [firstTrainLeg, onwardTrainLeg],
-                      alternativeFirstTrainLegs: orderedFirstTrainLegs.slice(1),
+                      trainLegs: [
+                          {
+                              ...firstTrainLeg,
+                              alternativeTrainLegs:
+                                  orderedFirstTrainLegs.slice(1),
+                          },
+                          onwardTrainLeg,
+                      ],
                   },
               ]
             : [];
+    });
+
+    return combineAlternativeOnwardTrains(connectionOptions);
+}
+
+function combineAlternativeOnwardTrains(
+    connectionOptions: TrainOption[]
+): TrainOption[] {
+    const optionsByFirstTrain = new Map<string, TrainOption[]>();
+
+    connectionOptions.forEach((option) => {
+        const firstTrain = option.trainLegs[0]!;
+        const key = `${firstTrain.serviceId}:${firstTrain.departure}`;
+        const options = optionsByFirstTrain.get(key) ?? [];
+        options.push(option);
+        optionsByFirstTrain.set(key, options);
+    });
+
+    return Array.from(optionsByFirstTrain.values(), (options) => {
+        const orderedOptions = [...options].sort(
+            (first, second) =>
+                first.trainLegs.at(-1)!.arrival -
+                second.trainLegs.at(-1)!.arrival
+        );
+        const mainOption = orderedOptions[0]!;
+        const alternativeOptions = orderedOptions.slice(1);
+        const onwardTrainLeg = mainOption.trainLegs.at(-1)!;
+
+        return {
+            ...mainOption,
+            trainLegs: [
+                mainOption.trainLegs[0]!,
+                {
+                    ...onwardTrainLeg,
+                    alternativeTrainLegs: alternativeOptions.map((option) =>
+                        option.trainLegs.at(-1)!
+                    ),
+                },
+            ],
+        };
     });
 }
 

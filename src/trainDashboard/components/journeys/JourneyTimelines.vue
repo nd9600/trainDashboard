@@ -34,10 +34,12 @@ const routesWithConsistentPlatforms = computed(() => {
     const servicesByRoute = new Map<string, Map<string, string>>();
 
     props.journeys
-        .flatMap((journey) => [
-            ...journey.trainLegs,
-            ...(journey.alternativeFirstTrainLegs ?? []),
-        ])
+        .flatMap((journey) =>
+            journey.trainLegs.flatMap((leg) => [
+                leg,
+                ...(leg.alternativeTrainLegs ?? []),
+            ])
+        )
         .forEach((leg) => {
             if (!leg.platform) {
                 return;

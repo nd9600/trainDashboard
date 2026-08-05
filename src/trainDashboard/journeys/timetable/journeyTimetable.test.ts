@@ -269,7 +269,7 @@ describe("journey timetable stages", () => {
         });
     });
 
-    it("orders every catchable onward train by final arrival time", async () => {
+    it("shows slower onward trains as alternatives", async () => {
         mockDepartureBoards({
             "HTC-MAN": [service("first-train", "10:05", "MAN", "10:20")],
             "MAN-LIV": [
@@ -285,14 +285,16 @@ describe("journey timetable stages", () => {
             false
         );
 
-        expect(
-            journeys.map((journey) => ({
-                departure: journey.trainLegs[1]!.departure,
-                arrival: journey.trainLegs[1]!.arrival,
-            }))
-        ).toEqual([
-            {departure: 10 * 60 + 35, arrival: 11 * 60 + 20},
-            {departure: 10 * 60 + 25, arrival: 11 * 60 + 30},
+        expect(journeys).toHaveLength(1);
+        expect(journeys[0]!.trainLegs[1]).toMatchObject({
+            departure: 10 * 60 + 35,
+            arrival: 11 * 60 + 20,
+        });
+        expect(journeys[0]!.trainLegs[1]!.alternativeTrainLegs).toEqual([
+            expect.objectContaining({
+                departure: 10 * 60 + 25,
+                arrival: 11 * 60 + 30,
+            }),
         ]);
     });
 
@@ -314,7 +316,7 @@ describe("journey timetable stages", () => {
 
         expect(journeys).toHaveLength(1);
         expect(journeys[0]!.trainLegs[0]!.departure).toBe(10 * 60 + 15);
-        expect(journeys[0]!.alternativeFirstTrainLegs).toEqual([
+        expect(journeys[0]!.trainLegs[0]!.alternativeTrainLegs).toEqual([
             expect.objectContaining({departure: 10 * 60 + 5}),
         ]);
     });
