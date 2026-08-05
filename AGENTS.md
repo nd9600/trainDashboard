@@ -123,6 +123,21 @@
   - pronoun references are unambiguous;
   - unnecessary words and repeated information are removed;
   - exact technical text remains unchanged;
+
+## Journey-planning documentation
+
+Keep `docs/journey-planning.md` consistent with the current journey-planning code.
+
+Update its sequence diagram, call graph, and source map when a change affects:
+
+- active schedule selection;
+- journey-to-route expansion;
+- departure-board requests or caching;
+- direct train or connection selection;
+- walk, wait, or train section construction;
+- catchability filtering or journey sorting;
+- the number of journeys shown;
+- the files or functions named in the document.
   
 ## English Prose Style
 
