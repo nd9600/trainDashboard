@@ -52,6 +52,7 @@ function journey(origin: string, destination: string): TimetabledJourney {
         segments: [{kind: "train", start: 17 * 60, end: 18 * 60}],
         trainLegs: [
             {
+                serviceId: `${origin}-${destination}`,
                 origin,
                 destination,
                 departure: 17 * 60,

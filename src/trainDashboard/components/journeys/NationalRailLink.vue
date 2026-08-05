@@ -1,6 +1,6 @@
 <template>
     <a
-        class="inline-flex w-fit items-center gap-0.5 text-xs font-medium text-ink-subtle underline decoration-line-strong underline-offset-2 hover:text-primary"
+        class="inline-flex items-center gap-0.5 text-xs font-medium text-ink-subtle underline decoration-line-strong underline-offset-2 hover:text-primary"
         :href="
             getNationalRailJourneyUrl(
                 originCrs,
@@ -13,7 +13,7 @@
         target="_blank"
     >
         {{ label }}
-        <AppIcon v-if="!isDesktop" class="size-3" name="external-link" />
+        <AppIcon v-if="shouldShowLinkIcon" class="size-3" name="external-link" />
     </a>
 </template>
 
@@ -28,11 +28,11 @@ withDefaults(
         departureMinutes: number;
         label?: string;
         ariaLabel?: string;
-        isDesktop?: boolean;
+        shouldShowLinkIcon?: boolean;
     }>(),
     {
         label: "NRE",
-        isDesktop: false
+        shouldShowLinkIcon: false
     }
 );
 </script>

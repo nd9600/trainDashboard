@@ -8,10 +8,12 @@ export interface Segment {
 }
 
 export interface TrainLeg {
+    serviceId: string;
     origin: string;
     destination: string;
     departure: number;
     arrival: number;
+    platform?: string | null;
 }
 
 export interface TimetabledJourney {

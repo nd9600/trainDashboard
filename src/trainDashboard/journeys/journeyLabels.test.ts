@@ -119,12 +119,14 @@ describe("getTimetabledJourneyLabelDetails", () => {
     it("gets the connecting station from a journey with two train legs", () => {
         const journey = getTimetabledJourney([
             {
+                serviceId: "first-train",
                 origin: "BNA",
                 destination: "MAN",
                 departure: 600,
                 arrival: 620,
             },
             {
+                serviceId: "second-train",
                 origin: "MAN",
                 destination: "LIV",
                 departure: 630,
@@ -142,6 +144,7 @@ describe("getTimetabledJourneyLabelDetails", () => {
     it("does not treat the destination of a direct train as a connection", () => {
         const journey = getTimetabledJourney([
             {
+                serviceId: "direct-train",
                 origin: "BNA",
                 destination: "LIV",
                 departure: 600,

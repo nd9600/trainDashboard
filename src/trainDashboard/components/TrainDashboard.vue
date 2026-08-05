@@ -103,7 +103,7 @@
                     :currentMinutes="currentMinutes"
                 />
 
-                <NationalRailRouteLinks
+                <NoJourneysFound
                     v-if="routesWithoutTimetabledJourneys.length > 0"
                     :journeyRoutes="routesWithoutTimetabledJourneys"
                     :departureMinutes="currentMinutes"
@@ -117,7 +117,7 @@
 import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import NationalRailRouteLinks from "./journeys/NationalRailRouteLinks.vue";
+import NoJourneysFound from "./journeys/NoJourneysFound.vue";
 import JourneyTimelines from "./journeys/JourneyTimelines.vue";
 import OtherJourneys from "./journeys/OtherJourneys.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";

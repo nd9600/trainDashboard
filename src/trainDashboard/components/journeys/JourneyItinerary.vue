@@ -5,7 +5,18 @@
             :key="step.id"
             class="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-2 items-start"
         >
-            <time class="py-3 text-right text-xs font-semibold text-ink">
+            <NationalRailLink
+                v-if="step.trainLeg && step.time"
+                class="py-3 text-right block! text-xs! font-semibold! text-ink!"
+                :originCrs="step.trainLeg.origin"
+                :destinationCrs="step.trainLeg.destination"
+                :departureMinutes="step.trainLeg.departure"
+                :label="formatTime(step.time)"
+            />
+            <time
+                v-else
+                class="py-3 text-right text-xs font-semibold text-ink"
+            >
                 {{ step.time === undefined ? "" : formatTime(step.time) }}
             </time>
             <div class="border-l pl-2 py-3 flex gap-2 items-start border-line">
@@ -32,14 +43,7 @@
                         </strong>
                         {{ step.suffix }}
                     </p>
-                    <NationalRailLink
-                        v-if="step.trainLeg"
-                        class="mt-1 max-w-full"
-                        :originCrs="step.trainLeg.origin"
-                        :destinationCrs="step.trainLeg.destination"
-                        :departureMinutes="step.trainLeg.departure"
-                        :label="`${stationName(step.trainLeg.origin)} → ${stationName(step.trainLeg.destination)}, NRE`"
-                    />
+
                     <AlternativeFirstTrainLink
                         v-if="step.alternativeFirstTrainLeg"
                         class="mt-1 flex"

@@ -20,6 +20,7 @@ const callingPointListSchema = z.object({
 const departureServiceSchema = z.object({
     std: apiTimeSchema,
     etd: apiTimeSchema.nullish(),
+    platform: z.string().nullish(),
     isCancelled: z.boolean().optional(),
     serviceID: z.string(),
     subsequentCallingPoints: z
@@ -34,6 +35,7 @@ export const departureBoardSchema = z.object({
     crs: z.string(),
     filterLocationName: z.string().nullish(),
     filtercrs: z.string().nullish(),
+    platformAvailable: z.boolean().optional(),
     areServicesAvailable: z.boolean().optional(),
     trainServices: z
         .array(departureServiceSchema)

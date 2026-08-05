@@ -20,6 +20,7 @@
                     :departureMinutes="departureMinutes"
                     label="NRE"
                     :ariaLabel="`${getJourneyLabelText(getStationRouteLabelDetails(route))} on National Rail Enquiries`"
+                    :shouldShowLinkIcon="true"
                 />
             </li>
         </ul>

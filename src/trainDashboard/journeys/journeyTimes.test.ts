@@ -21,12 +21,14 @@ describe("getJourneyTimelineRange", () => {
             ],
             trainLegs: [
                 {
+                    serviceId: "first-train",
                     origin: "BNA",
                     destination: "MAN",
                     departure: 15 * 60 + 5,
                     arrival: 15 * 60 + 20,
                 },
                 {
+                    serviceId: "second-train",
                     origin: "MAN",
                     destination: "LIV",
                     departure: 15 * 60 + 30,

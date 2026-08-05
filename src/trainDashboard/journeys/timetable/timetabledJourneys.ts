@@ -6,9 +6,9 @@ export function addJourneySections(
     trainOptions: TrainOption[]
 ): TimetabledJourney[] {
     return trainOptions.map((trainOption) => {
-        const {route, serviceLegs, alternativeFirstTrainLegs} = trainOption;
-        const firstLeg = serviceLegs.at(0)!;
-        const lastLeg = serviceLegs.at(-1)!;
+        const {route, trainLegs, alternativeFirstTrainLegs} = trainOption;
+        const firstLeg = trainLegs.at(0)!;
+        const lastLeg = trainLegs.at(-1)!;
         const walkingTimesKnown =
             route.origin.walkMinutes !== undefined &&
             route.destination.walkMinutes !== undefined;
@@ -29,8 +29,8 @@ export function addJourneySections(
             });
         }
 
-        serviceLegs.forEach((leg, index) => {
-            const previousLeg = serviceLegs[index - 1];
+        trainLegs.forEach((leg, index) => {
+            const previousLeg = trainLegs[index - 1];
 
             if (previousLeg && leg.departure > previousLeg.arrival) {
                 segments.push({
@@ -59,7 +59,7 @@ export function addJourneySections(
         }
 
         return {
-            id: `${route.id}:${serviceLegs.map((leg) => leg.serviceId).join(":")}`,
+            id: `${route.id}:${trainLegs.map((leg) => leg.serviceId).join(":")}`,
             journeyId: route.journeyId,
             origin: route.origin.crs,
             originLocationName: route.origin.locationName,
@@ -79,22 +79,8 @@ export function addJourneySections(
                 route.destination.locationName.toLowerCase() === "home",
             walkingTimesKnown,
             segments,
-            trainLegs: serviceLegs.map(
-                ({origin, destination, departure, arrival}) => ({
-                    origin,
-                    destination,
-                    departure,
-                    arrival,
-                })
-            ),
-            alternativeFirstTrainLegs: alternativeFirstTrainLegs.map(
-                ({origin, destination, departure, arrival}) => ({
-                    origin,
-                    destination,
-                    departure,
-                    arrival,
-                })
-            ),
+            trainLegs,
+            alternativeFirstTrainLegs,
         };
     });
 }

@@ -6,14 +6,10 @@ import type {TrainLeg} from "../../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "../planning/journeyRoutes";
 import {getDepartureBoard, type DepartureBoards} from "./departureBoards";
 
-interface ServiceLeg extends TrainLeg {
-    serviceId: string;
-}
-
 export interface TrainOption {
     route: JourneyRoute;
-    serviceLegs: ServiceLeg[];
-    alternativeFirstTrainLegs: ServiceLeg[];
+    trainLegs: TrainLeg[];
+    alternativeFirstTrainLegs: TrainLeg[];
 }
 
 const minimumTransferMinutes = 3;
@@ -39,7 +35,7 @@ export function getTrainOptions(
                 currentMinutes
             ).map((leg) => ({
                 route,
-                serviceLegs: [leg],
+                trainLegs: [leg],
                 alternativeFirstTrainLegs: [],
             }));
         }
@@ -95,7 +91,7 @@ function getConnectionOptions(
             ? [
                   {
                       route,
-                      serviceLegs: [firstTrainLeg, onwardTrainLeg],
+                      trainLegs: [firstTrainLeg, onwardTrainLeg],
                       alternativeFirstTrainLegs: orderedFirstTrainLegs.slice(1),
                   },
               ]
@@ -108,10 +104,10 @@ function getDirectTrainLegs(
     originCrs: string,
     destinationCrs: string,
     currentMinutes: number
-): ServiceLeg[] {
+): TrainLeg[] {
     return board.trainServices
         .flatMap((service) => {
-            const leg = getServiceLeg(
+            const leg = getTrainLeg(
                 service,
                 originCrs,
                 destinationCrs,
@@ -123,12 +119,12 @@ function getDirectTrainLegs(
         .sort((first, second) => first.departure - second.departure);
 }
 
-function getServiceLeg(
+function getTrainLeg(
     service: DepartureService,
     originCrs: string,
     destinationCrs: string,
     currentMinutes: number
-): ServiceLeg | undefined {
+): TrainLeg | undefined {
     if (service.isCancelled) {
         return undefined;
     }
@@ -169,6 +165,7 @@ function getServiceLeg(
         serviceId: service.serviceID,
         origin: originCrs,
         destination: destinationCrs,
+        platform: service.platform,
         departure,
         arrival,
     };

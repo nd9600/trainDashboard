@@ -22,7 +22,6 @@
                     :departureMinutes="leg.departure"
                     :label="formatTime(leg.departure)"
                     :ariaLabel="`View the ${formatTime(leg.departure)} ${stationName(leg.origin)} to ${stationName(leg.destination)} journey on National Rail Enquiries`"
-                    :isDesktop="true"
                 />
                 <strong
                     class="min-w-0 truncate"
@@ -47,11 +46,10 @@
                 v-if="
                     legIndex === 0 && journey.alternativeFirstTrainLegs?.at(0)
                 "
-                class="flex justify-end"
+                class="flex justify-start"
             >
                 <AlternativeFirstTrainLink
                     :trainLeg="journey.alternativeFirstTrainLegs[0]!"
-                    :isDesktop="true"
                 />
             </p>
         </template>
