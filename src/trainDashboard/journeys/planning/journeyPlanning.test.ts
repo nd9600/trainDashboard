@@ -7,7 +7,6 @@ import {
 } from "../../dto/dashboardConfig.dto";
 import {
     getActiveSchedule,
-    type CurrentClock,
     getJourneysForSchedule,
 } from "./journeySelection";
 import {getStationRoutes} from "./journeyRoutes";

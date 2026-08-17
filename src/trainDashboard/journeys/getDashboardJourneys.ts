@@ -4,8 +4,8 @@ import type {
 } from "../dto/dashboardConfig.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
-    getActiveSchedule,
     type CurrentClock,
+    getActiveSchedule,
     getJourneysForSchedule,
 } from "./planning/journeySelection";
 import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";

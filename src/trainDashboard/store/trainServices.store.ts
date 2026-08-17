@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {computed, ref, watch} from "vue";
+import {computed, type ComputedRef, ref, watch} from "vue";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import type {DisplaySchedule} from "../dto/dashboardConfig.dto";
 import type {JourneyRoute} from "../journeys/planning/journeyRoutes";
@@ -14,12 +14,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const apiStore = useRailDataApiStore();
 
     ///// state /////
-    const currentDate = new Date();
-    const currentClock: CurrentClock = {
-        day: currentDate.getDay() as Day,
-        minutes: currentDate.getHours() * 60 + currentDate.getMinutes(),
-    };
-    const currentMinutes = ref(currentClock.minutes);
+    const currentDate = ref(new Date());
+
     const activeSchedule = ref<DisplaySchedule>();
     const primaryRoutes = ref<JourneyRoute[]>([]);
     const secondaryRoutes = ref<JourneyRoute[]>([]);
@@ -29,6 +25,11 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const journeyLoadError = ref<string>();
 
     ///// getters /////
+    const currentClock: ComputedRef<CurrentClock> = computed(() => ({
+        day: currentDate.value.getDay() as Day,
+        minutes: currentDate.value.getHours() * 60 + currentDate.value.getMinutes(),
+    }));
+    const currentMinutes = computed(() => currentClock.value.minutes);
     const recommendedJourney = computed(() =>
         primaryJourneys.value.find((journey) => journey.recommended)
     );
@@ -43,10 +44,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         try {
             const dashboardJourneys = await getDashboardJourneys(
                 dashboardConfigStore.config,
-                {
-                    day: currentClock.day,
-                    minutes: currentMinutes.value,
-                },
+                currentClock.value,
                 consumerKey
             );
 
@@ -69,6 +67,21 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             isLoadingJourneys.value = false;
         }
     }
+
+    const updateClock = () => {
+        currentDate.value = new Date();
+    }
+
+    // update the click within 5s of every minute change, and whenever the tab becomes visible
+    let previousMinuteParity = currentMinutes.value % 2;
+    setInterval(function() {
+        const currentMinuteParity = (new Date()).getMinutes() % 2;
+        if (currentMinuteParity !== previousMinuteParity) {
+            console.log("updateClock");
+            updateClock();
+            previousMinuteParity = currentMinuteParity;
+        }
+    }, 1000);
 
     ///// effects /////
     watch(
