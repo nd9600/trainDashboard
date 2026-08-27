@@ -1,7 +1,10 @@
 <template>
-    <div
+    <Listbox
         v-if="savedJourneys.length"
-        class="mr-4 flex flex-col items-start gap-2"
+        :modelValue="activeJourneyId"
+        as="div"
+        class="relative mr-4 flex w-fit max-w-full flex-col items-start gap-2"
+        @update:model-value="selectJourney"
     >
         <p
             v-if="activeSchedule && !hasTemporaryJourneyOverride"
@@ -9,12 +12,9 @@
         >
             {{ activeSchedule.name }}
         </p>
-        <button
-            class="appButton appButton--quiet max-w-full justify-start whitespace-normal text-left border-none p-1"
-            type="button"
-            aria-haspopup="dialog"
+        <ListboxButton
+            class="appButton appButton--secondary max-w-full justify-start whitespace-normal text-left border-none p-1"
             :aria-label="switcherButtonLabel"
-            @click="openSwitcher"
         >
             <JourneyLabel
                 v-if="activeJourney"
@@ -33,94 +33,76 @@
                 class="size-3 shrink-0 rotate-90 transition-transform"
                 name="chevron"
             />
-        </button>
-    </div>
+        </ListboxButton>
 
-    <AppModal
-        :isOpen="isOpen"
-        closeLabel="Close journey switcher"
-        rootClass="sm:w-fit"
-        spotlightVariantPlacement="top"
-        @close="isOpen = false"
-    >
-        <template #header>Choose a journey</template>
-
-        <div class="p-3 sm:p-4">
-            <ul
-                class="divide-y divide-line overflow-hidden rounded-lg border border-line bg-paper"
-            >
-                <li v-for="journey in orderedJourneys" :key="journey.id">
-                    <button
-                        class="flex w-full gap-3 p-3 text-left transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary sm:p-4"
-                        type="button"
-                        @click="selectJourney(journey.id)"
-                    >
-                        <span
-                            class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border"
-                            :class="
-                                journey.id === activeJourneyId
-                                    ? 'border-primary bg-primary text-paper'
-                                    : 'border-line-strong text-transparent'
-                            "
-                            aria-hidden="true"
-                        >
-                            ✓
-                        </span>
-                        <span class="min-w-0 grow">
-                            <span
-                                class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"
-                            >
-                                <strong class="min-w-0 font-semibold text-ink">
-                                    <JourneyLabel
-                                        class="text-sm"
-                                        :details="
-                                            getJourneyLabelDetails(
-                                                journey,
-                                                stationGroups
-                                            )
-                                        "
-                                        :shouldSayWhenDirect="false"
-                                    />
-                                </strong>
-                                <span
-                                    v-if="journey.id === predictedJourneyId"
-                                    class="shrink-0 rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-ink-muted"
-                                >
-                                    Predicted
-                                </span>
-                            </span>
-                            <span
-                                v-if="journey.id === activeJourneyId"
-                                class="sr-only"
-                            >
-                                Current journey.
-                            </span>
-                        </span>
-                    </button>
-                </li>
-            </ul>
-        </div>
-
-        <template
-            v-if="hasTemporaryJourneyOverride && predictedJourneyId"
-            #footer
+        <ListboxOptions
+            class="absolute top-full left-0 z-20 mt-1 max-h-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line-strong bg-paper shadow-lg focus:outline-none"
         >
-            <button
-                class="appButton appButton--secondary w-full sm:w-auto"
-                type="button"
-                @click="selectPrediction"
+            <ListboxOption
+                v-for="journey in orderedJourneys"
+                :key="journey.id"
+                v-slot="{active, selected}"
+                as="template"
+                :value="journey.id"
             >
-                Use predicted journey
-            </button>
-        </template>
-    </AppModal>
+                <li
+                    class="flex cursor-pointer gap-3 px-3 py-2 text-left transition-colors"
+                    :class="{'bg-surface': active}"
+                >
+                    <span
+                        class="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border"
+                        :class="
+                            selected
+                                ? 'border-primary bg-primary text-paper'
+                                : 'border-line-strong text-transparent'
+                        "
+                        aria-hidden="true"
+                    >
+                        ✓
+                    </span>
+                    <span class="min-w-0 grow">
+                        <span
+                            class=""
+                        >
+                            <span class="min-w-0 font-semibold text-ink whitespace-nowrap">
+                                <JourneyLabel
+                                    class="text-xs sm:text-sm sm:whitespace-nowrap"
+                                    :details="
+                                        getJourneyLabelDetails(
+                                            journey,
+                                            stationGroups
+                                        )
+                                    "
+                                    :shouldSayWhenDirect="false"
+                                />
+                            </span>
+                            <span
+                                v-if="journey.id === predictedJourneyId"
+                                class="shrink-0 rounded-full bg-surface-muted ml-3 px-2 py-0.5 text-xs font-medium text-ink-muted"
+                            >
+                                Predicted
+                            </span>
+                        </span>
+                        <span v-if="selected" class="sr-only">
+                            Current journey.
+                        </span>
+                    </span>
+                </li>
+            </ListboxOption>
+        </ListboxOptions>
+    </Listbox>
 </template>
 
 <script setup lang="ts">
+import {
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
+} from "@headlessui/vue";
 import {storeToRefs} from "pinia";
-import {computed, ref} from "vue";
+import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import AppModal from "@/components/Modal/AppModal.vue";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import {useTrainServicesStore} from "../../store/trainServices.store";
 import {
@@ -138,7 +120,6 @@ const {
     hasTemporaryJourneyOverride,
     predictedJourneyId,
 } = storeToRefs(trainServicesStore);
-const isOpen = ref(false);
 
 const savedJourneys = computed(() => config.value.journeys);
 const stationGroups = computed(() => config.value.stationGroups);
@@ -164,17 +145,7 @@ const switcherButtonLabel = computed(() => {
     return `Change journey. Current journey: ${label}`;
 });
 
-function openSwitcher(): void {
-    isOpen.value = true;
-}
-
 function selectJourney(journeyId: string): void {
     trainServicesStore.selectSavedJourney(journeyId);
-    isOpen.value = false;
-}
-
-function selectPrediction(): void {
-    trainServicesStore.usePredictedJourney();
-    isOpen.value = false;
 }
 </script>
