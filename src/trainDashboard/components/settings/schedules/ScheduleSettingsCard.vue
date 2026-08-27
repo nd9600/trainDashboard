@@ -1,6 +1,6 @@
 <template>
     <button
-        class="flex w-full cursor-pointer items-center justify-between gap-4 rounded-lg border border-line bg-paper p-4 text-left shadow-sm transition-colors hover:border-primary hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        class="flex w-full items-center justify-between gap-4 rounded-lg border border-line bg-paper p-4 text-left shadow-sm transition-colors hover:border-primary hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         type="button"
         @click="emit('edit')"
     >
@@ -28,7 +28,7 @@
             </span>
         </span>
 
-        <AppIcon class="size-4 shrink-0" name="chevron" />
+        <AppIcon class="size-4" name="chevron" />
     </button>
 </template>
 

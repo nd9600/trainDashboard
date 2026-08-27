@@ -29,7 +29,7 @@
             >
                 Temporary
             </span>
-            <AppIcon class="size-3 shrink-0 rotate-90" name="chevron" />
+            <AppIcon class="size-3 rotate-90" name="chevron" />
         </ListboxButton>
 
         <ListboxOptions
@@ -61,7 +61,7 @@
                         class="min-w-0 grow text-balance font-semibold text-ink"
                     >
                         <JourneyLabel
-                            class="text-balance text-xs sm:text-sm"
+                            class="text-xs sm:text-sm"
                             :details="
                                 getJourneyLabelDetails(journey, stationGroups)
                             "

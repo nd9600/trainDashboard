@@ -55,7 +55,7 @@
 
                     <p
                         v-if="(step.alternativeTrainLegs ?? []).length > 0"
-                        class="mt-1 inline-flex items-baseline justify-start gap-1 pl-6 text-xs text-ink-subtle"
+                        class="mt-1 inline-flex items-baseline gap-1 pl-6 text-xs text-ink-subtle"
                     >
                         Also at <span
                             v-for="(alternativeTrainLeg, index) in step.alternativeTrainLegs"

@@ -46,7 +46,7 @@
                 >
                     Walking here takes
                     <input
-                        class="appInput w-20 grow-0"
+                        class="appInput w-20"
                         :min="0"
                         placeholder="Not set"
                         :step="1"

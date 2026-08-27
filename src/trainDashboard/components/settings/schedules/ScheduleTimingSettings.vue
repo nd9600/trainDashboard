@@ -12,7 +12,7 @@
             schedule should be active on
         </label>
 
-        <fieldset class="sentenceField flex-col items-start whitespace-normal">
+        <fieldset class="sentenceField flex-col items-start">
             <legend class="sr-only">Schedule days</legend>
             <div class="flex flex-wrap gap-2 sm:gap-4">
                 <label
@@ -35,7 +35,7 @@
             </div>
         </fieldset>
 
-        <fieldset class="sentenceField whitespace-normal">
+        <fieldset class="sentenceField">
             <legend class="sr-only">Schedule times</legend>
             <label class="inline-flex items-baseline gap-2">
                 <span>from</span>

@@ -4,7 +4,7 @@
             v-for="(journey, index) in journeys"
             :key="`highlight-${journey.id}`"
             class="pointer-events-none absolute inset-x-0 rounded-lg bg-highlight"
-            :class="journey.recommended ? 'block' : 'hidden'"
+            :class="{hidden: !journey.recommended}"
             :style="{
                 top: `${rowStart + index * rowGap - rowGap / 2 + rowMargin}px`,
                 height: `${rowGap - rowMargin * 2}px`,

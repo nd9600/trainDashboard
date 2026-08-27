@@ -1,12 +1,12 @@
 <template>
     <header class="min-w-0">
         <JourneySwitcher />
-        <h1 class="mt-8 mb-1 font-display text-4xl font-normal">
+        <h1 class="mt-8 mb-1 font-display text-4xl">
             {{ leaveInString }}
         </h1>
         <p
             v-if="recommendedJourney"
-            class="m-0 text-ink-muted text-sm sm:text-base flex flex-col sm:flex-row items-start sm:items-center flex-wrap gap-1"
+            class="text-ink-muted text-sm sm:text-base flex flex-col sm:flex-row items-start sm:items-center flex-wrap gap-1"
         >
             <span>
                 {{ shouldWalk ? "Walk to" : "Train from" }}
@@ -41,7 +41,7 @@
                 · {{ changeCount }} change{{ changeCount === 1 ? "" : "s" }}
             </span>
         </p>
-        <p class="mt-1 mb-0 text-sm text-ink-subtle">
+        <p class="mt-1 text-sm text-ink-subtle">
             It is now {{ formatTime(currentMinutes) }}
         </p>
     </header>

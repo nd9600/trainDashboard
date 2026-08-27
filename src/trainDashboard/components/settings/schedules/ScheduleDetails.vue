@@ -2,7 +2,7 @@
     <div class="space-y-6">
         <header>
             <button
-                class="appButton appButton--quiet mb-3 px-0 py-1 text-sm text-primary"
+                class="appButton appButton--quiet mb-3 px-0 py-1 text-primary"
                 type="button"
                 @click="emit('back')"
             >

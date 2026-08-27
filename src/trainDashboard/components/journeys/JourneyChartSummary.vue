@@ -1,6 +1,6 @@
 <template>
     <div
-        class="flex max-w-96 items-center gap-2 px-2"
+        class="flex max-w-96 items-center px-2"
         :style="{height: `${height}px`}"
     >
         <div class="min-w-0">
@@ -20,7 +20,6 @@
 import AppIcon from "@/components/AppIcon.vue";
 import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {getMustLeaveMessage} from "../../journeys/journeyTimes";
-import {stationColour} from "../../stations/stationColours";
 import JourneyDesktopItinerary from "./JourneyDesktopItinerary.vue";
 
 defineProps<{

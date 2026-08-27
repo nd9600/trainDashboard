@@ -1,6 +1,6 @@
 <template>
-    <main class="min-h-screen bg-wh">
-        <div class="mx-auto w-full max-w-dashboard pt-8 pb-8">
+    <main class="min-h-screen">
+        <div class="mx-auto max-w-dashboard pt-8 pb-8">
             <div class="flex justify-between max-sm:px-2">
                 <DashboardHeader />
                 <TrainDashboardSettingsModal ref="settingsModal" />
@@ -66,14 +66,14 @@
                     {{ journeyLoadError }}
                     <button
                         v-if="!apiKeyConfigured"
-                        class="appButton appButton--secondary ml-3 px-3 py-1"
+                        class="appButton appButton--secondary ml-3 py-1"
                         type="button"
                         @click="settingsModal?.openApiSettings()"
                     >
                         Open API settings
                     </button>
                 </p>
-                <section class="flex flex-col gap-4">
+                <section>
                     <JourneyTimelines
                         v-if="journeys.length > 0"
                         :journeys="journeys"

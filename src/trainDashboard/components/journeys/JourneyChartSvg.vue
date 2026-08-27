@@ -1,7 +1,7 @@
 <template>
     <div class="relative z-10 min-w-0">
         <svg
-            class="block w-full overflow-visible"
+            class="overflow-visible"
             width="100%"
             :height="chartHeight"
             role="img"

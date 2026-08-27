@@ -52,7 +52,7 @@
                             class="border-b border-line px-5 py-4 pr-14"
                         >
                             <DialogTitle
-                                class="p-0 text-lg font-semibold text-ink"
+                                class="text-lg font-semibold text-ink"
                             >
                                 <slot name="header" />
                             </DialogTitle>

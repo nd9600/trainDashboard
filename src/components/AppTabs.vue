@@ -12,7 +12,7 @@
             v-for="tab in tabs"
             :id="`${idPrefix}-tab-${tab.value}`"
             :key="tab.value"
-            class="appButton grow px-2 py-2 sm:px-4"
+            class="appButton grow px-2 sm:px-4"
             :class="tabClass(tab.value)"
             type="button"
             role="tab"
@@ -22,7 +22,7 @@
         >
             <AppIcon
                 v-if="tab.icon"
-                class="mr-2 inline-block size-4 align-text-bottom"
+                class="mr-2 size-4"
                 :name="tab.icon"
             />
             <span>{{ tab.label }}</span>

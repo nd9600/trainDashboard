@@ -18,7 +18,7 @@
             >
                 {{ stationName(leg.destination) }}
             </span>
-            <span class="font-normal">· {{ formatTime(leg.departure) }}</span>
+            <span>· {{ formatTime(leg.departure) }}</span>
         </p>
     </div>
 </template>

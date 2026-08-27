@@ -16,7 +16,7 @@
             </span>
             <button
                 v-if="selectedJourney"
-                class="appButton appButton--secondary shrink-0 px-3 py-1 text-sm"
+                class="appButton appButton--secondary shrink-0 py-1"
                 type="button"
                 @click="toggleJourneyEditor"
             >
@@ -25,7 +25,7 @@
         </div>
 
         <button
-            class="appButton appButton--quiet px-0 py-1 text-sm text-primary underline underline-offset-2"
+            class="appButton appButton--quiet px-0 py-1 text-primary underline underline-offset-2"
             type="button"
             @click="toggleJourneyPicker"
         >
@@ -74,7 +74,7 @@
             </label>
             <div class="flex flex-wrap gap-2">
                 <button
-                    class="appButton appButton--primary px-3 py-1.5"
+                    class="appButton appButton--primary py-1.5"
                     type="button"
                     :disabled="selectedJourneyId === ''"
                     @click="useSelectedJourney"
@@ -82,7 +82,7 @@
                     Use journey
                 </button>
                 <button
-                    class="appButton appButton--secondary px-3 py-1.5"
+                    class="appButton appButton--secondary py-1.5"
                     type="button"
                     @click="createJourney"
                 >

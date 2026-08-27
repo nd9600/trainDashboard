@@ -14,7 +14,7 @@
             v-for="leg in journey.trainLegs"
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
         >
-            <p class="flex min-w-0 items-baseline gap-x-1 whitespace-nowrap">
+            <p class="flex items-baseline gap-x-1 whitespace-nowrap">
                 <NationalRailLink
                     class="shrink-0 text-sm! font-semibold! text-ink!"
                     :originCrs="leg.origin"
@@ -51,7 +51,7 @@
             </p>
             <p
                 v-if="(leg.alternativeTrainLegs ?? []).length > 0"
-                class="inline-flex items-baseline justify-start gap-1 pl-6 text-xs text-ink-subtle"
+                class="inline-flex items-baseline gap-1 pl-6 text-xs text-ink-subtle"
             >
                 Also at <span
                     v-for="(alternativeTrainLeg, index) in leg.alternativeTrainLegs"
