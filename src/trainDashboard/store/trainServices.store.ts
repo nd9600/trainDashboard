@@ -1,9 +1,12 @@
 import {defineStore} from "pinia";
 import {computed, type ComputedRef, ref, watch} from "vue";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
-import type {DisplaySchedule} from "../dto/dashboardConfig.dto";
 import type {JourneyRoute} from "../journeys/planning/journeyRoutes";
-import type {CurrentClock} from "../journeys/planning/journeySelection";
+import {
+    type CurrentClock,
+    getActiveSchedule,
+    getPredictedJourney,
+} from "../journeys/planning/journeySelection";
 import {getDashboardJourneys} from "../journeys/getDashboardJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
@@ -14,11 +17,13 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
     const journeySelectionStore = useJourneySelectionStore();
+    const predictionJourneyHistory = [
+        ...journeySelectionStore.recentJourneyHistory,
+    ];
 
     ///// state /////
     const currentDate = ref(new Date());
 
-    const activeSchedule = ref<DisplaySchedule>();
     const routes = ref<JourneyRoute[]>([]);
     const journeys = ref<TimetabledJourney[]>([]);
     const isLoadingJourneys = ref(true);
@@ -31,7 +36,23 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             currentDate.value.getHours() * 60 + currentDate.value.getMinutes(),
     }));
     const currentMinutes = computed(() => currentClock.value.minutes);
-    const predictedJourneyId = computed(() => activeSchedule.value?.journeyId);
+    const activeSchedule = computed(() =>
+        getActiveSchedule(
+            dashboardConfigStore.config.schedules,
+            currentClock.value
+        )
+    );
+    const predictedJourneyId = computed(
+        () =>
+            getPredictedJourney(
+                dashboardConfigStore.config.journeys,
+                activeSchedule.value,
+                predictionJourneyHistory
+            )?.id
+    );
+    const recentJourneyHistory = computed(
+        () => journeySelectionStore.recentJourneyHistory
+    );
     const temporaryJourneyId = computed(() => {
         const journeyId = journeySelectionStore.temporaryJourneyId;
 
@@ -67,10 +88,10 @@ export const useTrainServicesStore = defineStore("train-services", () => {
                 dashboardConfigStore.config,
                 currentClock.value,
                 consumerKey,
-                temporaryJourneyId.value
+                temporaryJourneyId.value,
+                predictionJourneyHistory
             );
 
-            activeSchedule.value = dashboardJourneys.activeSchedule;
             routes.value = dashboardJourneys.routes;
             journeys.value = dashboardJourneys.journeys;
 
@@ -100,10 +121,6 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             journeyId,
             predictedJourneyId.value
         );
-    }
-
-    function usePredictedJourney(): void {
-        journeySelectionStore.usePredictedJourney();
     }
 
     const updateClock = () => {
@@ -142,10 +159,10 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         activeJourneyId,
         predictedJourneyId,
         hasTemporaryJourneyOverride,
+        recentJourneyHistory,
         journeys,
         routes,
         recommendedJourney,
         selectSavedJourney,
-        usePredictedJourney,
     };
 });

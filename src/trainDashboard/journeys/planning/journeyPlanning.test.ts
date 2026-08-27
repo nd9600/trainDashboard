@@ -9,6 +9,8 @@ import {
     type CurrentClock,
     getActiveSchedule,
     getJourneyForSchedule,
+    getPredictedJourney,
+    getRecentJourneys,
 } from "./journeySelection";
 import {getStationRoutes} from "./journeyRoutes";
 
@@ -20,9 +22,7 @@ describe("journey planning", () => {
         });
 
         expect(activePlan.schedule?.id).toBe("weekday-morning");
-        expect(
-            activePlan.routes.map((route) => route.journeyId)
-        ).toEqual([
+        expect(activePlan.routes.map((route) => route.journeyId)).toEqual([
             "heaton-chapel-to-manchester-piccadilly",
             "heaton-chapel-to-manchester-piccadilly",
         ]);
@@ -128,6 +128,69 @@ describe("journey planning", () => {
         ).toEqual(new Set(["heaton-chapel-to-liverpool"]));
     });
 
+    it("uses the scheduled journey before recent history", () => {
+        const activeSchedule = manchesterDashboardConfig.schedules[0];
+
+        const predictedJourney = getPredictedJourney(
+            manchesterDashboardConfig.journeys,
+            activeSchedule,
+            [
+                {
+                    journeyId: "heaton-chapel-to-liverpool",
+                    selectedAt: "2026-08-27T08:00:00.000Z",
+                },
+            ]
+        );
+
+        expect(predictedJourney?.id).toBe(
+            "heaton-chapel-to-manchester-piccadilly"
+        );
+    });
+
+    it("uses the most recent valid journey when no schedule is active", () => {
+        const predictedJourney = getPredictedJourney(
+            manchesterDashboardConfig.journeys,
+            undefined,
+            [
+                {
+                    journeyId: "deleted-journey",
+                    selectedAt: "2026-08-27T09:00:00.000Z",
+                },
+                {
+                    journeyId: "heaton-chapel-to-liverpool",
+                    selectedAt: "2026-08-27T08:00:00.000Z",
+                },
+            ]
+        );
+
+        expect(predictedJourney?.id).toBe("heaton-chapel-to-liverpool");
+    });
+
+    it("returns unique recent journeys in history order", () => {
+        const recentJourneys = getRecentJourneys(
+            manchesterDashboardConfig.journeys,
+            [
+                {
+                    journeyId: "heaton-chapel-to-liverpool",
+                    selectedAt: "2026-08-27T09:00:00.000Z",
+                },
+                {
+                    journeyId: "heaton-chapel-to-liverpool",
+                    selectedAt: "2026-08-27T08:00:00.000Z",
+                },
+                {
+                    journeyId: "manchester-piccadilly-to-heaton-chapel",
+                    selectedAt: "2026-08-26T18:00:00.000Z",
+                },
+            ]
+        );
+
+        expect(recentJourneys.map((journey) => journey.id)).toEqual([
+            "heaton-chapel-to-liverpool",
+            "manchester-piccadilly-to-heaton-chapel",
+        ]);
+    });
+
     it("preserves unknown walking times when it expands a station group", () => {
         const [journeys] = getStationRoutes(
             [manchesterDashboardConfig.journeys[2]!],
@@ -205,10 +268,7 @@ describe("journey planning", () => {
 
 function getJourneyPlan(config: DashboardConfig, currentClock: CurrentClock) {
     const schedule = getActiveSchedule(config.schedules, currentClock);
-    const configuredJourney = getJourneyForSchedule(
-        config.journeys,
-        schedule
-    );
+    const configuredJourney = getJourneyForSchedule(config.journeys, schedule);
 
     return {
         schedule,

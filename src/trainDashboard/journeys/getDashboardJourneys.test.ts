@@ -76,4 +76,28 @@ describe("getDashboardJourneys", () => {
             new Set(["heaton-chapel-to-liverpool"])
         );
     });
+
+    it("uses recent history when no schedule is active", async () => {
+        const config = structuredClone(manchesterDashboardConfig);
+        config.schedules = [];
+
+        const result = await getDashboardJourneys(
+            config,
+            {day: 1, minutes: 8 * 60},
+            "",
+            undefined,
+            [
+                {
+                    journeyId: "heaton-chapel-to-liverpool",
+                    selectedAt: "2026-08-27T08:00:00.000Z",
+                },
+            ]
+        );
+
+        expect(result.activeSchedule).toBeUndefined();
+        expect(result.activeJourneyId).toBe("heaton-chapel-to-liverpool");
+        expect(new Set(result.routes.map((route) => route.journeyId))).toEqual(
+            new Set(["heaton-chapel-to-liverpool"])
+        );
+    });
 });

@@ -32,14 +32,9 @@ export const useJourneySelectionStore = defineStore("journey-selection", () => {
         historyStorage.saveToLocalStorage(recentJourneyHistory.value);
     }
 
-    function usePredictedJourney(): void {
-        temporaryJourneyId.value = undefined;
-    }
-
     return {
         recentJourneyHistory,
         temporaryJourneyId,
         selectSavedJourney,
-        usePredictedJourney,
     };
 });

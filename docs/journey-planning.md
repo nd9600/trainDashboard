@@ -7,6 +7,8 @@ Current time
       ↓
 Active schedule
       ↓
+Scheduled journey, or most recent valid journey
+      ↓
 Predicted journey
       ↓
 Temporary saved-journey override, if selected
@@ -43,8 +45,10 @@ sequenceDiagram
     participant API as Rail Data Marketplace
 
     UI->>Store: Read journey state
-    Store->>Pipeline: getDashboardJourneys(config, currentClock, consumerKey, temporaryJourneyId)
+    Store->>Selection: Load recent history for this page session
+    Store->>Pipeline: getDashboardJourneys(config, currentClock, consumerKey, temporaryJourneyId, recentHistory)
     Pipeline->>Pipeline: getActiveSchedule(...)
+    Pipeline->>Pipeline: getPredictedJourney(...)
     Pipeline->>Pipeline: getActiveJourney(...)
     Pipeline->>Pipeline: getStationRoutes(...)
     Pipeline->>Boards: getDepartureBoards(...)
@@ -60,7 +64,7 @@ sequenceDiagram
     Store-->>UI: Routes and timetabled journeys
     UI->>UI: Show the first six journeys
 
-    UI->>Switcher: Open saved journeys
+    UI->>Switcher: Open predicted, recent, and saved journeys
     UI->>Switcher: Select a saved journey
     Switcher->>Selection: selectSavedJourney(...)
     Selection->>Selection: Keep override in memory and save history
@@ -70,7 +74,9 @@ sequenceDiagram
 
 A station-pair request occurs only once during each planning request.
 
-The temporary override exists only in memory. A page refresh restores the predicted journey. The saved selection remains in recent history.
+A matching schedule supplies the predicted journey. If no schedule matches, the most recent valid journey supplies the prediction.
+
+The prediction uses the history loaded when the page starts. A new selection remains a temporary override during that page session. The selection immediately appears in the Recent section. A page refresh can use it as the recent-history prediction.
 
 Connection options that use the same first train are shown as one journey. The option that arrives first remains visible. Other onward trains appear as alternatives on the second leg.
 
@@ -82,7 +88,9 @@ flowchart TD
     store[useTrainServicesStore]
     pipeline[getDashboardJourneys]
     active[getActiveSchedule]
-    predicted[getJourneyForSchedule]
+    scheduled[getJourneyForSchedule]
+    recent[getRecentJourneys]
+    predicted[getPredictedJourney]
     selected[getActiveJourney]
     switcher[JourneySwitcher.vue]
     selectionStore[useJourneySelectionStore]
@@ -106,10 +114,15 @@ flowchart TD
 
     dashboard --> store
     store --> pipeline
+    store --> selectionStore
+    store --> active
+    store --> predicted
     pipeline --> active
     pipeline --> predicted
     pipeline --> selected
     pipeline --> routes
+    predicted --> scheduled
+    predicted --> recent
     routes --> stations
     routes --> options
 
@@ -126,7 +139,6 @@ flowchart TD
 
     dashboard --> switcher
     switcher --> store
-    switcher --> selectionStore
 
     store --> missing
     dashboard --> timelines
@@ -139,11 +151,11 @@ flowchart TD
 - `src/trainDashboard/store/trainServices.store.ts` coordinates each refresh.
 - `src/trainDashboard/store/journeySelection.store.ts` keeps the temporary override and saves recent history.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
-- `src/trainDashboard/journeys/planning/journeySelection.ts` selects the predicted and active journeys.
+- `src/trainDashboard/journeys/planning/journeySelection.ts` selects recent, predicted, and active journeys.
 - `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands configured journeys into station routes.
 - `src/trainDashboard/journeys/timetable/departureBoards.ts` creates and deduplicates departure-board requests.
 - `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
 - `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains and valid connections.
 - `src/trainDashboard/journeys/timetable/timetabledJourneys.ts` builds sections, filters journeys, and sorts results.
-- `src/trainDashboard/components/journeys/JourneySwitcher.vue` shows saved journeys and applies temporary selections.
+- `src/trainDashboard/components/journeys/JourneySwitcher.vue` shows predicted, recent, and saved journeys without duplicates.
 - `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits the displayed journey list to six results.
