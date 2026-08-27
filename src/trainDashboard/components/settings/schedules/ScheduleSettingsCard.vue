@@ -13,18 +13,18 @@
                 {{ schedule.startsAt }}–{{ schedule.endsAt }}
             </span>
             <span
-                v-if="primaryJourneyIsComplete"
+                v-if="selectedJourneyIsComplete"
                 class="mt-2 block truncate text-sm"
             >
-                <span class="text-ink-subtle">Primary: </span>
+                <span class="text-ink-subtle">Journey: </span>
                 <JourneyLabel
                     :details="
-                        getJourneyLabelDetails(primaryJourney!, stationGroups)
+                        getJourneyLabelDetails(selectedJourney!, stationGroups)
                     "
                 />
             </span>
             <span v-else class="mt-2 block text-sm text-danger-dark">
-                Choose a primary journey.
+                Choose a journey.
             </span>
         </span>
 
@@ -54,14 +54,14 @@ const emit = defineEmits<{
     edit: [];
 }>();
 
-const primaryJourney = computed(() =>
+const selectedJourney = computed(() =>
     props.journeys.find(
-        (journey) => journey.id === props.schedule.primaryJourneyId
+        (journey) => journey.id === props.schedule.journeyId
     )
 );
-const primaryJourneyIsComplete = computed(
+const selectedJourneyIsComplete = computed(
     () =>
-        primaryJourney.value !== undefined &&
-        hasJourneyEndpoints(primaryJourney.value, props.stationGroups)
+        selectedJourney.value !== undefined &&
+        hasJourneyEndpoints(selectedJourney.value, props.stationGroups)
 );
 </script>

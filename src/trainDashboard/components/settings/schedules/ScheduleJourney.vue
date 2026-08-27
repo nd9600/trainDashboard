@@ -1,21 +1,21 @@
 <template>
     <section class="space-y-3 border-t border-line pt-5">
-        <h3 class="font-semibold text-primary">Primary journey</h3>
+        <h3 class="font-semibold text-primary">Journey</h3>
 
         <div
             class="flex items-center justify-between gap-3 rounded-lg bg-surface-muted p-3"
         >
             <span class="min-w-0 grow truncate">
                 <JourneyLabel
-                    v-if="primaryJourneyIsComplete"
+                    v-if="selectedJourneyIsComplete"
                     :details="
-                        getJourneyLabelDetails(primaryJourney!, stationGroups)
+                        getJourneyLabelDetails(selectedJourney!, stationGroups)
                     "
                 />
-                <template v-else>Choose a primary journey</template>
+                <template v-else>Choose a journey</template>
             </span>
             <button
-                v-if="primaryJourney"
+                v-if="selectedJourney"
                 class="appButton appButton--secondary shrink-0 px-3 py-1 text-sm"
                 type="button"
                 @click="toggleJourneyEditor"
@@ -32,21 +32,21 @@
             {{
                 isChangingJourney
                     ? "Hide journey choices"
-                    : "Change primary journey"
+                    : "Change journey"
             }}
         </button>
 
         <div
-            v-if="isEditingJourney && primaryJourneyIndex !== -1"
+            v-if="isEditingJourney && selectedJourneyIndex !== -1"
             class="space-y-3 border-l-2 border-primary pl-3"
         >
-            <h4 class="text-sm font-semibold">Edit primary journey</h4>
+            <h4 class="text-sm font-semibold">Edit journey</h4>
             <JourneySettingsFields
-                v-model:journey="journeys[primaryJourneyIndex]!"
+                v-model:journey="journeys[selectedJourneyIndex]!"
                 :stationGroups="stationGroups"
                 :journeys="journeys"
                 :scheduleNames="
-                    getScheduleNamesUsingJourney(primaryJourney!.id, schedules)
+                    getScheduleNamesUsingJourney(selectedJourney!.id, schedules)
                 "
                 :canRemove="false"
                 @changed="emit('changed')"
@@ -132,25 +132,25 @@ const emit = defineEmits<{
     changed: [];
 }>();
 
-const primaryJourney = computed(() =>
+const selectedJourney = computed(() =>
     journeys.value.find(
-        (journey) => journey.id === schedule.value.primaryJourneyId
+        (journey) => journey.id === schedule.value.journeyId
     )
 );
-const primaryJourneyIsComplete = computed(
+const selectedJourneyIsComplete = computed(
     () =>
-        primaryJourney.value !== undefined &&
-        hasJourneyEndpoints(primaryJourney.value, props.stationGroups)
+        selectedJourney.value !== undefined &&
+        hasJourneyEndpoints(selectedJourney.value, props.stationGroups)
 );
-const primaryJourneyIndex = computed(() =>
+const selectedJourneyIndex = computed(() =>
     journeys.value.findIndex(
-        (journey) => journey.id === schedule.value.primaryJourneyId
+        (journey) => journey.id === schedule.value.journeyId
     )
 );
 const selectableJourneys = computed(() =>
     journeys.value.filter(
         (journey) =>
-            journey.id !== schedule.value.primaryJourneyId &&
+            journey.id !== schedule.value.journeyId &&
             hasJourneyEndpoints(journey, props.stationGroups)
     )
 );
@@ -160,37 +160,24 @@ function useSelectedJourney(): void {
         return;
     }
 
-    setPrimaryJourney(selectedJourneyId.value);
+    setJourney(selectedJourneyId.value);
     selectedJourneyId.value = "";
     isChangingJourney.value = false;
     isEditingJourney.value = false;
 }
 
-function setPrimaryJourney(journeyId: string): void {
-    const previousPrimaryJourney = primaryJourney.value;
+function setJourney(journeyId: string): void {
+    const previousJourney = selectedJourney.value;
 
-    schedule.value.secondaryJourneyIds =
-        schedule.value.secondaryJourneyIds.filter(
-            (candidate) => candidate !== journeyId
-        );
-
-    if (
-        previousPrimaryJourney &&
-        hasJourneyEndpoints(previousPrimaryJourney, props.stationGroups) &&
-        !schedule.value.secondaryJourneyIds.includes(previousPrimaryJourney.id)
-    ) {
-        schedule.value.secondaryJourneyIds.push(previousPrimaryJourney.id);
-    }
-
-    schedule.value.primaryJourneyId = journeyId;
-    removeUnusedIncompleteJourney(previousPrimaryJourney);
+    schedule.value.journeyId = journeyId;
+    removeUnusedIncompleteJourney(previousJourney);
     emit("changed");
 }
 
 function createJourney(): void {
     const journey = createEmptyJourney();
     journeys.value = [...journeys.value, journey];
-    setPrimaryJourney(journey.id);
+    setJourney(journey.id);
     isChangingJourney.value = false;
     isEditingJourney.value = true;
 }
@@ -218,8 +205,7 @@ function removeUnusedIncompleteJourney(journey: Journey | undefined): void {
         props.schedules.some(
             (candidate) =>
                 candidate.id !== schedule.value.id &&
-                (candidate.primaryJourneyId === journey.id ||
-                    candidate.secondaryJourneyIds.includes(journey.id))
+                candidate.journeyId === journey.id
         )
     ) {
         return;

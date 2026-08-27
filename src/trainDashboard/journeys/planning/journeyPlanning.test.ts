@@ -6,13 +6,14 @@ import {
     type DashboardConfig,
 } from "../../dto/dashboardConfig.dto";
 import {
+    type CurrentClock,
     getActiveSchedule,
-    getJourneysForSchedule,
+    getJourneyForSchedule,
 } from "./journeySelection";
 import {getStationRoutes} from "./journeyRoutes";
 
 describe("journey planning", () => {
-    it("prioritises travel from Heaton Chapel to Manchester Piccadilly on weekday mornings", () => {
+    it("selects travel from Heaton Chapel to Manchester Piccadilly on weekday mornings", () => {
         const activePlan = getJourneyPlan(manchesterDashboardConfig, {
             day: 1,
             minutes: 8 * 60,
@@ -20,14 +21,11 @@ describe("journey planning", () => {
 
         expect(activePlan.schedule?.id).toBe("weekday-morning");
         expect(
-            activePlan.primaryRoutes.map((route) => route.journeyId)
+            activePlan.routes.map((route) => route.journeyId)
         ).toEqual([
             "heaton-chapel-to-manchester-piccadilly",
             "heaton-chapel-to-manchester-piccadilly",
         ]);
-        expect(
-            activePlan.secondaryRoutes.map((route) => route.journeyId)
-        ).toEqual(["heaton-chapel-to-liverpool", "heaton-chapel-to-liverpool"]);
     });
 
     it("reverses weekday travel after noon", () => {
@@ -38,21 +36,18 @@ describe("journey planning", () => {
 
         expect(activePlan.schedule?.id).toBe("weekday-afternoon");
         expect(
-            new Set(activePlan.primaryRoutes.map((route) => route.journeyId))
+            new Set(activePlan.routes.map((route) => route.journeyId))
         ).toEqual(new Set(["manchester-piccadilly-to-heaton-chapel"]));
         expect(
             new Set(
-                activePlan.primaryRoutes.map(
+                activePlan.routes.map(
                     (journeys) => journeys.destination.locationName
                 )
             )
         ).toEqual(new Set(["Heaton Chapel"]));
-        expect(
-            new Set(activePlan.secondaryRoutes.map((route) => route.journeyId))
-        ).toEqual(new Set(["liverpool-to-heaton-chapel"]));
     });
 
-    it("uses selected stations for other journeys", () => {
+    it("uses selected stations for the scheduled journey", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.journeys[2]!.origin = {
             type: "station",
@@ -66,12 +61,12 @@ describe("journey planning", () => {
         };
 
         const activePlan = getJourneyPlan(config, {
-            day: 1,
-            minutes: 8 * 60,
+            day: 6,
+            minutes: 14 * 60,
         });
 
         expect(
-            activePlan.secondaryRoutes.map(
+            activePlan.routes.map(
                 (route) => `${route.origin.crs}-${route.destination.crs}`
             )
         ).toEqual(["HTC-LIV"]);
@@ -86,8 +81,8 @@ describe("journey planning", () => {
             minutes: 8 * 60,
         });
 
-        expect(activePlan.primaryRoutes).toHaveLength(3);
-        expect(activePlan.primaryRoutes.map((route) => route.viaCrs)).toEqual([
+        expect(activePlan.routes).toHaveLength(3);
+        expect(activePlan.routes.map((route) => route.viaCrs)).toEqual([
             undefined,
             "MAN",
             undefined,
@@ -121,7 +116,7 @@ describe("journey planning", () => {
         ]);
     });
 
-    it("prioritises travel from Heaton Chapel to Liverpool at weekends", () => {
+    it("selects travel from Heaton Chapel to Liverpool at weekends", () => {
         const activePlan = getJourneyPlan(manchesterDashboardConfig, {
             day: 6,
             minutes: 14 * 60,
@@ -129,9 +124,8 @@ describe("journey planning", () => {
 
         expect(activePlan.schedule?.id).toBe("weekend");
         expect(
-            new Set(activePlan.primaryRoutes.map((route) => route.journeyId))
+            new Set(activePlan.routes.map((route) => route.journeyId))
         ).toEqual(new Set(["heaton-chapel-to-liverpool"]));
-        expect(activePlan.secondaryRoutes).toEqual([]);
     });
 
     it("preserves unknown walking times when it expands a station group", () => {
@@ -188,8 +182,7 @@ describe("journey planning", () => {
             days: [1],
             startsAt: "11:00",
             endsAt: "13:00",
-            primaryJourneyId: "heaton-chapel-to-manchester-piccadilly",
-            secondaryJourneyIds: [],
+            journeyId: "heaton-chapel-to-manchester-piccadilly",
         });
 
         expect(dashboardConfigSchema.safeParse(config).success).toBe(false);
@@ -212,19 +205,15 @@ describe("journey planning", () => {
 
 function getJourneyPlan(config: DashboardConfig, currentClock: CurrentClock) {
     const schedule = getActiveSchedule(config.schedules, currentClock);
-    const configuredJourneys = getJourneysForSchedule(
+    const configuredJourney = getJourneyForSchedule(
         config.journeys,
         schedule
     );
 
     return {
         schedule,
-        primaryRoutes: getStationRoutes(
-            configuredJourneys.primaryJourneys,
-            config.stationGroups
-        ),
-        secondaryRoutes: getStationRoutes(
-            configuredJourneys.secondaryJourneys,
+        routes: getStationRoutes(
+            configuredJourney ? [configuredJourney] : [],
             config.stationGroups
         ),
     };

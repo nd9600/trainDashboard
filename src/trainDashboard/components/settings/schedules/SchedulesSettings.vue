@@ -13,17 +13,13 @@
             @back="closeSchedule"
             @changed="emit('changed')"
             @remove="removeSchedule(selectedScheduleEntry.index)"
-            @removeJourney="
-                removeJourneyFromSchedule(selectedScheduleEntry.index, $event)
-            "
         />
 
         <div v-else class="space-y-4">
             <div>
                 <h2 class="font-semibold">Priority schedules</h2>
                 <p class="mt-1 text-sm text-ink-subtle">
-                    A schedule says which journeys are prioritised at that time
-                    of day.
+                    A schedule selects one journey for that time of day.
                 </p>
             </div>
 
@@ -65,10 +61,6 @@ import type {
     StationGroup,
     Journey,
 } from "../../../dto/dashboardConfig.dto";
-import {
-    getJourneyLabelDetails,
-    getJourneyLabelText,
-} from "../../../journeys/journeyLabels";
 import ScheduleDetails from "./ScheduleDetails.vue";
 import ScheduleSettingsCard from "./ScheduleSettingsCard.vue";
 import {createEmptyJourney, hasJourneyEndpoints} from "./scheduleSettings";
@@ -110,8 +102,7 @@ function addSchedule(): void {
             days: [1, 2, 3, 4, 5],
             startsAt: "00:00",
             endsAt: "12:00",
-            primaryJourneyId: journey.id,
-            secondaryJourneyIds: [],
+            journeyId: journey.id,
         },
     ];
     selectedScheduleId.value = scheduleId;
@@ -127,100 +118,30 @@ function removeSchedule(scheduleIndex: number): void {
     const otherSchedules = schedules.value.filter(
         (_, index) => index !== scheduleIndex
     );
-    const journeyIds = [
-        schedule.primaryJourneyId,
-        ...schedule.secondaryJourneyIds,
-    ];
-    const deletedJourneys = journeys.value.filter(
-        (journey) =>
-            journeyIds.includes(journey.id) &&
-            !otherSchedules.some((candidate) =>
-                scheduleUsesJourney(candidate, journey.id)
-            )
+    const journey = journeys.value.find(
+        (candidate) => candidate.id === schedule.journeyId
     );
-    const deletionMessage = deletedJourneys.length
-        ? ` The following ${deletedJourneys.length === 1 ? "journey" : "journeys"} will also be deleted because no other schedule uses ${deletedJourneys.length === 1 ? "it" : "them"}: ${deletedJourneys.map((journey) => `“${journeyLabel(journey)}”`).join("; ")}.`
-        : "";
+    const deleteIncompleteJourney =
+        journey !== undefined &&
+        !hasJourneyEndpoints(journey, props.stationGroups) &&
+        !otherSchedules.some(
+            (candidate) => candidate.journeyId === journey.id
+        );
 
-    if (
-        !window.confirm(`Remove schedule “${schedule.name}”?${deletionMessage}`)
-    ) {
+    if (!window.confirm(`Remove schedule “${schedule.name}”?`)) {
         return;
     }
 
     schedules.value = schedules.value.filter(
         (_, index) => index !== scheduleIndex
     );
-    const deletedJourneyIds = deletedJourneys.map((journey) => journey.id);
-    journeys.value = journeys.value.filter(
-        (journey) => !deletedJourneyIds.includes(journey.id)
-    );
-    closeSchedule();
-    emit("changed");
-}
-
-function removeJourneyFromSchedule(
-    scheduleIndex: number,
-    journeyId: string
-): void {
-    const schedule = schedules.value[scheduleIndex]!;
-
-    if (schedule.primaryJourneyId === journeyId) {
-        return;
-    }
-
-    const journey = journeys.value.find(
-        (candidate) => candidate.id === journeyId
-    )!;
-    const otherSchedules = schedules.value.filter(
-        (_, index) => index !== scheduleIndex
-    );
-    const schedulesUsingJourney = otherSchedules.filter((candidate) =>
-        scheduleUsesJourney(candidate, journeyId)
-    );
-    const consequence = schedulesUsingJourney.length
-        ? ""
-        : " It will be deleted because no other schedule uses it.";
-
-    if (
-        !window.confirm(
-            `Remove journey “${journeyLabel(journey)}” from “${schedule.name}”?${consequence}`
-        )
-    ) {
-        return;
-    }
-
-    schedule.secondaryJourneyIds = schedule.secondaryJourneyIds.filter(
-        (candidate) => candidate !== journeyId
-    );
-
-    if (schedulesUsingJourney.length === 0) {
+    if (deleteIncompleteJourney) {
         journeys.value = journeys.value.filter(
-            (candidate) => candidate.id !== journeyId
+            (candidate) => candidate.id !== journey!.id
         );
     }
-
+    closeSchedule();
     emit("changed");
-}
-
-function scheduleUsesJourney(
-    schedule: DisplaySchedule,
-    journeyId: string
-): boolean {
-    return (
-        schedule.primaryJourneyId === journeyId ||
-        schedule.secondaryJourneyIds.includes(journeyId)
-    );
-}
-
-function journeyLabel(journey: Journey): string {
-    if (!hasJourneyEndpoints(journey, props.stationGroups)) {
-        return "New journey";
-    }
-
-    return getJourneyLabelText(
-        getJourneyLabelDetails(journey, props.stationGroups)
-    );
 }
 
 function newId(prefix: string): string {

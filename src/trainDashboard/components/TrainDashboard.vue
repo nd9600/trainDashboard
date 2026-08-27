@@ -25,7 +25,7 @@
                         </h2>
                         <p class="mt-1 text-sm text-ink-muted">
                             First, add at least two station groups. Then add a
-                            schedule that selects a primary journey.
+                            schedule that selects a journey.
                         </p>
                         <p
                             class="mt-3 border-l-2 border-japonica pl-3 text-sm text-ink-muted"
@@ -73,17 +73,10 @@
                         Open API settings
                     </button>
                 </p>
-                <section
-                    class="flex flex-col gap-4"
-                    :class="
-                        secondaryRoutes.length > 0
-                            ? ' border-b-1 border-casa pb-8'
-                            : ''
-                    "
-                >
+                <section class="flex flex-col gap-4">
                     <JourneyTimelines
-                        v-if="primaryJourneys.length > 0"
-                        :journeys="primaryJourneys"
+                        v-if="journeys.length > 0"
+                        :journeys="journeys"
                         :currentMinutes="currentMinutes"
                         :flushOnMobile="true"
                     />
@@ -92,16 +85,9 @@
                         class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
                         role="status"
                     >
-                        There is no primary journey.
+                        There is no journey.
                     </p>
                 </section>
-
-                <OtherJourneys
-                    v-if="secondaryRoutes.length > 0"
-                    :journeyRoutes="secondaryRoutes"
-                    :timetabledJourneys="secondaryJourneys"
-                    :currentMinutes="currentMinutes"
-                />
 
                 <NoJourneysFound
                     v-if="routesWithoutTimetabledJourneys.length > 0"
@@ -119,7 +105,6 @@ import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import NoJourneysFound from "./journeys/NoJourneysFound.vue";
 import JourneyTimelines from "./journeys/JourneyTimelines.vue";
-import OtherJourneys from "./journeys/OtherJourneys.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useDashboardConfigStore} from "../store/dashboardConfig.store";
@@ -136,15 +121,13 @@ const {
     isLoadingJourneys,
     journeyLoadError,
     currentMinutes,
-    primaryJourneys,
-    secondaryJourneys,
-    primaryRoutes,
-    secondaryRoutes,
+    journeys,
+    routes,
 } = storeToRefs(trainServicesStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
 
 const hasJourneyData = computed(
-    () => primaryJourneys.value.length > 0 || secondaryJourneys.value.length > 0
+    () => journeys.value.length > 0
 );
 const hasNoJourneyConfiguration = computed(
     () =>
@@ -157,8 +140,8 @@ const apiKeyConfigured = computed(
 
 const routesWithoutTimetabledJourneys = computed(() =>
     getRoutesWithoutTimetabledJourneys(
-        [...primaryRoutes.value, ...secondaryRoutes.value],
-        [...primaryJourneys.value, ...secondaryJourneys.value]
+        routes.value,
+        journeys.value
     )
 );
 </script>

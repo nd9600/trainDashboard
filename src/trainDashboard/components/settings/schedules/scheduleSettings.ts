@@ -90,11 +90,7 @@ export function getScheduleNamesUsingJourney(
     schedules: DisplaySchedule[]
 ): string[] {
     return schedules
-        .filter(
-            (schedule) =>
-                schedule.primaryJourneyId === journeyId ||
-                schedule.secondaryJourneyIds.includes(journeyId)
-        )
+        .filter((schedule) => schedule.journeyId === journeyId)
         .map((schedule) => schedule.name);
 }
 

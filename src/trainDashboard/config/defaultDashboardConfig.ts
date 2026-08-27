@@ -5,7 +5,7 @@ import {
 
 export const defaultDashboardConfig: DashboardConfig =
     dashboardConfigSchema.parse({
-        version: 2,
+        version: 3,
         stationGroups: [
             {
                 id: "home",
@@ -66,8 +66,7 @@ export const defaultDashboardConfig: DashboardConfig =
                 days: [1, 2, 3, 4, 5],
                 startsAt: "00:00",
                 endsAt: "12:00",
-                primaryJourneyId: "home-to-work",
-                secondaryJourneyIds: ["home-to-glasgow"],
+                journeyId: "home-to-work",
             },
             {
                 id: "weekday-afternoon",
@@ -75,8 +74,7 @@ export const defaultDashboardConfig: DashboardConfig =
                 days: [1, 2, 3, 4, 5],
                 startsAt: "12:00",
                 endsAt: "24:00",
-                primaryJourneyId: "work-to-home",
-                secondaryJourneyIds: ["glasgow-to-home"],
+                journeyId: "work-to-home",
             },
             {
                 id: "weekend",
@@ -84,8 +82,7 @@ export const defaultDashboardConfig: DashboardConfig =
                 days: [0, 6],
                 startsAt: "00:00",
                 endsAt: "24:00",
-                primaryJourneyId: "home-to-glasgow",
-                secondaryJourneyIds: [],
+                journeyId: "home-to-glasgow",
             },
         ],
     });

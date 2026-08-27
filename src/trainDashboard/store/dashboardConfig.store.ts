@@ -8,10 +8,10 @@ import {
 } from "../dto/dashboardConfig.dto";
 
 const storage = useLocalStorageTyped(
-    "train-dashboard-config-v2",
+    "train-dashboard-config-v3",
     dashboardConfigSchema,
     {
-        version: 2,
+        version: 3,
         stationGroups: [],
         journeys: [],
         schedules: [],

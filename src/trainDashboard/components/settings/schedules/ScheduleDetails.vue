@@ -20,21 +20,12 @@
 
         <ScheduleTimingSettings v-model:schedule="schedule" />
 
-        <SchedulePrimaryJourney
+        <ScheduleJourney
             v-model:schedule="schedule"
             v-model:journeys="journeys"
             :stationGroups="stationGroups"
             :schedules="schedules"
             @changed="emit('changed')"
-        />
-
-        <ScheduleOtherJourneys
-            v-model:schedule="schedule"
-            v-model:journeys="journeys"
-            :stationGroups="stationGroups"
-            :schedules="schedules"
-            @changed="emit('changed')"
-            @removeJourney="emit('removeJourney', $event)"
         />
 
         <div class="border-t border-line pt-5">
@@ -57,8 +48,7 @@ import type {
     Journey,
     StationGroup,
 } from "../../../dto/dashboardConfig.dto";
-import ScheduleOtherJourneys from "./ScheduleOtherJourneys.vue";
-import SchedulePrimaryJourney from "./SchedulePrimaryJourney.vue";
+import ScheduleJourney from "./ScheduleJourney.vue";
 import ScheduleTimingSettings from "./ScheduleTimingSettings.vue";
 import {getActiveDaysText} from "./scheduleSettings";
 
@@ -74,6 +64,5 @@ const emit = defineEmits<{
     back: [];
     changed: [];
     remove: [];
-    removeJourney: [journeyId: string];
 }>();
 </script>

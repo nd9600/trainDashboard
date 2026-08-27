@@ -10,11 +10,6 @@ export interface CurrentClock {
     minutes: number;
 }
 
-export interface ConfiguredJourneys {
-    primaryJourneys: Journey[];
-    secondaryJourneys: Journey[];
-}
-
 export function getActiveSchedule(
     schedules: DisplaySchedule[],
     currentClock: CurrentClock
@@ -27,29 +22,15 @@ export function getActiveSchedule(
     );
 }
 
-export function getJourneysForSchedule(
+export function getJourneyForSchedule(
     journeys: Journey[],
     activeSchedule: DisplaySchedule | undefined
-): ConfiguredJourneys {
+): Journey | undefined {
     if (!activeSchedule) {
-        return {
-            primaryJourneys: [],
-            secondaryJourneys: journeys,
-        };
+        return undefined;
     }
 
-    const journeysById = new Map(
-        journeys.map((journey) => [journey.id, journey])
+    return journeys.find(
+        (journey) => journey.id === activeSchedule.journeyId
     );
-    const primaryJourney = journeysById.get(activeSchedule.primaryJourneyId);
-
-    return {
-        primaryJourneys: primaryJourney ? [primaryJourney] : [],
-        secondaryJourneys: activeSchedule.secondaryJourneyIds.flatMap(
-            (journeyId) => {
-                const journey = journeysById.get(journeyId);
-                return journey ? [journey] : [];
-            }
-        ),
-    };
 }

@@ -16,19 +16,14 @@ describe("getDashboardJourneys", () => {
         );
 
         expect(result.activeSchedule?.id).toBe("weekday-morning");
-        expect(result.primaryRoutes.map((route) => route.journeyId)).toEqual([
+        expect(result.routes.map((route) => route.journeyId)).toEqual([
             "heaton-chapel-to-manchester-piccadilly",
             "heaton-chapel-to-manchester-piccadilly",
         ]);
-        expect(result.secondaryRoutes.map((route) => route.journeyId)).toEqual([
-            "heaton-chapel-to-liverpool",
-            "heaton-chapel-to-liverpool",
-        ]);
-        expect(result.primaryJourneys).toEqual([]);
-        expect(result.secondaryJourneys).toEqual([]);
+        expect(result.journeys).toEqual([]);
     });
 
-    it("runs the complete pipeline for primary and secondary journeys", async () => {
+    it("runs the complete pipeline for the scheduled journey", async () => {
         vi.spyOn(
             railDataMarketplaceApi,
             "fetchDepartureBoard"
@@ -61,11 +56,10 @@ describe("getDashboardJourneys", () => {
             "test-key"
         );
 
-        expect(result.primaryJourneys).toHaveLength(2);
+        expect(result.journeys).toHaveLength(2);
         expect(
-            result.primaryJourneys.find((journey) => journey.recommended)
+            result.journeys.find((journey) => journey.recommended)
                 ?.destination
         ).toBe("EDY");
-        expect(result.secondaryJourneys).toHaveLength(2);
     });
 });

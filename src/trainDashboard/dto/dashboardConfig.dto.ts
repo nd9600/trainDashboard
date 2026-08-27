@@ -96,8 +96,7 @@ export const displayScheduleSchema = z
         days: z.array(daySchema).min(1, "Select at least one day."),
         startsAt: timeSchema,
         endsAt: timeSchema,
-        primaryJourneyId: idSchema,
-        secondaryJourneyIds: z.array(idSchema),
+        journeyId: idSchema,
     })
     .refine(
         (schedule) =>
@@ -109,7 +108,7 @@ export const displayScheduleSchema = z
     );
 
 const dashboardConfigBaseSchema = z.object({
-    version: z.literal(2),
+    version: z.literal(3),
     stationGroups: z.array(stationGroupSchema),
     journeys: z.array(journeySchema).min(1, "Add at least one journey."),
     schedules: z
@@ -207,47 +206,11 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
         });
 
         config.schedules.forEach((schedule, scheduleIndex) => {
-            const selectedJourneyIds = [
-                schedule.primaryJourneyId,
-                ...schedule.secondaryJourneyIds,
-            ];
-
-            selectedJourneyIds.forEach((journeyId) => {
-                if (!journeyIds.has(journeyId)) {
-                    context.addIssue({
-                        code: "custom",
-                        message: `Journey "${journeyId}" does not exist.`,
-                        path: ["schedules", scheduleIndex],
-                    });
-                }
-            });
-
-            const duplicateJourneyId = schedule.secondaryJourneyIds.find(
-                (journeyId) => journeyId === schedule.primaryJourneyId
-            );
-
-            if (duplicateJourneyId) {
+            if (!journeyIds.has(schedule.journeyId)) {
                 context.addIssue({
                     code: "custom",
-                    message: `Journey "${duplicateJourneyId}" cannot be primary and secondary.`,
-                    path: ["schedules", scheduleIndex],
-                });
-            }
-        });
-
-        const scheduledJourneyIds = new Set(
-            config.schedules.flatMap((schedule) => [
-                schedule.primaryJourneyId,
-                ...schedule.secondaryJourneyIds,
-            ])
-        );
-
-        config.journeys.forEach((journey, journeyIndex) => {
-            if (!scheduledJourneyIds.has(journey.id)) {
-                context.addIssue({
-                    code: "custom",
-                    message: "Journey must be used by at least one schedule.",
-                    path: ["journeys", journeyIndex],
+                    message: `Journey "${schedule.journeyId}" does not exist.`,
+                    path: ["schedules", scheduleIndex, "journeyId"],
                 });
             }
         });
@@ -338,8 +301,7 @@ function getErrorLocation(path: PropertyKey[]): string {
             days: "days",
             startsAt: "start time",
             endsAt: "end time",
-            primaryJourneyId: "primary journey",
-            secondaryJourneyIds: "Other journeys",
+            journeyId: "journey",
         };
         const fieldLabel =
             typeof field === "string" ? scheduleFields[field] : undefined;

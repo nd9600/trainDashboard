@@ -17,10 +17,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const currentDate = ref(new Date());
 
     const activeSchedule = ref<DisplaySchedule>();
-    const primaryRoutes = ref<JourneyRoute[]>([]);
-    const secondaryRoutes = ref<JourneyRoute[]>([]);
-    const primaryJourneys = ref<TimetabledJourney[]>([]);
-    const secondaryJourneys = ref<TimetabledJourney[]>([]);
+    const routes = ref<JourneyRoute[]>([]);
+    const journeys = ref<TimetabledJourney[]>([]);
     const isLoadingJourneys = ref(true);
     const journeyLoadError = ref<string>();
 
@@ -31,7 +29,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     }));
     const currentMinutes = computed(() => currentClock.value.minutes);
     const recommendedJourney = computed(() =>
-        primaryJourneys.value.find((journey) => journey.recommended)
+        journeys.value.find((journey) => journey.recommended)
     );
 
     ///// actions /////
@@ -49,18 +47,15 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             );
 
             activeSchedule.value = dashboardJourneys.activeSchedule;
-            primaryRoutes.value = dashboardJourneys.primaryRoutes;
-            secondaryRoutes.value = dashboardJourneys.secondaryRoutes;
-            primaryJourneys.value = dashboardJourneys.primaryJourneys;
-            secondaryJourneys.value = dashboardJourneys.secondaryJourneys;
+            routes.value = dashboardJourneys.routes;
+            journeys.value = dashboardJourneys.journeys;
 
             if (!consumerKey) {
                 journeyLoadError.value =
                     "Add your Consumer key in Settings → API.";
             }
         } catch {
-            primaryJourneys.value = [];
-            secondaryJourneys.value = [];
+            journeys.value = [];
             journeyLoadError.value =
                 "Train data could not be loaded. Try again later.";
         } finally {
@@ -100,10 +95,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         isLoadingJourneys,
         journeyLoadError,
         currentMinutes,
-        primaryJourneys,
-        primaryRoutes,
+        journeys,
+        routes,
         recommendedJourney,
-        secondaryJourneys,
-        secondaryRoutes,
     };
 });

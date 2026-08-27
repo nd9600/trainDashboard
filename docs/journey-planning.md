@@ -7,7 +7,7 @@ Current time
       ↓
 Active schedule
       ↓
-Configured journeys
+Configured journey
       ↓
 Concrete station routes
       ↓
@@ -39,7 +39,7 @@ sequenceDiagram
     UI->>Store: Read journey state
     Store->>Pipeline: getDashboardJourneys(config, currentClock, consumerKey)
     Pipeline->>Pipeline: getActiveSchedule(...)
-    Pipeline->>Pipeline: getJourneysForSchedule(...)
+    Pipeline->>Pipeline: getJourneyForSchedule(...)
     Pipeline->>Pipeline: getStationRoutes(...)
     Pipeline->>Boards: getDepartureBoards(...)
     Boards->>API: fetchDepartureBoard(...) for each unique request
@@ -51,11 +51,11 @@ sequenceDiagram
     Pipeline->>Pipeline: getCatchableJourneys(...)
     Pipeline->>Pipeline: sortJourneysByArrival(...)
     Pipeline-->>Store: Routes and timetabled journeys
-    Store-->>UI: Primary and secondary journeys
-    UI->>UI: Show the first six journeys in each list
+    Store-->>UI: Routes and timetabled journeys
+    UI->>UI: Show the first six journeys
 ```
 
-Primary and secondary planning share one departure-board request cache. A station-pair request occurs only once during each refresh.
+A station-pair request occurs only once during each refresh.
 
 Connection options that use the same first train are shown as one journey. The option that arrives first remains visible. Other onward trains appear as alternatives on the second leg.
 
@@ -67,7 +67,7 @@ flowchart TD
     store[useTrainServicesStore]
     pipeline[getDashboardJourneys]
     active[getActiveSchedule]
-    configured[getJourneysForSchedule]
+    configured[getJourneyForSchedule]
     routes[getStationRoutes]
     stations[getStationsForLocation]
     options[getRouteOptions]
@@ -115,10 +115,10 @@ flowchart TD
 
 - `src/trainDashboard/store/trainServices.store.ts` coordinates each refresh.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
-- `src/trainDashboard/journeys/planning/journeySelection.ts` selects the active schedule and its journeys.
-- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands configured journeys into station routes.
+- `src/trainDashboard/journeys/planning/journeySelection.ts` selects the active schedule and its journey.
+- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands the configured journey into station routes.
 - `src/trainDashboard/journeys/timetable/departureBoards.ts` creates and deduplicates departure-board requests.
 - `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
 - `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains and valid connections.
 - `src/trainDashboard/journeys/timetable/timetabledJourneys.ts` builds sections, filters journeys, and sorts results.
-- `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits each displayed journey list to six results.
+- `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits the displayed journey list to six results.

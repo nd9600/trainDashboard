@@ -141,9 +141,7 @@ function removeGroup(groupIndex: number): void {
 
     const affectedScheduleCount = draft.value.schedules.filter((schedule) =>
         removedJourneyIds.some(
-            (journeyId) =>
-                schedule.primaryJourneyId === journeyId ||
-                schedule.secondaryJourneyIds.includes(journeyId)
+            (journeyId) => schedule.journeyId === journeyId
         )
     ).length;
 
@@ -174,12 +172,9 @@ function referencesGroup(
 
 function removeJourneyIdsFromSchedules(journeyIds: string[]): void {
     for (const schedule of draft.value.schedules) {
-        if (journeyIds.includes(schedule.primaryJourneyId)) {
-            schedule.primaryJourneyId = "";
+        if (journeyIds.includes(schedule.journeyId)) {
+            schedule.journeyId = "";
         }
-        schedule.secondaryJourneyIds = schedule.secondaryJourneyIds.filter(
-            (journeyId) => !journeyIds.includes(journeyId)
-        );
     }
 }
 

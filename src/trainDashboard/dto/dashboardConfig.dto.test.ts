@@ -6,28 +6,19 @@ import {
 } from "./dashboardConfig.dto";
 
 describe("dashboardConfigSchema", () => {
-    it("rejects a journey that is not used by a schedule", () => {
+    it("allows a journey that is not used by a schedule", () => {
         const config = structuredClone(manchesterDashboardConfig);
         const journeyId = config.journeys.at(0)!.id;
 
         for (const schedule of config.schedules) {
-            if (schedule.primaryJourneyId === journeyId) {
-                schedule.primaryJourneyId = config.journeys.at(1)!.id;
+            if (schedule.journeyId === journeyId) {
+                schedule.journeyId = config.journeys.at(1)!.id;
             }
-            schedule.secondaryJourneyIds = schedule.secondaryJourneyIds.filter(
-                (candidate) => candidate !== journeyId
-            );
         }
 
         const result = dashboardConfigSchema.safeParse(config);
 
-        expect(result.success).toBe(false);
-        expect(result.error?.issues).toContainEqual(
-            expect.objectContaining({
-                message: "Journey must be used by at least one schedule.",
-                path: ["journeys", 0],
-            })
-        );
+        expect(result.success).toBe(true);
     });
 
     it("describes an invalid station without exposing its data path", () => {

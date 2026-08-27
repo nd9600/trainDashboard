@@ -5,7 +5,7 @@ import {
 
 export const manchesterDashboardConfig: DashboardConfig =
     dashboardConfigSchema.parse({
-        version: 2,
+        version: 3,
         stationGroups: [
             {
                 id: "heaton-chapel",
@@ -66,8 +66,7 @@ export const manchesterDashboardConfig: DashboardConfig =
                 days: [1, 2, 3, 4, 5],
                 startsAt: "00:00",
                 endsAt: "12:00",
-                primaryJourneyId: "heaton-chapel-to-manchester-piccadilly",
-                secondaryJourneyIds: ["heaton-chapel-to-liverpool"],
+                journeyId: "heaton-chapel-to-manchester-piccadilly",
             },
             {
                 id: "weekday-afternoon",
@@ -75,8 +74,7 @@ export const manchesterDashboardConfig: DashboardConfig =
                 days: [1, 2, 3, 4, 5],
                 startsAt: "12:00",
                 endsAt: "24:00",
-                primaryJourneyId: "manchester-piccadilly-to-heaton-chapel",
-                secondaryJourneyIds: ["liverpool-to-heaton-chapel"],
+                journeyId: "manchester-piccadilly-to-heaton-chapel",
             },
             {
                 id: "weekend",
@@ -84,8 +82,7 @@ export const manchesterDashboardConfig: DashboardConfig =
                 days: [0, 6],
                 startsAt: "00:00",
                 endsAt: "24:00",
-                primaryJourneyId: "heaton-chapel-to-liverpool",
-                secondaryJourneyIds: [],
+                journeyId: "heaton-chapel-to-liverpool",
             },
         ],
     });

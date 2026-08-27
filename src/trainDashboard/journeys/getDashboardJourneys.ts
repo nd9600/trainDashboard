@@ -6,7 +6,7 @@ import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
     type CurrentClock,
     getActiveSchedule,
-    getJourneysForSchedule,
+    getJourneyForSchedule,
 } from "./planning/journeySelection";
 import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";
 import {getDepartureBoards} from "./timetable/departureBoards";
@@ -20,10 +20,8 @@ import {
 
 export interface DashboardJourneys {
     activeSchedule: DisplaySchedule | undefined;
-    primaryRoutes: JourneyRoute[];
-    secondaryRoutes: JourneyRoute[];
-    primaryJourneys: TimetabledJourney[];
-    secondaryJourneys: TimetabledJourney[];
+    routes: JourneyRoute[];
+    journeys: TimetabledJourney[];
 }
 
 export async function getDashboardJourneys(
@@ -33,76 +31,40 @@ export async function getDashboardJourneys(
 ): Promise<DashboardJourneys> {
     const activeSchedule = getActiveSchedule(config.schedules, currentClock);
 
-    const configuredJourneys = getJourneysForSchedule(
+    const configuredJourney = getJourneyForSchedule(
         config.journeys,
         activeSchedule
     );
 
-    const concreteStationRoutes = {
-        primaryRoutes: getStationRoutes(
-            configuredJourneys.primaryJourneys,
-            config.stationGroups
-        ),
-        secondaryRoutes: getStationRoutes(
-            configuredJourneys.secondaryJourneys,
-            config.stationGroups
-        ),
-    };
+    const routes = getStationRoutes(
+        configuredJourney ? [configuredJourney] : [],
+        config.stationGroups
+    );
 
     if (!consumerKey) {
         return {
             activeSchedule,
-            ...concreteStationRoutes,
-            primaryJourneys: [],
-            secondaryJourneys: [],
+            routes,
+            journeys: [],
         };
     }
 
-    const departureBoards = await getDepartureBoards(consumerKey, [
-        ...concreteStationRoutes.primaryRoutes,
-        ...concreteStationRoutes.secondaryRoutes,
-    ]);
-
-    const trainOptions = {
-        primary: getTrainOptions(
-            concreteStationRoutes.primaryRoutes,
-            departureBoards,
-            currentClock.minutes
-        ),
-        secondary: getTrainOptions(
-            concreteStationRoutes.secondaryRoutes,
-            departureBoards,
-            currentClock.minutes
-        ),
-    };
-
-    const timetabledJourneys = {
-        primary: makeTimetabledJourneys(trainOptions.primary),
-        secondary: makeTimetabledJourneys(trainOptions.secondary),
-    };
-
-    const catchableJourneys = {
-        primary: getCatchableJourneys(
-            timetabledJourneys.primary,
-            currentClock.minutes
-        ),
-        secondary: getCatchableJourneys(
-            timetabledJourneys.secondary,
-            currentClock.minutes
-        ),
-    };
-
-    const journeysSortedByArrival = {
-        primary: sortJourneysByArrival(catchableJourneys.primary),
-        secondary: sortJourneysByArrival(catchableJourneys.secondary),
-    };
+    const departureBoards = await getDepartureBoards(consumerKey, routes);
+    const trainOptions = getTrainOptions(
+        routes,
+        departureBoards,
+        currentClock.minutes
+    );
+    const timetabledJourneys = makeTimetabledJourneys(trainOptions);
+    const catchableJourneys = getCatchableJourneys(
+        timetabledJourneys,
+        currentClock.minutes
+    );
+    const journeysSortedByArrival = sortJourneysByArrival(catchableJourneys);
 
     return {
         activeSchedule,
-        ...concreteStationRoutes,
-        primaryJourneys: markRecommendedJourney(
-            journeysSortedByArrival.primary
-        ),
-        secondaryJourneys: journeysSortedByArrival.secondary,
+        routes,
+        journeys: markRecommendedJourney(journeysSortedByArrival),
     };
 }
