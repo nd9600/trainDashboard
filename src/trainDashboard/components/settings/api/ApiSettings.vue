@@ -1,7 +1,12 @@
 <template>
     <section aria-labelledby="api-settings-heading">
         <h2 id="api-settings-heading" class="text-lg font-semibold">
-            Rail Data Marketplace
+            <a
+                class="underline"
+                href="https://raildata.org.uk/"
+            >
+                Rail Data Marketplace
+            </a>
         </h2>
         <p class="mt-1 text-sm text-ink-subtle">
             The dashboard sends your Consumer key in the

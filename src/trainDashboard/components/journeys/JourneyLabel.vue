@@ -26,7 +26,7 @@
             <span>, possibly connecting through </span>
             <StationLabel :crs="details.connectingStationCrs" />
         </template>
-        <span v-else> (direct)</span>
+        <span v-else-if="shouldSayWhenDirect"> (direct)</span>
     </span>
 </template>
 
@@ -34,7 +34,8 @@
 import type {JourneyLabelDetails} from "../../journeys/journeyLabels";
 import StationLabel from "../stations/StationLabel.vue";
 
-defineProps<{
+const {details, shouldSayWhenDirect = true } = defineProps<{
     details: JourneyLabelDetails;
+    shouldSayWhenDirect?: boolean;
 }>();
 </script>

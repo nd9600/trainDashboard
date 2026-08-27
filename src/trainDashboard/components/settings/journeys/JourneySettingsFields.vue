@@ -49,7 +49,7 @@
             {{ scheduleNames.join(", ") }}. Changes apply to all of them.
         </p>
         <p v-if="journey.viaCrs !== undefined" class="text-xs text-ink-subtle">
-            The dashboard allows at least 3 minutes to change trains. It cannot
+            The dashboard allows at least 3 minutes to change trains. It can't
             check the station’s official minimum connection time.
         </p>
 

@@ -7,11 +7,13 @@ import type {CurrentClock} from "../journeys/planning/journeySelection";
 import {getDashboardJourneys} from "../journeys/getDashboardJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
+import {useJourneySelectionStore} from "./journeySelection.store";
 import type {Day} from "@/trainDashboard/dto/dashboardConfig.dto.ts";
 
 export const useTrainServicesStore = defineStore("train-services", () => {
     const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
+    const journeySelectionStore = useJourneySelectionStore();
 
     ///// state /////
     const currentDate = ref(new Date());
@@ -25,9 +27,30 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     ///// getters /////
     const currentClock: ComputedRef<CurrentClock> = computed(() => ({
         day: currentDate.value.getDay() as Day,
-        minutes: currentDate.value.getHours() * 60 + currentDate.value.getMinutes(),
+        minutes:
+            currentDate.value.getHours() * 60 + currentDate.value.getMinutes(),
     }));
     const currentMinutes = computed(() => currentClock.value.minutes);
+    const predictedJourneyId = computed(() => activeSchedule.value?.journeyId);
+    const temporaryJourneyId = computed(() => {
+        const journeyId = journeySelectionStore.temporaryJourneyId;
+
+        if (journeyId === predictedJourneyId.value) {
+            return undefined;
+        }
+
+        return dashboardConfigStore.config.journeys.some(
+            (journey) => journey.id === journeyId
+        )
+            ? journeyId
+            : undefined;
+    });
+    const activeJourneyId = computed(
+        () => temporaryJourneyId.value ?? predictedJourneyId.value
+    );
+    const hasTemporaryJourneyOverride = computed(
+        () => temporaryJourneyId.value !== undefined
+    );
     const recommendedJourney = computed(() =>
         journeys.value.find((journey) => journey.recommended)
     );
@@ -43,7 +66,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             const dashboardJourneys = await getDashboardJourneys(
                 dashboardConfigStore.config,
                 currentClock.value,
-                consumerKey
+                consumerKey,
+                temporaryJourneyId.value
             );
 
             activeSchedule.value = dashboardJourneys.activeSchedule;
@@ -63,14 +87,33 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         }
     }
 
+    function selectSavedJourney(journeyId: string): void {
+        if (
+            !dashboardConfigStore.config.journeys.some(
+                (journey) => journey.id === journeyId
+            )
+        ) {
+            return;
+        }
+
+        journeySelectionStore.selectSavedJourney(
+            journeyId,
+            predictedJourneyId.value
+        );
+    }
+
+    function usePredictedJourney(): void {
+        journeySelectionStore.usePredictedJourney();
+    }
+
     const updateClock = () => {
         currentDate.value = new Date();
-    }
+    };
 
     // update the click within 5s of every minute change, and whenever the tab becomes visible
     let previousMinuteParity = currentMinutes.value % 2;
-    setInterval(function() {
-        const currentMinuteParity = (new Date()).getMinutes() % 2;
+    setInterval(function () {
+        const currentMinuteParity = new Date().getMinutes() % 2;
         if (currentMinuteParity !== previousMinuteParity) {
             console.log("updateClock");
             updateClock();
@@ -84,6 +127,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             () => dashboardConfigStore.config,
             () => apiStore.settings.consumerKey,
             currentMinutes,
+            temporaryJourneyId,
         ],
         refreshJourneys,
         {immediate: true}
@@ -95,8 +139,13 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         isLoadingJourneys,
         journeyLoadError,
         currentMinutes,
+        activeJourneyId,
+        predictedJourneyId,
+        hasTemporaryJourneyOverride,
         journeys,
         routes,
         recommendedJourney,
+        selectSavedJourney,
+        usePredictedJourney,
     };
 });

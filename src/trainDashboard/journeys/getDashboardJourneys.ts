@@ -5,8 +5,8 @@ import type {
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {
     type CurrentClock,
+    getActiveJourney,
     getActiveSchedule,
-    getJourneyForSchedule,
 } from "./planning/journeySelection";
 import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";
 import {getDepartureBoards} from "./timetable/departureBoards";
@@ -20,6 +20,7 @@ import {
 
 export interface DashboardJourneys {
     activeSchedule: DisplaySchedule | undefined;
+    activeJourneyId: string | undefined;
     routes: JourneyRoute[];
     journeys: TimetabledJourney[];
 }
@@ -27,23 +28,25 @@ export interface DashboardJourneys {
 export async function getDashboardJourneys(
     config: DashboardConfig,
     currentClock: CurrentClock,
-    consumerKey: string
+    consumerKey: string,
+    temporaryJourneyId?: string
 ): Promise<DashboardJourneys> {
     const activeSchedule = getActiveSchedule(config.schedules, currentClock);
-
-    const configuredJourney = getJourneyForSchedule(
+    const activeJourney = getActiveJourney(
         config.journeys,
-        activeSchedule
+        activeSchedule,
+        temporaryJourneyId
     );
 
     const routes = getStationRoutes(
-        configuredJourney ? [configuredJourney] : [],
+        activeJourney ? [activeJourney] : [],
         config.stationGroups
     );
 
     if (!consumerKey) {
         return {
             activeSchedule,
+            activeJourneyId: activeJourney?.id,
             routes,
             journeys: [],
         };
@@ -64,6 +67,7 @@ export async function getDashboardJourneys(
 
     return {
         activeSchedule,
+        activeJourneyId: activeJourney?.id,
         routes,
         journeys: markRecommendedJourney(journeysSortedByArrival),
     };

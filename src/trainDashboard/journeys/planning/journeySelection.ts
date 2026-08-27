@@ -30,7 +30,16 @@ export function getJourneyForSchedule(
         return undefined;
     }
 
-    return journeys.find(
-        (journey) => journey.id === activeSchedule.journeyId
+    return journeys.find((journey) => journey.id === activeSchedule.journeyId);
+}
+
+export function getActiveJourney(
+    journeys: Journey[],
+    activeSchedule: DisplaySchedule | undefined,
+    temporaryJourneyId: string | undefined
+): Journey | undefined {
+    return (
+        journeys.find((journey) => journey.id === temporaryJourneyId) ??
+        getJourneyForSchedule(journeys, activeSchedule)
     );
 }

@@ -58,8 +58,22 @@ describe("getDashboardJourneys", () => {
 
         expect(result.journeys).toHaveLength(2);
         expect(
-            result.journeys.find((journey) => journey.recommended)
-                ?.destination
+            result.journeys.find((journey) => journey.recommended)?.destination
         ).toBe("EDY");
+    });
+
+    it("uses a temporary saved journey instead of the scheduled journey", async () => {
+        const result = await getDashboardJourneys(
+            manchesterDashboardConfig,
+            {day: 1, minutes: 8 * 60},
+            "",
+            "heaton-chapel-to-liverpool"
+        );
+
+        expect(result.activeSchedule?.id).toBe("weekday-morning");
+        expect(result.activeJourneyId).toBe("heaton-chapel-to-liverpool");
+        expect(new Set(result.routes.map((route) => route.journeyId))).toEqual(
+            new Set(["heaton-chapel-to-liverpool"])
+        );
     });
 });

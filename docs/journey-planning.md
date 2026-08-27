@@ -7,7 +7,11 @@ Current time
       ↓
 Active schedule
       ↓
-Configured journey
+Predicted journey
+      ↓
+Temporary saved-journey override, if selected
+      ↓
+Active journey
       ↓
 Concrete station routes
       ↓
@@ -31,15 +35,17 @@ Show the first six
 ```mermaid
 sequenceDiagram
     participant UI as TrainDashboard
+    participant Switcher as JourneySwitcher
     participant Store as trainServices store
+    participant Selection as journeySelection store
     participant Pipeline as getDashboardJourneys
     participant Boards as Departure-board stage
     participant API as Rail Data Marketplace
 
     UI->>Store: Read journey state
-    Store->>Pipeline: getDashboardJourneys(config, currentClock, consumerKey)
+    Store->>Pipeline: getDashboardJourneys(config, currentClock, consumerKey, temporaryJourneyId)
     Pipeline->>Pipeline: getActiveSchedule(...)
-    Pipeline->>Pipeline: getJourneyForSchedule(...)
+    Pipeline->>Pipeline: getActiveJourney(...)
     Pipeline->>Pipeline: getStationRoutes(...)
     Pipeline->>Boards: getDepartureBoards(...)
     Boards->>API: fetchDepartureBoard(...) for each unique request
@@ -53,9 +59,18 @@ sequenceDiagram
     Pipeline-->>Store: Routes and timetabled journeys
     Store-->>UI: Routes and timetabled journeys
     UI->>UI: Show the first six journeys
+
+    UI->>Switcher: Open saved journeys
+    UI->>Switcher: Select a saved journey
+    Switcher->>Selection: selectSavedJourney(...)
+    Selection->>Selection: Keep override in memory and save history
+    Selection-->>Store: Temporary journey changed
+    Store->>Pipeline: Refresh the active journey
 ```
 
-A station-pair request occurs only once during each refresh.
+A station-pair request occurs only once during each planning request.
+
+The temporary override exists only in memory. A page refresh restores the predicted journey. The saved selection remains in recent history.
 
 Connection options that use the same first train are shown as one journey. The option that arrives first remains visible. Other onward trains appear as alternatives on the second leg.
 
@@ -67,7 +82,10 @@ flowchart TD
     store[useTrainServicesStore]
     pipeline[getDashboardJourneys]
     active[getActiveSchedule]
-    configured[getJourneyForSchedule]
+    predicted[getJourneyForSchedule]
+    selected[getActiveJourney]
+    switcher[JourneySwitcher.vue]
+    selectionStore[useJourneySelectionStore]
     routes[getStationRoutes]
     stations[getStationsForLocation]
     options[getRouteOptions]
@@ -89,7 +107,8 @@ flowchart TD
     dashboard --> store
     store --> pipeline
     pipeline --> active
-    pipeline --> configured
+    pipeline --> predicted
+    pipeline --> selected
     pipeline --> routes
     routes --> stations
     routes --> options
@@ -105,6 +124,10 @@ flowchart TD
     pipeline --> sort
     pipeline --> recommended
 
+    dashboard --> switcher
+    switcher --> store
+    switcher --> selectionStore
+
     store --> missing
     dashboard --> timelines
     timelines -->|slice 0, 6| cards
@@ -114,11 +137,13 @@ flowchart TD
 ## Source map
 
 - `src/trainDashboard/store/trainServices.store.ts` coordinates each refresh.
+- `src/trainDashboard/store/journeySelection.store.ts` keeps the temporary override and saves recent history.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
-- `src/trainDashboard/journeys/planning/journeySelection.ts` selects the active schedule and its journey.
-- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands the configured journey into station routes.
+- `src/trainDashboard/journeys/planning/journeySelection.ts` selects the predicted and active journeys.
+- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands configured journeys into station routes.
 - `src/trainDashboard/journeys/timetable/departureBoards.ts` creates and deduplicates departure-board requests.
 - `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
 - `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains and valid connections.
 - `src/trainDashboard/journeys/timetable/timetabledJourneys.ts` builds sections, filters journeys, and sorts results.
+- `src/trainDashboard/components/journeys/JourneySwitcher.vue` shows saved journeys and applies temporary selections.
 - `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits the displayed journey list to six results.

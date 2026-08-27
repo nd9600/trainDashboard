@@ -12,6 +12,7 @@
         <AppModal
             :isOpen="isOpen"
             :isClosable="true"
+            closeLabel="Close settings"
             rootClass="sm:w-[min(48rem,calc(100vw-3rem))]"
             spotlightVariantPlacement="top"
             @close="closeSettings"

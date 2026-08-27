@@ -41,7 +41,7 @@
                             v-if="isClosable"
                             class="appButton appButton--quiet appButton--icon absolute top-3 right-3 z-10 size-10 rounded-full border-line-strong"
                             type="button"
-                            aria-label="Close settings"
+                            :aria-label="closeLabel"
                             @click="emit('close')"
                         >
                             <AppIcon class="size-5" name="close" />
@@ -107,6 +107,7 @@ const props = withDefaults(
     defineProps<{
         isOpen: boolean;
         isClosable?: boolean;
+        closeLabel?: string;
         spotlightVariantPlacement?: "middle" | "top";
         rootClass?: ClassValue;
         bodyClass?: ClassValue;
@@ -114,6 +115,7 @@ const props = withDefaults(
     }>(),
     {
         isClosable: true,
+        closeLabel: "Close dialog",
         spotlightVariantPlacement: "middle",
     }
 );
