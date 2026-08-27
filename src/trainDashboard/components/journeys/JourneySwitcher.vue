@@ -8,7 +8,7 @@
     >
         <p
             v-if="activeSchedule && !hasTemporaryJourneyOverride"
-            class="m-0 text-xs text-ink-subtle"
+            class="text-xs text-ink-subtle"
         >
             {{ activeSchedule.name }}
         </p>
@@ -18,7 +18,7 @@
         >
             <JourneyLabel
                 v-if="activeJourney"
-                class="min-w-0 text-xs"
+                class="text-xs"
                 :details="getJourneyLabelDetails(activeJourney, stationGroups)"
                 :shouldSayWhenDirect="false"
             />
@@ -29,10 +29,7 @@
             >
                 Temporary
             </span>
-            <AppIcon
-                class="size-3 shrink-0 rotate-90 transition-transform"
-                name="chevron"
-            />
+            <AppIcon class="size-3 shrink-0 rotate-90" name="chevron" />
         </ListboxButton>
 
         <ListboxOptions
@@ -60,28 +57,21 @@
                     >
                         ✓
                     </span>
-                    <span class="min-w-0 grow">
+                    <span
+                        class="min-w-0 grow text-balance font-semibold text-ink"
+                    >
+                        <JourneyLabel
+                            class="text-balance text-xs sm:text-sm"
+                            :details="
+                                getJourneyLabelDetails(journey, stationGroups)
+                            "
+                            :shouldSayWhenDirect="false"
+                        />
                         <span
-                            class=""
+                            v-if="journey.id === predictedJourneyId"
+                            class="ml-3 rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-ink-muted"
                         >
-                            <span class="min-w-0 font-semibold text-ink whitespace-nowrap">
-                                <JourneyLabel
-                                    class="text-xs sm:text-sm sm:whitespace-nowrap"
-                                    :details="
-                                        getJourneyLabelDetails(
-                                            journey,
-                                            stationGroups
-                                        )
-                                    "
-                                    :shouldSayWhenDirect="false"
-                                />
-                            </span>
-                            <span
-                                v-if="journey.id === predictedJourneyId"
-                                class="shrink-0 rounded-full bg-surface-muted ml-3 px-2 py-0.5 text-xs font-medium text-ink-muted"
-                            >
-                                Predicted
-                            </span>
+                            Predicted
                         </span>
                         <span v-if="selected" class="sr-only">
                             Current journey.
