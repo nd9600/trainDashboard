@@ -73,8 +73,10 @@ export function hasJourneyEndpoints(
     journey: Journey,
     stationGroups: StationGroup[]
 ): boolean {
-    return [journey.origin, journey.destination].every((location) =>
-        stationGroups.some((group) => group.id === location.groupId)
+    return [journey.origin, journey.destination].every(
+        (location) =>
+            (location.type === "station" && location.groupId === undefined) ||
+            stationGroups.some((group) => group.id === location.groupId)
     );
 }
 

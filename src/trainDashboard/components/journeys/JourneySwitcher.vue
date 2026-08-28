@@ -10,16 +10,22 @@
             v-if="activeSchedule || hasTemporaryJourneyOverride"
             class="text-xs text-ink-subtle"
         >
-            {{ hasTemporaryJourneyOverride ? "Temporary schedule" : activeSchedule?.name }}
+            {{ hasTemporaryJourneyOverride ? "&nbsp;" : activeSchedule?.name }}
         </p>
         <ListboxButton
             class="appButton appButton--secondary max-w-full justify-start whitespace-normal text-left border-none p-1"
             :aria-label="switcherButtonLabel"
+            :disabled="isCreatingEphemeralJourney"
         >
             <JourneyLabel
                 v-if="activeJourney"
                 class="text-xs"
-                :details="getJourneyLabelDetails(activeJourney, stationGroups)"
+                :details="
+                    getJourneySelectionLabelDetails(
+                        activeJourney,
+                        stationGroups
+                    )
+                "
                 :shouldSayWhenDirect="false"
             />
             <span v-else>Choose a journey</span>
@@ -44,7 +50,7 @@
                     :value="journey.id"
                 >
                     <li
-                        class="flex cursor-pointer gap-3 px-3 py-2 text-left transition-colors"
+                        class="flex items-center cursor-pointer gap-3 px-3 py-2 text-left transition-colors"
                         :class="{'bg-surface': active}"
                     >
                         <span
@@ -62,9 +68,9 @@
                             class="min-w-0 grow text-balance font-semibold text-ink"
                         >
                             <JourneyLabel
-                                class="text-xs sm:text-sm"
+                                class="text-xs sm:text-sm sm:whitespace-nowrap"
                                 :details="
-                                    getJourneyLabelDetails(
+                                    getJourneySelectionLabelDetails(
                                         journey,
                                         stationGroups
                                     )
@@ -78,7 +84,43 @@
                     </li>
                 </ListboxOption>
             </template>
+            <ListboxOption
+                v-slot="{active}"
+                as="template"
+                :value="newJourneyOptionId"
+            >
+                <li
+                    class="cursor-pointer border-t border-line px-3 py-2 text-sm font-semibold text-primary transition-colors"
+                    :class="{'bg-surface': active}"
+                >
+                    Go somewhere else…
+                </li>
+            </ListboxOption>
         </ListboxOptions>
+
+        <div v-if="activeJourneyIsEphemeral">
+            <button
+                class="appButton appButton--quiet px-0 py-1 text-xs text-primary"
+                type="button"
+                @click="saveActiveJourney"
+            >
+                Save
+            </button>
+            <button
+                v-if="hasTemporaryJourneyOverride"
+                class="appButton appButton--quiet px-0 py-1 text-xs text-secondary"
+                type="button"
+                @click="clearActiveJourney"
+            >
+                Clear
+            </button>
+        </div>
+
+        <EphemeralJourneyForm
+            v-if="isCreatingEphemeralJourney"
+            @use="useEphemeralJourney"
+            @cancel="isCreatingEphemeralJourney = false"
+        />
     </Listbox>
 </template>
 
@@ -90,39 +132,39 @@ import {
     ListboxOptions,
 } from "@headlessui/vue";
 import {storeToRefs} from "pinia";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {Journey} from "../../dto/dashboardConfig.dto";
+import type {JourneyFields} from "../../dto/dashboardConfig.dto";
+import type {JourneySelection} from "../../dto/journeySelection.dto";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import {useTrainServicesStore} from "../../store/trainServices.store";
 import {
-    getJourneyLabelDetails,
+    getJourneySelectionLabelDetails,
     getJourneyLabelText,
 } from "../../journeys/journeyLabels";
 import {getRecentJourneys} from "../../journeys/planning/journeySelection";
+import EphemeralJourneyForm from "./EphemeralJourneyForm.vue";
 import JourneyLabel from "./JourneyLabel.vue";
+
+const newJourneyOptionId = "__new-journey__";
 
 const dashboardConfigStore = useDashboardConfigStore();
 const trainServicesStore = useTrainServicesStore();
 const {config} = storeToRefs(dashboardConfigStore);
 const {
     activeJourneyId,
+    activeJourney,
+    activeJourneyIsEphemeral,
     activeSchedule,
     hasTemporaryJourneyOverride,
+    predictedJourney,
     predictedJourneyId,
     recentJourneyHistory,
 } = storeToRefs(trainServicesStore);
 
 const savedJourneys = computed(() => config.value.journeys);
 const stationGroups = computed(() => config.value.stationGroups);
-const activeJourney = computed(() =>
-    savedJourneys.value.find((journey) => journey.id === activeJourneyId.value)
-);
-const predictedJourney = computed(() =>
-    savedJourneys.value.find(
-        (journey) => journey.id === predictedJourneyId.value
-    )
-);
+const isCreatingEphemeralJourney = ref(false);
 const recentJourneys = computed(() =>
     getRecentJourneys(savedJourneys.value, recentJourneyHistory.value)
         .filter((journey) => journey.id !== predictedJourneyId.value)
@@ -156,18 +198,43 @@ const switcherButtonLabel = computed(() => {
     }
 
     const label = getJourneyLabelText(
-        getJourneyLabelDetails(activeJourney.value, stationGroups.value)
+        getJourneySelectionLabelDetails(
+            activeJourney.value,
+            stationGroups.value
+        )
     );
 
     return `Change journey. Current journey: ${label}`;
 });
 
 function selectJourney(journeyId: string): void {
-    trainServicesStore.selectSavedJourney(journeyId);
+    if (journeyId === newJourneyOptionId) {
+        isCreatingEphemeralJourney.value = true;
+        return;
+    }
+
+    isCreatingEphemeralJourney.value = false;
+    trainServicesStore.selectJourney(journeyId);
+}
+
+function useEphemeralJourney(journey: JourneyFields): void {
+    if (!trainServicesStore.selectEphemeralJourney(journey)) {
+        return;
+    }
+
+    isCreatingEphemeralJourney.value = false;
+}
+
+function saveActiveJourney(): void {
+    trainServicesStore.saveActiveEphemeralJourney();
+}
+
+function clearActiveJourney(): void {
+    trainServicesStore.clearActiveEphemeralJourney();
 }
 
 interface JourneySection {
     name: "Predicted" | "Recent" | "Saved";
-    journeys: Journey[];
+    journeys: JourneySelection[];
 }
 </script>

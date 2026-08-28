@@ -50,6 +50,13 @@ interface JourneyLocationOption {
 
 const selectedLocationKey = computed({
     get: () => {
+        if (
+            props.modelValue.type === "station" &&
+            props.modelValue.groupId === undefined
+        ) {
+            return locationKey(props.modelValue);
+        }
+
         if (props.modelValue.groupId === "") {
             return "";
         }
@@ -80,64 +87,82 @@ const selectedLocationKey = computed({
 
 const locationOptions = computed<JourneyLocationOption[]>(() => {
     const selectedKey = selectedLocationKey.value;
+    const standaloneStationOption =
+        props.modelValue.type === "station" &&
+        props.modelValue.groupId === undefined
+            ? [
+                  {
+                      key: selectedKey,
+                      label: stationDisplayName(props.modelValue.crs),
+                      value: props.modelValue,
+                  },
+              ]
+            : [];
 
-    return props.stationGroups.flatMap((group) => {
-        const isExcludedGroup = group.id === props.excludedGroupId;
-        const groupLocation: LocationReference = {
-            type: "group",
-            groupId: group.id,
-        };
-        const groupOption = {
-            key: locationKey(groupLocation),
-            label: group.name,
-            value: groupLocation,
-        } satisfies JourneyLocationOption;
+    return [
+        ...standaloneStationOption,
+        ...props.stationGroups.flatMap((group) => {
+            const isExcludedGroup = group.id === props.excludedGroupId;
+            const groupLocation: LocationReference = {
+                type: "group",
+                groupId: group.id,
+            };
+            const groupOption = {
+                key: locationKey(groupLocation),
+                label: group.name,
+                value: groupLocation,
+            } satisfies JourneyLocationOption;
 
-        return [
-            ...(group.stations.length !== 1 ||
-            group.stations[0]?.crs !== props.excludedCrs ||
-            groupOption.key === selectedKey
-                ? [groupOption]
-                : []),
-            ...(group.stations.length > 1 ? group.stations : [])
-                .filter(
-                    (station) =>
-                        station.crs !== props.excludedCrs ||
-                        locationKey({
+            return [
+                ...(group.stations.length !== 1 ||
+                group.stations[0]?.crs !== props.excludedCrs ||
+                groupOption.key === selectedKey
+                    ? [groupOption]
+                    : []),
+                ...(group.stations.length > 1 ? group.stations : [])
+                    .filter(
+                        (station) =>
+                            station.crs !== props.excludedCrs ||
+                            locationKey({
+                                type: "station",
+                                groupId: group.id,
+                                crs: station.crs,
+                            }) === selectedKey
+                    )
+                    .map((station) => ({
+                        key: locationKey({
                             type: "station",
                             groupId: group.id,
                             crs: station.crs,
-                        }) === selectedKey
-                )
-                .map((station) => ({
-                    key: locationKey({
-                        type: "station",
-                        groupId: group.id,
-                        crs: station.crs,
-                    }),
-                    label: `${group.name} - from ${stationDisplayName(station.crs)}`,
-                    value: {
-                        type: "station" as const,
-                        groupId: group.id,
-                        crs: station.crs,
-                    },
-                })),
-        ].filter((option) => {
-            if (option.key === selectedKey) {
-                return true;
-            }
+                        }),
+                        label: `${group.name} - from ${stationDisplayName(station.crs)}`,
+                        value: {
+                            type: "station" as const,
+                            groupId: group.id,
+                            crs: station.crs,
+                        },
+                    })),
+            ].filter((option) => {
+                if (option.key === selectedKey) {
+                    return true;
+                }
 
-            return (
-                !isExcludedGroup &&
-                !props.excludedLocationKeys?.includes(option.key) &&
-                (option.value.type !== "station" ||
-                    option.value.crs !== props.excludedCrs)
-            );
-        });
-    });
+                return (
+                    !isExcludedGroup &&
+                    !props.excludedLocationKeys?.includes(option.key) &&
+                    (option.value.type !== "station" ||
+                        option.value.crs !== props.excludedCrs)
+                );
+            });
+        }),
+    ];
 });
 
 function locationKey(location: LocationReference): string {
+    if (location.type === "station" && location.groupId === undefined) {
+        return `station:${location.crs}`;
+    }
+
     return location.type === "group"
         ? `group:${location.groupId}`
         : `station:${location.groupId}:${location.crs}`;

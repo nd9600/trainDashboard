@@ -73,7 +73,7 @@ export const stationGroupSchema = z
 export const locationReferenceSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.literal("station"),
-        groupId: locationGroupIdSchema,
+        groupId: locationGroupIdSchema.optional(),
         crs: crsCodeSchema,
     }),
     z.object({
@@ -82,12 +82,13 @@ export const locationReferenceSchema = z.discriminatedUnion("type", [
     }),
 ]);
 
-export const journeySchema = z.object({
-    id: idSchema,
+export const journeyFieldsSchema = z.object({
     origin: locationReferenceSchema,
     destination: locationReferenceSchema,
     viaCrs: crsCodeSchema.optional(),
 });
+
+export const journeySchema = journeyFieldsSchema.extend({id: idSchema});
 
 export const displayScheduleSchema = z
     .object({
@@ -149,16 +150,25 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
                 ["origin", journey.origin],
                 ["destination", journey.destination],
             ] as const) {
-                if (endpoint.groupId === "") {
+                if (
+                    endpoint.type === "station" &&
+                    endpoint.groupId === undefined
+                ) {
                     continue;
                 }
 
-                const group = stationGroupsById.get(endpoint.groupId);
+                const groupId = endpoint.groupId;
+
+                if (!groupId) {
+                    continue;
+                }
+
+                const group = stationGroupsById.get(groupId);
 
                 if (!group) {
                     context.addIssue({
                         code: "custom",
-                        message: `Group "${endpoint.groupId}" does not exist.`,
+                        message: `Group "${groupId}" does not exist.`,
                         path: ["journeys", journeyIndex, endpointName],
                     });
                     continue;
@@ -183,8 +193,11 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
 
         config.journeys.forEach((journey, journeyIndex) => {
             if (
-                !stationGroupsById.has(journey.origin.groupId) ||
-                !stationGroupsById.has(journey.destination.groupId)
+                [journey.origin, journey.destination].some(
+                    (location) =>
+                        location.groupId !== undefined &&
+                        !stationGroupsById.has(location.groupId)
+                )
             ) {
                 return;
             }
@@ -239,9 +252,17 @@ function getStationPairKey(
 ): string {
     return [journey.origin, journey.destination]
         .map((location) => {
-            const group = stationGroupsById.get(location.groupId);
+            if (location.type === "group") {
+                return `group:${location.groupId}`;
+            }
 
-            if (location.type === "group" || group?.stations.length === 1) {
+            if (location.groupId === undefined) {
+                return `station:${location.crs}`;
+            }
+
+            if (
+                stationGroupsById.get(location.groupId)?.stations.length === 1
+            ) {
                 return `group:${location.groupId}`;
             }
 
@@ -253,6 +274,7 @@ function getStationPairKey(
 export type Day = z.output<typeof daySchema>;
 export type StationGroup = z.output<typeof stationGroupSchema>;
 export type LocationReference = z.output<typeof locationReferenceSchema>;
+export type JourneyFields = z.output<typeof journeyFieldsSchema>;
 export type Journey = z.output<typeof journeySchema>;
 export type DisplaySchedule = z.output<typeof displayScheduleSchema>;
 export type DashboardConfig = z.output<typeof dashboardConfigSchema>;

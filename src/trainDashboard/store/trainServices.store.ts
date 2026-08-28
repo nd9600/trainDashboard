@@ -6,20 +6,29 @@ import {
     type CurrentClock,
     getActiveSchedule,
     getPredictedJourney,
+    getRecentJourneys,
 } from "../journeys/planning/journeySelection";
 import {getDashboardJourneys} from "../journeys/getDashboardJourneys";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
 import {useJourneySelectionStore} from "./journeySelection.store";
-import type {Day} from "@/trainDashboard/dto/dashboardConfig.dto.ts";
+import type {
+    Day,
+    JourneyFields,
+} from "@/trainDashboard/dto/dashboardConfig.dto.ts";
+import {
+    createEphemeralJourney,
+    isEphemeralJourney,
+} from "../dto/journeySelection.dto";
+import type {JourneyHistoryEntry} from "../dto/journeyHistory.dto";
 
 export const useTrainServicesStore = defineStore("train-services", () => {
     const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
     const journeySelectionStore = useJourneySelectionStore();
-    const predictionJourneyHistory = [
+    const predictionJourneyHistory = ref<JourneyHistoryEntry[]>([
         ...journeySelectionStore.recentJourneyHistory,
-    ];
+    ]);
 
     ///// state /////
     const currentDate = ref(new Date());
@@ -42,35 +51,41 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             currentClock.value
         )
     );
-    const predictedJourneyId = computed(
-        () =>
-            getPredictedJourney(
-                dashboardConfigStore.config.journeys,
-                activeSchedule.value,
-                predictionJourneyHistory
-            )?.id
+    const predictedJourney = computed(() =>
+        getPredictedJourney(
+            dashboardConfigStore.config.journeys,
+            activeSchedule.value,
+            predictionJourneyHistory.value
+        )
     );
+    const predictedJourneyId = computed(() => predictedJourney.value?.id);
     const recentJourneyHistory = computed(
         () => journeySelectionStore.recentJourneyHistory
     );
-    const temporaryJourneyId = computed(() => {
-        const journeyId = journeySelectionStore.temporaryJourneyId;
+    const temporaryJourney = computed(() => {
+        const journey = journeySelectionStore.temporaryJourney;
 
-        if (journeyId === predictedJourneyId.value) {
+        if (!journey || journey.id === predictedJourneyId.value) {
             return undefined;
         }
 
-        return dashboardConfigStore.config.journeys.some(
-            (journey) => journey.id === journeyId
-        )
-            ? journeyId
-            : undefined;
+        if (isEphemeralJourney(journey)) {
+            return journey;
+        }
+
+        return dashboardConfigStore.config.journeys.find(
+            (savedJourney) => savedJourney.id === journey.id
+        );
     });
-    const activeJourneyId = computed(
-        () => temporaryJourneyId.value ?? predictedJourneyId.value
+    const activeJourney = computed(
+        () => temporaryJourney.value ?? predictedJourney.value
     );
+    const activeJourneyId = computed(() => activeJourney.value?.id);
     const hasTemporaryJourneyOverride = computed(
-        () => temporaryJourneyId.value !== undefined
+        () => temporaryJourney.value !== undefined
+    );
+    const activeJourneyIsEphemeral = computed(() =>
+        isEphemeralJourney(activeJourney.value)
     );
     const recommendedJourney = computed(() =>
         journeys.value.find((journey) => journey.recommended)
@@ -88,8 +103,10 @@ export const useTrainServicesStore = defineStore("train-services", () => {
                 dashboardConfigStore.config,
                 currentClock.value,
                 consumerKey,
-                temporaryJourneyId.value,
-                predictionJourneyHistory
+                {
+                    temporaryJourney: temporaryJourney.value,
+                    recentJourneyHistory: predictionJourneyHistory.value,
+                }
             );
 
             routes.value = dashboardJourneys.routes;
@@ -108,17 +125,74 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         }
     }
 
-    function selectSavedJourney(journeyId: string): void {
-        if (
-            !dashboardConfigStore.config.journeys.some(
-                (journey) => journey.id === journeyId
-            )
-        ) {
+    function selectJourney(journeyId: string): void {
+        const journey = [
+            ...dashboardConfigStore.config.journeys,
+            ...getRecentJourneys(
+                dashboardConfigStore.config.journeys,
+                recentJourneyHistory.value
+            ),
+        ].find((candidate) => candidate.id === journeyId);
+
+        if (!journey) {
             return;
         }
 
-        journeySelectionStore.selectSavedJourney(
-            journeyId,
+        journeySelectionStore.selectJourney(
+            journey,
+            predictedJourneyId.value,
+            activeJourney.value
+        );
+    }
+
+    function selectEphemeralJourney(journeyFields: JourneyFields): boolean {
+        const journey = createEphemeralJourney(journeyFields);
+
+        if (!journey) {
+            return false;
+        }
+
+        journeySelectionStore.selectJourney(
+            journey,
+            predictedJourneyId.value,
+            activeJourney.value
+        );
+        return true;
+    }
+
+    function saveActiveEphemeralJourney(): boolean {
+        const journey = activeJourney.value;
+
+        if (!isEphemeralJourney(journey)) {
+            return false;
+        }
+
+        const savedJourney = dashboardConfigStore.saveStationJourney(
+            journey.origin.crs,
+            journey.destination.crs,
+            journey.viaCrs
+        );
+
+        if (!savedJourney) {
+            return false;
+        }
+
+        journeySelectionStore.markEphemeralJourneySaved(journey, savedJourney);
+        predictionJourneyHistory.value = predictionJourneyHistory.value.map(
+            (entry) =>
+                entry.type === "ephemeral" && entry.journey.id === journey.id
+                    ? {
+                          type: "saved",
+                          journeyId: savedJourney.id,
+                          selectedAt: entry.selectedAt,
+                      }
+                    : entry
+        );
+        return true;
+    }
+
+    function clearActiveEphemeralJourney(): boolean {
+        return journeySelectionStore.clearEphemeralJourney(
             predictedJourneyId.value
         );
     }
@@ -144,7 +218,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             () => dashboardConfigStore.config,
             () => apiStore.settings.consumerKey,
             currentMinutes,
-            temporaryJourneyId,
+            temporaryJourney,
         ],
         refreshJourneys,
         {immediate: true}
@@ -157,12 +231,18 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         journeyLoadError,
         currentMinutes,
         activeJourneyId,
+        activeJourney,
+        activeJourneyIsEphemeral,
         predictedJourneyId,
+        predictedJourney,
         hasTemporaryJourneyOverride,
         recentJourneyHistory,
         journeys,
         routes,
         recommendedJourney,
-        selectSavedJourney,
+        selectJourney,
+        selectEphemeralJourney,
+        saveActiveEphemeralJourney,
+        clearActiveEphemeralJourney,
     };
 });

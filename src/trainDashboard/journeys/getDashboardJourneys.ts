@@ -4,6 +4,7 @@ import type {
 } from "../dto/dashboardConfig.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import type {JourneyHistoryEntry} from "../dto/journeyHistory.dto";
+import type {JourneySelection} from "../dto/journeySelection.dto";
 import {
     type CurrentClock,
     getActiveJourney,
@@ -27,23 +28,26 @@ export interface DashboardJourneys {
     journeys: TimetabledJourney[];
 }
 
+export interface DashboardJourneySelection {
+    temporaryJourney?: JourneySelection;
+    recentJourneyHistory?: JourneyHistoryEntry[];
+}
+
 export async function getDashboardJourneys(
     config: DashboardConfig,
     currentClock: CurrentClock,
     consumerKey: string,
-    temporaryJourneyId?: string,
-    recentJourneyHistory: JourneyHistoryEntry[] = []
+    selection: DashboardJourneySelection = {}
 ): Promise<DashboardJourneys> {
     const activeSchedule = getActiveSchedule(config.schedules, currentClock);
     const predictedJourney = getPredictedJourney(
         config.journeys,
         activeSchedule,
-        recentJourneyHistory
+        selection.recentJourneyHistory ?? []
     );
     const activeJourney = getActiveJourney(
-        config.journeys,
         predictedJourney,
-        temporaryJourneyId
+        selection.temporaryJourney
     );
 
     const routes = getStationRoutes(

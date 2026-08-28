@@ -13,6 +13,7 @@ import {
     getRecentJourneys,
 } from "./journeySelection";
 import {getStationRoutes} from "./journeyRoutes";
+import {createEphemeralJourney} from "../../dto/journeySelection.dto";
 
 describe("journey planning", () => {
     it("selects travel from Heaton Chapel to Manchester Piccadilly on weekday mornings", () => {
@@ -136,6 +137,7 @@ describe("journey planning", () => {
             activeSchedule,
             [
                 {
+                    type: "saved",
                     journeyId: "heaton-chapel-to-liverpool",
                     selectedAt: "2026-08-27T08:00:00.000Z",
                 },
@@ -153,10 +155,12 @@ describe("journey planning", () => {
             undefined,
             [
                 {
+                    type: "saved",
                     journeyId: "deleted-journey",
                     selectedAt: "2026-08-27T09:00:00.000Z",
                 },
                 {
+                    type: "saved",
                     journeyId: "heaton-chapel-to-liverpool",
                     selectedAt: "2026-08-27T08:00:00.000Z",
                 },
@@ -171,14 +175,17 @@ describe("journey planning", () => {
             manchesterDashboardConfig.journeys,
             [
                 {
+                    type: "saved",
                     journeyId: "heaton-chapel-to-liverpool",
                     selectedAt: "2026-08-27T09:00:00.000Z",
                 },
                 {
+                    type: "saved",
                     journeyId: "heaton-chapel-to-liverpool",
                     selectedAt: "2026-08-27T08:00:00.000Z",
                 },
                 {
+                    type: "saved",
                     journeyId: "manchester-piccadilly-to-heaton-chapel",
                     selectedAt: "2026-08-26T18:00:00.000Z",
                 },
@@ -189,6 +196,46 @@ describe("journey planning", () => {
             "heaton-chapel-to-liverpool",
             "manchester-piccadilly-to-heaton-chapel",
         ]);
+    });
+
+    it("uses a recent ephemeral journey when no schedule is active", () => {
+        const journey = createEphemeralJourney({
+            origin: {type: "station", crs: "MAN"},
+            destination: {type: "station", crs: "LIV"},
+        })!;
+
+        const predictedJourney = getPredictedJourney(
+            manchesterDashboardConfig.journeys,
+            undefined,
+            [
+                {
+                    type: "ephemeral",
+                    journey,
+                    selectedAt: "2026-08-27T08:00:00.000Z",
+                },
+            ]
+        );
+
+        expect(predictedJourney).toEqual(journey);
+    });
+
+    it("leaves walking time unknown for a station-to-station journey", () => {
+        const journey = createEphemeralJourney({
+            origin: {type: "station", crs: "MAN"},
+            destination: {type: "station", crs: "LIV"},
+        })!;
+
+        const [route] = getStationRoutes(
+            [journey],
+            manchesterDashboardConfig.stationGroups
+        );
+
+        expect(route).toMatchObject({
+            origin: {crs: "MAN"},
+            destination: {crs: "LIV"},
+        });
+        expect(route!.origin).not.toHaveProperty("walkMinutes");
+        expect(route!.destination).not.toHaveProperty("walkMinutes");
     });
 
     it("preserves unknown walking times when it expands a station group", () => {

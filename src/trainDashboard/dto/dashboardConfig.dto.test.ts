@@ -21,6 +21,19 @@ describe("dashboardConfigSchema", () => {
         expect(result.success).toBe(true);
     });
 
+    it("allows a saved station-to-station journey without station groups", () => {
+        const config = structuredClone(manchesterDashboardConfig);
+        config.journeys.push({
+            id: "manchester-to-liverpool",
+            origin: {type: "station", crs: "MAN"},
+            destination: {type: "station", crs: "LIV"},
+        });
+
+        const result = dashboardConfigSchema.safeParse(config);
+
+        expect(result.success).toBe(true);
+    });
+
     it("describes an invalid station without exposing its data path", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.stationGroups[0]!.stations[0]!.crs = "not-a-station";

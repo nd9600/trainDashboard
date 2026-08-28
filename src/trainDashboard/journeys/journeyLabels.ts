@@ -4,6 +4,7 @@ import type {
     StationGroup,
 } from "../dto/dashboardConfig.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
+import type {JourneySelection} from "../dto/journeySelection.dto";
 import type {JourneyRoute} from "./planning/journeyRoutes";
 import {stationName} from "../stations/stations";
 
@@ -30,6 +31,13 @@ export function getJourneyLabelDetails(
         destination: getEndpointDetails(journey.destination, stationGroupsById),
         connectingStationCrs: journey.viaCrs,
     };
+}
+
+export function getJourneySelectionLabelDetails(
+    journey: JourneySelection,
+    stationGroups: StationGroup[]
+): JourneyLabelDetails {
+    return getJourneyLabelDetails(journey, stationGroups);
 }
 
 export function getRouteLabelDetails(route: JourneyRoute): JourneyLabelDetails {
@@ -80,15 +88,23 @@ function getEndpointDetails(
     location: LocationReference,
     stationGroupsById: Map<string, StationGroup>
 ): JourneyLabelEndpoint {
+    if (location.type === "group") {
+        return {
+            type: "location",
+            name: stationGroupsById.get(location.groupId)!.name,
+        };
+    }
+
+    if (location.groupId === undefined) {
+        return {type: "station", stationCrs: location.crs};
+    }
+
     const group = stationGroupsById.get(location.groupId)!;
 
     return {
         type: "location",
         name: group.name,
-        stationCrs:
-            location.type === "station" && group.stations.length > 1
-                ? location.crs
-                : undefined,
+        stationCrs: group.stations.length > 1 ? location.crs : undefined,
     };
 }
 

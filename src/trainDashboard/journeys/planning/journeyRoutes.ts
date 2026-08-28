@@ -1,8 +1,9 @@
 import type {
     LocationReference,
     StationGroup,
-    Journey,
 } from "../../dto/dashboardConfig.dto";
+import {type JourneySelection} from "../../dto/journeySelection.dto";
+import {stationName} from "../../stations/stations";
 
 export interface StationEndpoint {
     crs: string;
@@ -19,7 +20,7 @@ export interface JourneyRoute {
 }
 
 export function getStationRoutes(
-    journeys: Journey[],
+    journeys: JourneySelection[],
     stationGroups: StationGroup[]
 ): JourneyRoute[] {
     const stationGroupsById = new Map(
@@ -47,7 +48,7 @@ export function getStationRoutes(
 }
 
 function getRouteOptions(
-    journey: Journey,
+    journey: JourneySelection,
     origin: StationEndpoint,
     destination: StationEndpoint
 ): JourneyRoute[] {
@@ -80,18 +81,33 @@ function getStationsForLocation(
     location: LocationReference,
     stationGroupsById: Map<string, StationGroup>
 ): StationEndpoint[] {
+    if (location.type === "station") {
+        if (location.groupId === undefined) {
+            return [
+                {crs: location.crs, locationName: stationName(location.crs)},
+            ];
+        }
+
+        const group = stationGroupsById.get(location.groupId);
+
+        return group
+            ? group.stations
+                  .filter((station) => station.crs === location.crs)
+                  .map((station) => ({
+                      crs: station.crs,
+                      walkMinutes: station.walkMinutes,
+                      locationName: group.name,
+                  }))
+            : [];
+    }
+
     const group = stationGroupsById.get(location.groupId);
 
     if (!group) {
         return [];
     }
 
-    const stations =
-        location.type === "station"
-            ? group.stations.filter((station) => station.crs === location.crs)
-            : group.stations;
-
-    return stations.map((station) => ({
+    return group.stations.map((station) => ({
         crs: station.crs,
         walkMinutes: station.walkMinutes,
         locationName: group.name,

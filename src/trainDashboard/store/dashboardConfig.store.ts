@@ -5,6 +5,7 @@ import {
     dashboardConfigErrorMessages,
     dashboardConfigSchema,
     type DashboardConfig,
+    type Journey,
 } from "../dto/dashboardConfig.dto";
 
 const storage = useLocalStorageTyped(
@@ -40,5 +41,57 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         return {success: true, errors: []};
     }
 
-    return {config, saveConfig};
+    function saveStationJourney(
+        originCrs: string,
+        destinationCrs: string,
+        viaCrs?: string
+    ): Journey | undefined {
+        const existingJourney = config.value.journeys.find(
+            (journey) =>
+                journey.origin.type === "station" &&
+                journey.origin.groupId === undefined &&
+                journey.origin.crs === originCrs &&
+                journey.destination.type === "station" &&
+                journey.destination.groupId === undefined &&
+                journey.destination.crs === destinationCrs
+        );
+
+        if (existingJourney) {
+            return existingJourney;
+        }
+
+        const journey: Journey = {
+            id: getAvailableJourneyId(originCrs, destinationCrs),
+            origin: {type: "station", crs: originCrs},
+            destination: {type: "station", crs: destinationCrs},
+            viaCrs,
+        };
+        const result = saveConfig({
+            ...config.value,
+            journeys: [...config.value.journeys, journey],
+        });
+
+        return result.success ? journey : undefined;
+    }
+
+    function getAvailableJourneyId(
+        originCrs: string,
+        destinationCrs: string
+    ): string {
+        const baseId = `${originCrs}-to-${destinationCrs}`.toLowerCase();
+        const existingIds = new Set(
+            config.value.journeys.map((journey) => journey.id)
+        );
+        let id = baseId;
+        let suffix = 2;
+
+        while (existingIds.has(id)) {
+            id = `${baseId}-${suffix}`;
+            suffix += 1;
+        }
+
+        return id;
+    }
+
+    return {config, saveConfig, saveStationJourney};
 });

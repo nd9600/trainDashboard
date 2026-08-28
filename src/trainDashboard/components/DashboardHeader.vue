@@ -5,7 +5,7 @@
             {{ leaveInString }}
         </h1>
         <p
-            v-if="recommendedJourney"
+            v-if="headerJourney"
             class="text-ink-muted text-sm sm:text-base flex flex-col sm:flex-row items-start sm:items-center flex-wrap gap-1"
         >
             <span>
@@ -13,29 +13,26 @@
                 <span
                     class="font-semibold"
                     :style="{
-                        color: stationColour(recommendedJourney.origin),
+                        color: stationColour(headerJourney.origin),
                     }"
                 >
-                    {{ stationName(recommendedJourney.origin) }}
+                    {{ stationName(headerJourney.origin) }}
                 </span>
             </span>
             <span>
-                · train {{ formatTime(recommendedJourney.trainLegs[0]!.departure) }}
+                · train {{ formatTime(headerJourney.trainLegs[0]!.departure) }}
             </span>
             <span>
                 · arrive
                 <span
                     class="font-semibold"
                     :style="{
-                        color: stationColour(recommendedJourney.destination),
+                        color: stationColour(headerJourney.destination),
                     }"
                 >
-                    {{ stationName(recommendedJourney.destination) }}
+                    {{ stationName(headerJourney.destination) }}
                 </span>
-                {{
-                    recommendedJourney.arrivalTime ??
-                    recommendedJourney.railArrivalTime
-                }}
+                {{ headerJourney.arrivalTime ?? headerJourney.railArrivalTime }}
             </span>
             <span v-if="changeCount">
                 · {{ changeCount }} change{{ changeCount === 1 ? "" : "s" }}
@@ -57,8 +54,18 @@ import {useTrainServicesStore} from "../store/trainServices.store";
 import JourneySwitcher from "./journeys/JourneySwitcher.vue";
 
 const trainServicesStore = useTrainServicesStore();
-const {activeJourneyId, currentMinutes, isLoadingJourneys, recommendedJourney} =
-    storeToRefs(trainServicesStore);
+const {
+    activeJourneyIsEphemeral,
+    activeJourneyId,
+    currentMinutes,
+    isLoadingJourneys,
+    journeys,
+    recommendedJourney,
+} = storeToRefs(trainServicesStore);
+
+const headerJourney = computed(
+    () => recommendedJourney.value ?? journeys.value.at(0)
+);
 
 const leaveInMinutes = computed(() => {
     const journey = recommendedJourney.value;
@@ -68,12 +75,37 @@ const leaveInMinutes = computed(() => {
 });
 
 const leaveInString = computed(() => {
+    if (activeJourneyIsEphemeral.value) {
+        if (isLoadingJourneys.value) {
+            return "Finding trains…";
+        }
+
+        if (!headerJourney.value) {
+            return "No trains found";
+        }
+
+        const trainInMinutes =
+            headerJourney.value.trainLegs[0]!.departure - currentMinutes.value;
+
+        if (trainInMinutes <= 0) {
+            return "Train now";
+        }
+
+        return `Train in ${trainInMinutes} minute${trainInMinutes === 1 ? "" : "s"}`;
+    }
+
     if (leaveInMinutes.value === undefined) {
         if (isLoadingJourneys.value) {
             return "Finding trains…";
         }
 
-        return activeJourneyId.value ? "Journey unavailable" : "Journeys";
+        const nextJourney = headerJourney.value;
+
+        if (nextJourney) {
+            return `Next train at ${formatTime(nextJourney.trainLegs[0]!.departure)}`;
+        }
+
+        return activeJourneyId.value ? "No trains found" : "Journeys";
     }
 
     if (leaveInMinutes.value <= 1) {
@@ -84,11 +116,11 @@ const leaveInString = computed(() => {
 });
 
 const shouldWalk = computed(() => {
-    const firstSegment = recommendedJourney.value?.segments.at(0);
+    const firstSegment = headerJourney.value?.segments.at(0);
     return firstSegment?.kind === "walk";
 });
 
 const changeCount = computed(
-    () => (recommendedJourney.value?.trainLegs.length ?? 1) - 1
+    () => (headerJourney.value?.trainLegs.length ?? 1) - 1
 );
 </script>
