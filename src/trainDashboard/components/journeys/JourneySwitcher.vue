@@ -10,11 +10,7 @@
             v-if="activeSchedule || activeJourney.type !== 'predicted'"
             class="text-xs text-ink-subtle"
         >
-            {{
-                activeJourney.type === "predicted"
-                    ? activeSchedule?.name
-                    : "Temporary"
-            }}
+            {{ activeJourney.type === "predicted" ? activeSchedule?.name : "&nbsp;" }}
         </p>
         <ListboxButton
             class="appButton appButton--secondary max-w-full justify-start whitespace-normal text-left border-none p-1"
@@ -34,7 +30,7 @@
         </ListboxButton>
 
         <ListboxOptions
-            class="absolute top-full left-0 z-20 mt-1 max-h-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line-strong bg-paper shadow-lg focus:outline-none"
+            class="absolute top-full left-0 z-20 mt-1 max-h-[80vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line-strong bg-paper shadow-lg focus:outline-none"
         >
             <template v-for="section in journeyChoices" :key="section.name">
                 <li

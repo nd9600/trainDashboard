@@ -1,7 +1,10 @@
 <template>
     <header class="min-w-0">
         <JourneySwitcher />
-        <h1 class="mt-8 mb-1 font-display text-4xl">
+        <h1
+            class="mt-8 mb-1 font-display text-4xl"
+            :class="isLoadingJourneys ? 'text-surface' : ''"
+        >
             {{ leaveInString }}
         </h1>
         <p
@@ -74,11 +77,10 @@ const leaveInMinutes = computed(() => {
 });
 
 const leaveInString = computed(() => {
+    if (isLoadingJourneys.value) {
+        return "Finding trains…";
+    }
     if (activeJourneyIsEphemeral.value) {
-        if (isLoadingJourneys.value) {
-            return "Finding trains…";
-        }
-
         if (!headerJourney.value) {
             return "No trains found";
         }
@@ -94,10 +96,6 @@ const leaveInString = computed(() => {
     }
 
     if (leaveInMinutes.value === undefined) {
-        if (isLoadingJourneys.value) {
-            return "Finding trains…";
-        }
-
         const nextJourney = headerJourney.value;
 
         if (nextJourney) {
