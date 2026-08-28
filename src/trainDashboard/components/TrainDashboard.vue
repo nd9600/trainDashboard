@@ -108,27 +108,23 @@ import JourneyTimelines from "./journeys/JourneyTimelines.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useDashboardConfigStore} from "../store/dashboardConfig.store";
+import {useJourneySelectionStore} from "../store/journeySelection.store";
 import DashboardHeader from "./DashboardHeader.vue";
 import {getRoutesWithoutTimetabledJourneys} from "@/trainDashboard/journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
 
 const trainServicesStore = useTrainServicesStore();
+const journeySelectionStore = useJourneySelectionStore();
 const dashboardConfigStore = useDashboardConfigStore();
 const settingsModal = ref<{
     open: () => void;
     openApiSettings: () => void;
 } | null>(null);
-const {
-    isLoadingJourneys,
-    journeyLoadError,
-    currentMinutes,
-    journeys,
-    routes,
-} = storeToRefs(trainServicesStore);
+const {isLoadingJourneys, journeyLoadError, journeys, routes} =
+    storeToRefs(trainServicesStore);
+const {currentMinutes} = storeToRefs(journeySelectionStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
 
-const hasJourneyData = computed(
-    () => journeys.value.length > 0
-);
+const hasJourneyData = computed(() => journeys.value.length > 0);
 const hasNoJourneyConfiguration = computed(
     () =>
         dashboardConfig.value.stationGroups.length === 0 &&
@@ -139,9 +135,6 @@ const apiKeyConfigured = computed(
 );
 
 const routesWithoutTimetabledJourneys = computed(() =>
-    getRoutesWithoutTimetabledJourneys(
-        routes.value,
-        journeys.value
-    )
+    getRoutesWithoutTimetabledJourneys(routes.value, journeys.value)
 );
 </script>

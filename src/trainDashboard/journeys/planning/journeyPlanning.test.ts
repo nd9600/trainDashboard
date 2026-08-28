@@ -5,13 +5,7 @@ import {
     timeSchema,
     type DashboardConfig,
 } from "../../dto/dashboardConfig.dto";
-import {
-    type CurrentClock,
-    getActiveSchedule,
-    getJourneyForSchedule,
-    getPredictedJourney,
-    getRecentJourneys,
-} from "./journeySelection";
+import {type CurrentClock, getActiveSchedule} from "./journeySelection";
 import {getStationRoutes} from "./journeyRoutes";
 import {createEphemeralJourney} from "../../dto/journeySelection.dto";
 
@@ -129,96 +123,6 @@ describe("journey planning", () => {
         ).toEqual(new Set(["heaton-chapel-to-liverpool"]));
     });
 
-    it("uses the scheduled journey before recent history", () => {
-        const activeSchedule = manchesterDashboardConfig.schedules[0];
-
-        const predictedJourney = getPredictedJourney(
-            manchesterDashboardConfig.journeys,
-            activeSchedule,
-            [
-                {
-                    type: "saved",
-                    journeyId: "heaton-chapel-to-liverpool",
-                    selectedAt: "2026-08-27T08:00:00.000Z",
-                },
-            ]
-        );
-
-        expect(predictedJourney?.id).toBe(
-            "heaton-chapel-to-manchester-piccadilly"
-        );
-    });
-
-    it("uses the most recent valid journey when no schedule is active", () => {
-        const predictedJourney = getPredictedJourney(
-            manchesterDashboardConfig.journeys,
-            undefined,
-            [
-                {
-                    type: "saved",
-                    journeyId: "deleted-journey",
-                    selectedAt: "2026-08-27T09:00:00.000Z",
-                },
-                {
-                    type: "saved",
-                    journeyId: "heaton-chapel-to-liverpool",
-                    selectedAt: "2026-08-27T08:00:00.000Z",
-                },
-            ]
-        );
-
-        expect(predictedJourney?.id).toBe("heaton-chapel-to-liverpool");
-    });
-
-    it("returns unique recent journeys in history order", () => {
-        const recentJourneys = getRecentJourneys(
-            manchesterDashboardConfig.journeys,
-            [
-                {
-                    type: "saved",
-                    journeyId: "heaton-chapel-to-liverpool",
-                    selectedAt: "2026-08-27T09:00:00.000Z",
-                },
-                {
-                    type: "saved",
-                    journeyId: "heaton-chapel-to-liverpool",
-                    selectedAt: "2026-08-27T08:00:00.000Z",
-                },
-                {
-                    type: "saved",
-                    journeyId: "manchester-piccadilly-to-heaton-chapel",
-                    selectedAt: "2026-08-26T18:00:00.000Z",
-                },
-            ]
-        );
-
-        expect(recentJourneys.map((journey) => journey.id)).toEqual([
-            "heaton-chapel-to-liverpool",
-            "manchester-piccadilly-to-heaton-chapel",
-        ]);
-    });
-
-    it("uses a recent ephemeral journey when no schedule is active", () => {
-        const journey = createEphemeralJourney({
-            origin: {type: "station", crs: "MAN"},
-            destination: {type: "station", crs: "LIV"},
-        })!;
-
-        const predictedJourney = getPredictedJourney(
-            manchesterDashboardConfig.journeys,
-            undefined,
-            [
-                {
-                    type: "ephemeral",
-                    journey,
-                    selectedAt: "2026-08-27T08:00:00.000Z",
-                },
-            ]
-        );
-
-        expect(predictedJourney).toEqual(journey);
-    });
-
     it("leaves walking time unknown for a station-to-station journey", () => {
         const journey = createEphemeralJourney({
             origin: {type: "station", crs: "MAN"},
@@ -315,7 +219,9 @@ describe("journey planning", () => {
 
 function getJourneyPlan(config: DashboardConfig, currentClock: CurrentClock) {
     const schedule = getActiveSchedule(config.schedules, currentClock);
-    const configuredJourney = getJourneyForSchedule(config.journeys, schedule);
+    const configuredJourney = config.journeys.find(
+        (journey) => journey.id === schedule?.journeyId
+    );
 
     return {
         schedule,

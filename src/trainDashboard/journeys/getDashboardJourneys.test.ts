@@ -9,14 +9,14 @@ describe("getDashboardJourneys", () => {
         vi.restoreAllMocks();
     });
 
-    it("selects and expands configured journeys without an API key", async () => {
+    it("expands a configured journey without an API key", async () => {
         const result = await getDashboardJourneys(
-            manchesterDashboardConfig,
+            manchesterDashboardConfig.journeys[0],
+            manchesterDashboardConfig.stationGroups,
             {day: 1, minutes: 8 * 60},
             ""
         );
 
-        expect(result.activeSchedule?.id).toBe("weekday-morning");
         expect(result.routes.map((route) => route.journeyId)).toEqual([
             "heaton-chapel-to-manchester-piccadilly",
             "heaton-chapel-to-manchester-piccadilly",
@@ -52,7 +52,8 @@ describe("getDashboardJourneys", () => {
         }));
 
         const result = await getDashboardJourneys(
-            manchesterDashboardConfig,
+            manchesterDashboardConfig.journeys[0],
+            manchesterDashboardConfig.stationGroups,
             {day: 1, minutes: 8 * 60},
             "test-key"
         );
@@ -63,46 +64,16 @@ describe("getDashboardJourneys", () => {
         ).toBe("EDY");
     });
 
-    it("uses a temporary saved journey instead of the scheduled journey", async () => {
+    it("expands the journey supplied by the selection store", async () => {
         const result = await getDashboardJourneys(
-            manchesterDashboardConfig,
+            manchesterDashboardConfig.journeys.find(
+                (journey) => journey.id === "heaton-chapel-to-liverpool"
+            ),
+            manchesterDashboardConfig.stationGroups,
             {day: 1, minutes: 8 * 60},
-            "",
-            {
-                temporaryJourney: manchesterDashboardConfig.journeys.find(
-                    (journey) => journey.id === "heaton-chapel-to-liverpool"
-                ),
-            }
+            ""
         );
 
-        expect(result.activeSchedule?.id).toBe("weekday-morning");
-        expect(result.activeJourneyId).toBe("heaton-chapel-to-liverpool");
-        expect(new Set(result.routes.map((route) => route.journeyId))).toEqual(
-            new Set(["heaton-chapel-to-liverpool"])
-        );
-    });
-
-    it("uses recent history when no schedule is active", async () => {
-        const config = structuredClone(manchesterDashboardConfig);
-        config.schedules = [];
-
-        const result = await getDashboardJourneys(
-            config,
-            {day: 1, minutes: 8 * 60},
-            "",
-            {
-                recentJourneyHistory: [
-                    {
-                        type: "saved",
-                        journeyId: "heaton-chapel-to-liverpool",
-                        selectedAt: "2026-08-27T08:00:00.000Z",
-                    },
-                ],
-            }
-        );
-
-        expect(result.activeSchedule).toBeUndefined();
-        expect(result.activeJourneyId).toBe("heaton-chapel-to-liverpool");
         expect(new Set(result.routes.map((route) => route.journeyId))).toEqual(
             new Set(["heaton-chapel-to-liverpool"])
         );
@@ -115,16 +86,15 @@ describe("getDashboardJourneys", () => {
         })!;
 
         const result = await getDashboardJourneys(
-            manchesterDashboardConfig,
+            journey,
+            manchesterDashboardConfig.stationGroups,
             {day: 1, minutes: 8 * 60},
-            "",
-            {temporaryJourney: journey}
+            ""
         );
 
-        expect(result.activeJourneyId).toBe("ephemeral:MAN-LIV");
         expect(result.routes).toEqual([
             expect.objectContaining({
-                journeyId: "ephemeral:MAN-LIV",
+                journeyId: "man-to-liv",
                 origin: expect.objectContaining({crs: "MAN"}),
                 destination: expect.objectContaining({crs: "LIV"}),
             }),
@@ -139,10 +109,10 @@ describe("getDashboardJourneys", () => {
         })!;
 
         const result = await getDashboardJourneys(
-            manchesterDashboardConfig,
+            journey,
+            manchesterDashboardConfig.stationGroups,
             {day: 1, minutes: 8 * 60},
-            "",
-            {temporaryJourney: journey}
+            ""
         );
 
         expect(result.routes.map((route) => route.viaCrs)).toEqual([

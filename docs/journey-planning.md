@@ -7,13 +7,13 @@ Current time
       ↓
 Active schedule
       ↓
-Scheduled journey, or most recent valid journey
+Scheduled journey ID, or most recent valid journey ID
       ↓
-Predicted journey
+Predicted journey ID
       ↓
-Temporary saved or station-to-station override, if selected
+Active selection: predicted, saved ID, or ephemeral ID
       ↓
-Active journey
+Resolved active journey
       ↓
 Concrete station routes
       ↓
@@ -38,19 +38,19 @@ Show the first six
 sequenceDiagram
     participant UI as TrainDashboard
     participant Switcher as JourneySwitcher
-    participant Store as trainServices store
     participant Selection as journeySelection store
+    participant Store as trainServices store
     participant Config as dashboardConfig store
     participant Pipeline as getDashboardJourneys
     participant Boards as Departure-board stage
     participant API as Rail Data Marketplace
 
-    UI->>Store: Read journey state
-    Store->>Selection: Load recent history for this page session
-    Store->>Pipeline: getDashboardJourneys(config, currentClock, consumerKey, selection)
-    Pipeline->>Pipeline: getActiveSchedule(...)
-    Pipeline->>Pipeline: getPredictedJourney(...)
-    Pipeline->>Pipeline: getActiveJourney(...)
+    Selection->>Config: Read schedules, journeys, and station groups
+    Selection->>Selection: Load recent journey IDs and ephemeral journeys
+    Selection->>Selection: Compute schedule and predicted journey ID
+    Selection->>Selection: Resolve the active selection to one Journey
+    Store->>Selection: Read active journey, station groups, and clock
+    Store->>Pipeline: getDashboardJourneys(journey, stationGroups, currentClock, consumerKey)
     Pipeline->>Pipeline: getStationRoutes(...)
     Pipeline->>Boards: getDepartureBoards(...)
     Boards->>API: fetchDepartureBoard(...) for each unique request
@@ -68,28 +68,26 @@ sequenceDiagram
     UI->>Switcher: Open predicted, recent, and saved journeys
     alt Select an existing journey
         UI->>Switcher: Select a journey
-        Switcher->>Store: selectJourney(...)
+        Switcher->>Selection: selectJourney(journeyId)
     else Select a station-to-station journey
         UI->>Switcher: Choose Go somewhere else
         Switcher->>Switcher: Select two stations and an optional connection
-        Switcher->>Store: selectEphemeralJourney(...)
+        Switcher->>Selection: selectEphemeralJourney(fields)
     end
-    Store->>Selection: selectJourney(...)
-    Selection->>Selection: Keep override in memory and save history
-    Selection-->>Store: Temporary journey changed
+    Selection->>Selection: Set the active selection and update recent IDs
+    Selection-->>Store: Resolved active journey changed
     Store->>Pipeline: Refresh the active journey
 
     opt Save a station-to-station journey
         UI->>Switcher: Select Save
-        Switcher->>Store: saveActiveEphemeralJourney(...)
-        Store->>Config: saveStationJourney(...)
-        Store->>Selection: markEphemeralJourneySaved(...)
+        Switcher->>Selection: saveActiveJourney()
+        Selection->>Config: saveJourney(journey)
+        Selection->>Selection: Remove the journey from ephemeral memory
     end
 
     opt Clear a station-to-station journey
         UI->>Switcher: Select Clear
-        Switcher->>Store: clearActiveEphemeralJourney()
-        Store->>Selection: clearEphemeralJourney()
+        Switcher->>Selection: clearActiveJourney()
         Selection-->>Store: Restore the previous active journey
         Store->>Pipeline: Refresh the active journey
     end
@@ -103,9 +101,11 @@ The prediction uses the history loaded when the page starts. A new selection rem
 
 The selection immediately appears in the Recent section. A page refresh can use it as the recent-history prediction.
 
-An ephemeral journey contains one origin station, one destination station, and an optional connecting station. Its walking times are unknown, so the header shows the time until the train departs.
+Saved and ephemeral journeys use the same `Journey` shape. An ephemeral journey uses station endpoints and can include one connecting station.
 
-The Save action converts an ephemeral journey into a configured journey. It also converts matching recent-history entries to the saved journey.
+The Save action adds the same journey to the configuration. Its ID stays the same unless that ID is already in use.
+
+Recent history contains journey IDs only. Ephemeral journey definitions remain in journey memory while a recent or active selection refers to them.
 
 The Clear action restores the journey that was active before the ephemeral journey. It does not add another recent-history entry.
 
@@ -119,10 +119,6 @@ flowchart TD
     store[useTrainServicesStore]
     pipeline[getDashboardJourneys]
     active[getActiveSchedule]
-    scheduled[getJourneyForSchedule]
-    recent[getRecentJourneys]
-    predicted[getPredictedJourney]
-    selected[getActiveJourney]
     switcher[JourneySwitcher.vue]
     ephemeralForm[EphemeralJourneyForm.vue]
     maker[JourneyMaker.vue]
@@ -151,14 +147,9 @@ flowchart TD
     dashboard --> store
     store --> pipeline
     store --> selectionStore
-    store --> active
-    store --> predicted
-    pipeline --> active
-    pipeline --> predicted
-    pipeline --> selected
+    selectionStore --> active
+    selectionStore --> configStore
     pipeline --> routes
-    predicted --> scheduled
-    predicted --> recent
     routes --> stations
     routes --> options
 
@@ -174,15 +165,13 @@ flowchart TD
     pipeline --> recommended
 
     dashboard --> switcher
-    switcher --> store
+    switcher --> selectionStore
     switcher --> ephemeralForm
     ephemeralForm --> maker
     maker --> stationInput
-    store --> createEphemeral
-    store --> configStore
-    store --> selectionStore
+    selectionStore --> createEphemeral
 
-    store --> missing
+    dashboard --> missing
     dashboard --> timelines
     timelines -->|slice 0, 6| cards
     timelines -->|slice 0, 6| charts
@@ -190,14 +179,13 @@ flowchart TD
 
 ## Source map
 
-- `src/trainDashboard/store/trainServices.store.ts` coordinates each refresh.
-- `src/trainDashboard/store/journeySelection.store.ts` keeps the temporary override and saves recent history.
-- `src/trainDashboard/store/dashboardConfig.store.ts` saves an ephemeral station pair as a configured journey.
-- `src/trainDashboard/dto/journeySelection.dto.ts` defines saved and ephemeral journey selections.
-- `src/trainDashboard/dto/journeyHistory.dto.ts` validates saved and ephemeral recent-history entries.
+- `src/trainDashboard/store/trainServices.store.ts` refreshes train data for the resolved active journey.
+- `src/trainDashboard/store/journeySelection.store.ts` owns prediction, active selection, recent IDs, ephemeral journeys, and switcher groups.
+- `src/trainDashboard/store/dashboardConfig.store.ts` saves a journey in the configuration.
+- `src/trainDashboard/dto/journeySelection.dto.ts` defines active selection and journey-memory shapes.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
-- `src/trainDashboard/journeys/planning/journeySelection.ts` selects recent, predicted, and active journeys.
-- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands configured and ephemeral journeys into station routes.
+- `src/trainDashboard/journeys/planning/journeySelection.ts` selects the active schedule for the current clock.
+- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands journeys into station routes.
 - `src/trainDashboard/journeys/timetable/departureBoards.ts` creates and deduplicates departure-board requests.
 - `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
 - `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains and valid connections.

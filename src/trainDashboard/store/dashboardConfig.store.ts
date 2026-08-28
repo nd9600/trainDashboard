@@ -41,19 +41,17 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         return {success: true, errors: []};
     }
 
-    function saveStationJourney(
-        originCrs: string,
-        destinationCrs: string,
-        viaCrs?: string
-    ): Journey | undefined {
+    function saveJourney(candidate: Journey): Journey | undefined {
         const existingJourney = config.value.journeys.find(
             (journey) =>
                 journey.origin.type === "station" &&
                 journey.origin.groupId === undefined &&
-                journey.origin.crs === originCrs &&
+                candidate.origin.type === "station" &&
+                journey.origin.crs === candidate.origin.crs &&
                 journey.destination.type === "station" &&
                 journey.destination.groupId === undefined &&
-                journey.destination.crs === destinationCrs
+                candidate.destination.type === "station" &&
+                journey.destination.crs === candidate.destination.crs
         );
 
         if (existingJourney) {
@@ -61,10 +59,8 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         }
 
         const journey: Journey = {
-            id: getAvailableJourneyId(originCrs, destinationCrs),
-            origin: {type: "station", crs: originCrs},
-            destination: {type: "station", crs: destinationCrs},
-            viaCrs,
+            ...candidate,
+            id: getAvailableJourneyId(candidate.id),
         };
         const result = saveConfig({
             ...config.value,
@@ -74,11 +70,7 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         return result.success ? journey : undefined;
     }
 
-    function getAvailableJourneyId(
-        originCrs: string,
-        destinationCrs: string
-    ): string {
-        const baseId = `${originCrs}-to-${destinationCrs}`.toLowerCase();
+    function getAvailableJourneyId(baseId: string): string {
         const existingIds = new Set(
             config.value.journeys.map((journey) => journey.id)
         );
@@ -93,5 +85,5 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         return id;
     }
 
-    return {config, saveConfig, saveStationJourney};
+    return {config, saveConfig, saveJourney};
 });

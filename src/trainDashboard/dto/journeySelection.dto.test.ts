@@ -10,12 +10,23 @@ describe("createEphemeralJourney", () => {
         });
 
         expect(journey).toEqual({
-            type: "ephemeral",
-            id: "ephemeral:MAN-LIV",
+            id: "man-to-liv",
             origin: {type: "station", crs: "MAN"},
             destination: {type: "station", crs: "LIV"},
             viaCrs: "CRE",
         });
+    });
+
+    it("allocates a configured journey ID", () => {
+        const journey = createEphemeralJourney(
+            {
+                origin: {type: "station", crs: "MAN"},
+                destination: {type: "station", crs: "LIV"},
+            },
+            ["man-to-liv", "man-to-liv-2"]
+        );
+
+        expect(journey?.id).toBe("man-to-liv-3");
     });
 
     it("rejects location groups and matching stations", () => {

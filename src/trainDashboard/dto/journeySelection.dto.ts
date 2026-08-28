@@ -2,6 +2,7 @@ import {z} from "zod";
 import {
     crsCodeSchema,
     journeyFieldsSchema,
+    journeySchema,
     type Journey,
     type JourneyFields,
 } from "./dashboardConfig.dto";
@@ -11,51 +12,67 @@ const stationLocationSchema = z.object({
     crs: crsCodeSchema,
 });
 
-export const ephemeralJourneySchema = journeyFieldsSchema
+const ephemeralJourneyFieldsSchema = journeyFieldsSchema
     .extend({
-        type: z.literal("ephemeral"),
         origin: stationLocationSchema,
         destination: stationLocationSchema,
     })
-    .transform((journey) => ({
-        ...journey,
-        id: getEphemeralJourneyId(journey.origin.crs, journey.destination.crs),
-    }));
+    .refine((journey) => journey.origin.crs !== journey.destination.crs);
 
-export type EphemeralJourney = z.output<typeof ephemeralJourneySchema>;
-export type JourneySelection = Journey | EphemeralJourney;
+const ephemeralJourneySchema = journeySchema.extend({
+    origin: stationLocationSchema,
+    destination: stationLocationSchema,
+});
+type StationJourney = z.output<typeof ephemeralJourneySchema>;
+
+export const journeyMemorySchema = z.object({
+    recentJourneyIds: z.array(z.string().min(1)).max(50),
+    ephemeralJourneys: z.array(ephemeralJourneySchema),
+});
+
+export type JourneyMemory = z.output<typeof journeyMemorySchema>;
+
+export type ActiveJourney =
+    | {type: "predicted"}
+    | {type: "saved"; id: string}
+    | {type: "ephemeral"; id: string};
+
+export interface JourneyChoiceGroup {
+    name: "Predicted" | "Recent" | "Saved";
+    journeys: Journey[];
+}
 
 export function createEphemeralJourney(
-    journey: JourneyFields
-): EphemeralJourney | undefined {
-    const result = ephemeralJourneySchema.safeParse({
-        type: "ephemeral",
-        ...journey,
-    });
+    fields: JourneyFields,
+    existingJourneyIds: Iterable<string> = []
+): StationJourney | undefined {
+    const result = ephemeralJourneyFieldsSchema.safeParse(fields);
 
-    if (
-        !result.success ||
-        result.data.origin.crs === result.data.destination.crs
-    ) {
+    if (!result.success) {
         return undefined;
     }
 
-    return result.data;
+    return {
+        id: getAvailableJourneyId(
+            `${result.data.origin.crs}-to-${result.data.destination.crs}`.toLowerCase(),
+            existingJourneyIds
+        ),
+        ...result.data,
+    };
 }
 
-export function isEphemeralJourney(
-    journey: JourneySelection | undefined
-): journey is EphemeralJourney {
-    return (
-        journey !== undefined &&
-        "type" in journey &&
-        journey.type === "ephemeral"
-    );
-}
-
-function getEphemeralJourneyId(
-    originCrs: string,
-    destinationCrs: string
+function getAvailableJourneyId(
+    baseId: string,
+    existingJourneyIds: Iterable<string>
 ): string {
-    return `ephemeral:${originCrs}-${destinationCrs}`;
+    const existingIds = new Set(existingJourneyIds);
+    let id = baseId;
+    let suffix = 2;
+
+    while (existingIds.has(id)) {
+        id = `${baseId}-${suffix}`;
+        suffix += 1;
+    }
+
+    return id;
 }

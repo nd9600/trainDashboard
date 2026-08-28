@@ -1,16 +1,6 @@
-import type {
-    DashboardConfig,
-    DisplaySchedule,
-} from "../dto/dashboardConfig.dto";
+import type {Journey, StationGroup} from "../dto/dashboardConfig.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
-import type {JourneyHistoryEntry} from "../dto/journeyHistory.dto";
-import type {JourneySelection} from "../dto/journeySelection.dto";
-import {
-    type CurrentClock,
-    getActiveJourney,
-    getActiveSchedule,
-    getPredictedJourney,
-} from "./planning/journeySelection";
+import type {CurrentClock} from "./planning/journeySelection";
 import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";
 import {getDepartureBoards} from "./timetable/departureBoards";
 import {getTrainOptions} from "./timetable/trainOptions";
@@ -22,46 +12,20 @@ import {
 } from "./timetable/timetabledJourneys";
 
 export interface DashboardJourneys {
-    activeSchedule: DisplaySchedule | undefined;
-    activeJourneyId: string | undefined;
     routes: JourneyRoute[];
     journeys: TimetabledJourney[];
 }
 
-export interface DashboardJourneySelection {
-    temporaryJourney?: JourneySelection;
-    recentJourneyHistory?: JourneyHistoryEntry[];
-}
-
 export async function getDashboardJourneys(
-    config: DashboardConfig,
+    journey: Journey | undefined,
+    stationGroups: StationGroup[],
     currentClock: CurrentClock,
-    consumerKey: string,
-    selection: DashboardJourneySelection = {}
+    consumerKey: string
 ): Promise<DashboardJourneys> {
-    const activeSchedule = getActiveSchedule(config.schedules, currentClock);
-    const predictedJourney = getPredictedJourney(
-        config.journeys,
-        activeSchedule,
-        selection.recentJourneyHistory ?? []
-    );
-    const activeJourney = getActiveJourney(
-        predictedJourney,
-        selection.temporaryJourney
-    );
-
-    const routes = getStationRoutes(
-        activeJourney ? [activeJourney] : [],
-        config.stationGroups
-    );
+    const routes = getStationRoutes(journey ? [journey] : [], stationGroups);
 
     if (!consumerKey) {
-        return {
-            activeSchedule,
-            activeJourneyId: activeJourney?.id,
-            routes,
-            journeys: [],
-        };
+        return {routes, journeys: []};
     }
 
     const departureBoards = await getDepartureBoards(consumerKey, routes);
@@ -78,8 +42,6 @@ export async function getDashboardJourneys(
     const journeysSortedByArrival = sortJourneysByArrival(catchableJourneys);
 
     return {
-        activeSchedule,
-        activeJourneyId: activeJourney?.id,
         routes,
         journeys: markRecommendedJourney(journeysSortedByArrival),
     };

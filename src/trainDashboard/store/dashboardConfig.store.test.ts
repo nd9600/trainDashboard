@@ -13,8 +13,13 @@ describe("useDashboardConfigStore", () => {
         const store = useDashboardConfigStore();
         store.saveConfig(manchesterDashboardConfig);
 
-        const firstResult = store.saveStationJourney("MAN", "LIV");
-        const secondResult = store.saveStationJourney("MAN", "LIV");
+        const journey = {
+            id: "man-to-liv",
+            origin: {type: "station" as const, crs: "MAN"},
+            destination: {type: "station" as const, crs: "LIV"},
+        };
+        const firstResult = store.saveJourney(journey);
+        const secondResult = store.saveJourney(journey);
 
         expect(firstResult).toEqual({
             id: "man-to-liv",
@@ -33,7 +38,12 @@ describe("useDashboardConfigStore", () => {
         const store = useDashboardConfigStore();
         store.saveConfig(manchesterDashboardConfig);
 
-        const result = store.saveStationJourney("MAN", "LIV", "CRE");
+        const result = store.saveJourney({
+            id: "man-to-liv",
+            origin: {type: "station", crs: "MAN"},
+            destination: {type: "station", crs: "LIV"},
+            viaCrs: "CRE",
+        });
 
         expect(result).toMatchObject({
             origin: {type: "station", crs: "MAN"},

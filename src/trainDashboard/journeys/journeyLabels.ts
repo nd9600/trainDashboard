@@ -4,7 +4,6 @@ import type {
     StationGroup,
 } from "../dto/dashboardConfig.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
-import type {JourneySelection} from "../dto/journeySelection.dto";
 import type {JourneyRoute} from "./planning/journeyRoutes";
 import {stationName} from "../stations/stations";
 
@@ -31,13 +30,6 @@ export function getJourneyLabelDetails(
         destination: getEndpointDetails(journey.destination, stationGroupsById),
         connectingStationCrs: journey.viaCrs,
     };
-}
-
-export function getJourneySelectionLabelDetails(
-    journey: JourneySelection,
-    stationGroups: StationGroup[]
-): JourneyLabelDetails {
-    return getJourneyLabelDetails(journey, stationGroups);
 }
 
 export function getRouteLabelDetails(route: JourneyRoute): JourneyLabelDetails {

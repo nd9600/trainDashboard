@@ -1,8 +1,8 @@
 import type {
+    Journey,
     LocationReference,
     StationGroup,
 } from "../../dto/dashboardConfig.dto";
-import {type JourneySelection} from "../../dto/journeySelection.dto";
 import {stationName} from "../../stations/stations";
 
 export interface StationEndpoint {
@@ -20,7 +20,7 @@ export interface JourneyRoute {
 }
 
 export function getStationRoutes(
-    journeys: JourneySelection[],
+    journeys: Journey[],
     stationGroups: StationGroup[]
 ): JourneyRoute[] {
     const stationGroupsById = new Map(
@@ -48,7 +48,7 @@ export function getStationRoutes(
 }
 
 function getRouteOptions(
-    journey: JourneySelection,
+    journey: Journey,
     origin: StationEndpoint,
     destination: StationEndpoint
 ): JourneyRoute[] {

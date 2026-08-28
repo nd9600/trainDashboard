@@ -1,168 +1,219 @@
-import {beforeEach, describe, expect, it, vi} from "vitest";
 import {createPinia, setActivePinia} from "pinia";
-import {createEphemeralJourney} from "../dto/journeySelection.dto";
+import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import type {DashboardConfig, JourneyFields} from "../dto/dashboardConfig.dto";
 import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
+import {useDashboardConfigStore} from "./dashboardConfig.store";
 import {useJourneySelectionStore} from "./journeySelection.store";
 
 const predictedJourney = manchesterDashboardConfig.journeys[0]!;
 const savedJourney = manchesterDashboardConfig.journeys[2]!;
+const manchesterToLiverpool: JourneyFields = {
+    origin: {type: "station", crs: "MAN"},
+    destination: {type: "station", crs: "LIV"},
+};
 
 describe("useJourneySelectionStore", () => {
     beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-08-24T07:00:00.000Z"));
         vi.stubGlobal("localStorage", new MemoryStorage());
         setActivePinia(createPinia());
+        useDashboardConfigStore().saveConfig(manchesterDashboardConfig);
     });
 
-    it("keeps an override in memory and records the selection", () => {
+    afterEach(() => {
+        vi.clearAllTimers();
+        vi.useRealTimers();
+    });
+
+    it("starts with the scheduled prediction", () => {
         const store = useJourneySelectionStore();
 
-        store.selectJourney(
-            savedJourney,
-            predictedJourney.id,
-            predictedJourney,
-            new Date("2026-08-27T08:00:00.000Z")
-        );
+        expect(store.predictedJourneyId).toBe(predictedJourney.id);
+        expect(store.activeJourney).toEqual({type: "predicted"});
+        expect(store.activeJourneyDetails).toEqual(predictedJourney);
+    });
 
-        expect(store.temporaryJourney).toEqual(savedJourney);
-        expect(store.recentJourneyHistory).toEqual([
+    it("records a saved override as one recent journey ID", () => {
+        const store = useJourneySelectionStore();
+
+        store.selectJourney(savedJourney.id);
+        store.selectJourney(savedJourney.id);
+
+        expect(store.activeJourney).toEqual({
+            type: "saved",
+            id: savedJourney.id,
+        });
+        expect(store.recentJourneyIds).toEqual([savedJourney.id]);
+    });
+
+    it("groups each journey once for the switcher", () => {
+        const store = useJourneySelectionStore();
+
+        store.selectJourney(savedJourney.id);
+
+        expect(store.journeyChoices).toEqual([
+            {name: "Predicted", journeys: [predictedJourney]},
+            {name: "Recent", journeys: [savedJourney]},
             {
-                type: "saved",
-                journeyId: savedJourney.id,
-                selectedAt: "2026-08-27T08:00:00.000Z",
+                name: "Saved",
+                journeys: manchesterDashboardConfig.journeys.filter(
+                    (journey) =>
+                        journey.id !== predictedJourney.id &&
+                        journey.id !== savedJourney.id
+                ),
             },
         ]);
     });
 
     it("restores prediction after the store is recreated", () => {
         const firstStore = useJourneySelectionStore();
-        firstStore.selectJourney(
-            savedJourney,
-            predictedJourney.id,
-            predictedJourney,
-            new Date("2026-08-27T08:00:00.000Z")
-        );
+        firstStore.selectJourney(savedJourney.id);
 
-        setActivePinia(createPinia());
+        recreateStores();
         const restoredStore = useJourneySelectionStore();
 
-        expect(restoredStore.temporaryJourney).toBeUndefined();
-        expect(restoredStore.recentJourneyHistory).toHaveLength(1);
+        expect(restoredStore.activeJourney).toEqual({type: "predicted"});
+        expect(restoredStore.recentJourneyIds).toEqual([savedJourney.id]);
     });
 
-    it("ends an override when the predicted journey is selected", () => {
+    it("stores an ephemeral journey in the same format as saved journeys", () => {
         const store = useJourneySelectionStore();
-        store.selectJourney(savedJourney, predictedJourney.id);
 
-        store.selectJourney(predictedJourney, predictedJourney.id);
+        store.selectEphemeralJourney(manchesterToLiverpool);
 
-        expect(store.temporaryJourney).toBeUndefined();
-        expect(store.recentJourneyHistory[0]).toMatchObject({
-            type: "saved",
-            journeyId: predictedJourney.id,
+        expect(store.activeJourney).toEqual({
+            type: "ephemeral",
+            id: "man-to-liv",
         });
+        expect(store.activeJourneyDetails).toEqual({
+            id: "man-to-liv",
+            ...manchesterToLiverpool,
+        });
+        expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
     });
 
-    it("keeps an ephemeral journey in history after the store is recreated", () => {
-        const journey = createTestEphemeralJourney("MAN", "LIV");
+    it("uses a recent ephemeral journey as the next page prediction", () => {
+        useDashboardConfigStore().saveConfig(getConfigWithoutActiveSchedule());
         const firstStore = useJourneySelectionStore();
-        firstStore.selectJourney(
-            journey,
-            predictedJourney.id,
-            predictedJourney,
-            new Date("2026-08-27T08:00:00.000Z")
-        );
+        firstStore.selectEphemeralJourney(manchesterToLiverpool);
 
-        setActivePinia(createPinia());
+        recreateStores();
         const restoredStore = useJourneySelectionStore();
 
-        expect(restoredStore.temporaryJourney).toBeUndefined();
-        expect(restoredStore.recentJourneyHistory).toEqual([
-            {
-                type: "ephemeral",
-                journey,
-                selectedAt: "2026-08-27T08:00:00.000Z",
-            },
-        ]);
+        expect(restoredStore.activeJourney).toEqual({type: "predicted"});
+        expect(restoredStore.predictedJourneyId).toBe("man-to-liv");
+        expect(restoredStore.activeJourneyDetails).toEqual({
+            id: "man-to-liv",
+            ...manchesterToLiverpool,
+        });
+        expect(restoredStore.activeJourneyIsEphemeral).toBe(true);
     });
 
-    it("replaces an ephemeral history entry when the journey is saved", () => {
-        const journey = createTestEphemeralJourney("MAN", "LIV");
+    it("saves an ephemeral journey without changing its ID", () => {
         const store = useJourneySelectionStore();
-        store.selectJourney(journey, predictedJourney.id, predictedJourney);
+        store.selectEphemeralJourney(manchesterToLiverpool);
 
-        store.markEphemeralJourneySaved(journey, savedJourney);
+        store.saveActiveJourney();
 
-        expect(store.temporaryJourney).toEqual(savedJourney);
-        expect(store.recentJourneyHistory[0]).toMatchObject({
+        expect(store.activeJourney).toEqual({
             type: "saved",
-            journeyId: savedJourney.id,
+            id: "man-to-liv",
         });
+        expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
+        expect(store.activeJourneyIsEphemeral).toBe(false);
+        expect(
+            useDashboardConfigStore().config.journeys.find(
+                (journey) => journey.id === "man-to-liv"
+            )
+        ).toEqual({id: "man-to-liv", ...manchesterToLiverpool});
+    });
+
+    it("saves a predicted ephemeral journey without creating an override", () => {
+        useDashboardConfigStore().saveConfig(getConfigWithoutActiveSchedule());
+        useJourneySelectionStore().selectEphemeralJourney(
+            manchesterToLiverpool
+        );
+        recreateStores();
+        const store = useJourneySelectionStore();
+
+        store.saveActiveJourney();
+
+        expect(store.activeJourney).toEqual({type: "predicted"});
+        expect(store.activeJourneyIsEphemeral).toBe(false);
     });
 
     it("clears an ephemeral journey back to the prediction", () => {
-        const journey = createTestEphemeralJourney("MAN", "LIV");
         const store = useJourneySelectionStore();
-        store.selectJourney(journey, predictedJourney.id, predictedJourney);
+        store.selectEphemeralJourney(manchesterToLiverpool);
 
-        store.clearEphemeralJourney(predictedJourney.id);
+        store.clearActiveJourney();
 
-        expect(store.temporaryJourney).toBeUndefined();
-        expect(store.recentJourneyHistory[0]).toMatchObject({
-            type: "ephemeral",
-            journey,
+        expect(store.activeJourney).toEqual({type: "predicted"});
+        expect(store.activeJourneyDetails).toEqual(predictedJourney);
+        expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
+    });
+
+    it("clears an ephemeral journey back to the previous saved override", () => {
+        const store = useJourneySelectionStore();
+        store.selectJourney(savedJourney.id);
+        store.selectEphemeralJourney(manchesterToLiverpool);
+
+        store.clearActiveJourney();
+
+        expect(store.activeJourney).toEqual({
+            type: "saved",
+            id: savedJourney.id,
         });
     });
 
-    it("clears an ephemeral journey back to the previous override", () => {
-        const journey = createTestEphemeralJourney("MAN", "LIV");
+    it("restores the old prediction as an override when prediction changes", () => {
         const store = useJourneySelectionStore();
-        store.selectJourney(
-            savedJourney,
-            predictedJourney.id,
-            predictedJourney
-        );
-        store.selectJourney(journey, predictedJourney.id, savedJourney);
+        store.selectEphemeralJourney(manchesterToLiverpool);
+        const config = structuredClone(manchesterDashboardConfig);
+        config.schedules[0]!.journeyId = config.journeys[1]!.id;
+        useDashboardConfigStore().saveConfig(config);
 
-        store.clearEphemeralJourney(predictedJourney.id);
+        store.clearActiveJourney();
 
-        expect(store.temporaryJourney).toEqual(savedJourney);
-    });
-
-    it("restores the previous prediction after the prediction changes", () => {
-        const journey = createTestEphemeralJourney("MAN", "LIV");
-        const nextPrediction = manchesterDashboardConfig.journeys[1]!;
-        const store = useJourneySelectionStore();
-        store.selectJourney(journey, predictedJourney.id, predictedJourney);
-
-        store.clearEphemeralJourney(nextPrediction.id);
-
-        expect(store.temporaryJourney).toEqual(predictedJourney);
+        expect(store.activeJourney).toEqual({
+            type: "saved",
+            id: predictedJourney.id,
+        });
     });
 
     it("clears consecutive ephemeral journeys in selection order", () => {
-        const firstJourney = createTestEphemeralJourney("MAN", "LIV");
-        const secondJourney = createTestEphemeralJourney("EDY", "LIV");
         const store = useJourneySelectionStore();
-        store.selectJourney(
-            firstJourney,
-            predictedJourney.id,
-            predictedJourney
-        );
-        store.selectJourney(secondJourney, predictedJourney.id, firstJourney);
+        store.selectEphemeralJourney(manchesterToLiverpool);
+        store.selectEphemeralJourney({
+            origin: {type: "station", crs: "EDY"},
+            destination: {type: "station", crs: "LIV"},
+        });
 
-        store.clearEphemeralJourney(predictedJourney.id);
-        expect(store.temporaryJourney).toEqual(firstJourney);
+        store.clearActiveJourney();
+        expect(store.activeJourney).toEqual({
+            type: "ephemeral",
+            id: "man-to-liv",
+        });
 
-        store.clearEphemeralJourney(predictedJourney.id);
-        expect(store.temporaryJourney).toBeUndefined();
+        store.clearActiveJourney();
+        expect(store.activeJourney).toEqual({type: "predicted"});
     });
 });
 
-function createTestEphemeralJourney(originCrs: string, destinationCrs: string) {
-    return createEphemeralJourney({
-        origin: {type: "station", crs: originCrs},
-        destination: {type: "station", crs: destinationCrs},
-    })!;
+function recreateStores(): void {
+    setActivePinia(createPinia());
+}
+
+function getConfigWithoutActiveSchedule(): DashboardConfig {
+    const config = structuredClone(manchesterDashboardConfig);
+    config.schedules = [
+        {
+            ...config.schedules[0]!,
+            days: [2],
+        },
+    ];
+    return config;
 }
 
 class MemoryStorage implements Storage {
