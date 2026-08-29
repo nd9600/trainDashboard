@@ -7,11 +7,11 @@ Current time
       ↓
 Active schedule
       ↓
-Scheduled journey ID, or most recent valid journey ID
+Scheduled journey ID
       ↓
 Predicted journey ID
       ↓
-Active selection: predicted, saved ID, or ephemeral ID
+Active selection: predicted, saved ID, or current ephemeral journey
       ↓
 Resolved active journey
       ↓
@@ -93,20 +93,20 @@ sequenceDiagram
     opt Clear a station-to-station journey
         UI->>Switcher: Select Clear
         Switcher->>Selection: clearActiveJourney()
-        Selection-->>Store: Restore the previous active journey
+        Selection-->>Store: Restore the current predicted journey
         Store->>Pipeline: Refresh the active journey
     end
 ```
 
 A station-pair request occurs only once during each planning request.
 
-A matching schedule supplies the predicted journey. If no schedule matches, the most recent valid journey supplies the prediction.
+A matching schedule supplies the predicted journey. If no schedule matches, there is no predicted journey.
 
-The prediction uses the history loaded when the page starts. A new selection remains a temporary override during that page session.
+Recent history does not affect prediction. A new selection remains a temporary override during that page session.
 
 The selection store starts with explicit empty state. The train-services store calls `initialise()` before its first refresh. The action loads memory once.
 
-The selection immediately appears in the Recent section. A page refresh can use it as the recent-history prediction.
+The selection immediately appears in the Recent section. A page refresh restores the current schedule prediction.
 
 Saved and ephemeral journeys use the same `Journey` shape. An ephemeral journey uses station endpoints and can include one connecting station.
 
@@ -114,7 +114,7 @@ The Save action adds the same journey to the configuration. Its ID stays the sam
 
 Recent history contains journey IDs only. Ephemeral journey definitions remain in journey memory while a recent or active selection refers to them.
 
-The Clear action restores the journey that was active before the ephemeral journey. It does not add another recent-history entry.
+The Clear action restores the current schedule prediction. It does not add another recent-history entry.
 
 Connection options that use the same first train are shown as one journey. The option that arrives first remains visible. Other onward trains appear as alternatives on the second leg.
 

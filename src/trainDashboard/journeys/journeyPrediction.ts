@@ -1,4 +1,4 @@
-import type {Day, DisplaySchedule, Journey} from "../dto/dashboardConfig.dto";
+import type {Day, DisplaySchedule} from "../dto/dashboardConfig.dto";
 import {timeToMinutes} from "../dto/dashboardConfig.dto";
 
 export interface CurrentClock {
@@ -13,8 +13,6 @@ export interface JourneyPrediction {
 
 export function getJourneyPrediction(
     schedules: DisplaySchedule[],
-    journeys: Journey[],
-    recentJourneyIds: string[],
     currentClock: CurrentClock
 ): JourneyPrediction {
     const activeSchedule = schedules.find(
@@ -23,12 +21,8 @@ export function getJourneyPrediction(
             currentClock.minutes >= timeToMinutes(schedule.startsAt) &&
             currentClock.minutes < timeToMinutes(schedule.endsAt)
     );
-    const journeyIds = new Set(journeys.map((journey) => journey.id));
-    const scheduledJourneyId = activeSchedule?.journeyId;
-    const predictedJourneyId =
-        scheduledJourneyId && journeyIds.has(scheduledJourneyId)
-            ? scheduledJourneyId
-            : recentJourneyIds.find((journeyId) => journeyIds.has(journeyId));
-
-    return {activeSchedule, predictedJourneyId};
+    return {
+        activeSchedule,
+        predictedJourneyId: activeSchedule?.journeyId,
+    };
 }

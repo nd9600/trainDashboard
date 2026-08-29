@@ -218,12 +218,7 @@ describe("journey planning", () => {
 });
 
 function getJourneyPlan(config: DashboardConfig, currentClock: CurrentClock) {
-    const prediction = getJourneyPrediction(
-        config.schedules,
-        config.journeys,
-        [],
-        currentClock
-    );
+    const prediction = getJourneyPrediction(config.schedules, currentClock);
     const configuredJourney = config.journeys.find(
         (journey) => journey.id === prediction.predictedJourneyId
     );

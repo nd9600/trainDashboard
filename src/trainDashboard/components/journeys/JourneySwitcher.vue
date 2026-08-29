@@ -99,7 +99,7 @@
             </ListboxOption>
         </ListboxOptions>
 
-        <div v-if="activeJourneyIsEphemeral">
+        <div v-if="activeJourney.type === 'ephemeral'">
             <button
                 class="appButton appButton--quiet px-0 py-1 text-xs text-primary"
                 type="button"
@@ -108,7 +108,6 @@
                 Save
             </button>
             <button
-                v-if="activeJourney.type === 'ephemeral'"
                 class="appButton appButton--quiet px-0 py-1 text-xs text-secondary"
                 type="button"
                 @click="clearActiveJourney"
@@ -153,7 +152,6 @@ const {
     activeJourneyId,
     activeJourney,
     activeJourneyDetails,
-    activeJourneyIsEphemeral,
     activeSchedule,
     journeyChoices,
 } = storeToRefs(journeySelectionStore);

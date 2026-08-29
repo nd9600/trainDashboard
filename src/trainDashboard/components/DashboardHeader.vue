@@ -63,9 +63,7 @@ const dashboardClockStore = useDashboardClockStore();
 const journeySelectionStore = useJourneySelectionStore();
 const {isLoadingJourneys, journeys, recommendedJourney} =
     storeToRefs(trainServicesStore);
-const {activeJourneyIsEphemeral, activeJourneyId} = storeToRefs(
-    journeySelectionStore
-);
+const {activeJourney, activeJourneyId} = storeToRefs(journeySelectionStore);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 
 const headerJourney = computed(
@@ -83,7 +81,7 @@ const leaveInString = computed(() => {
     if (isLoadingJourneys.value) {
         return "Finding trains…";
     }
-    if (activeJourneyIsEphemeral.value) {
+    if (activeJourney.value.type === "ephemeral") {
         if (!headerJourney.value) {
             return "No trains found";
         }

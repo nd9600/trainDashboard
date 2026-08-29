@@ -40,16 +40,14 @@ describe("useJourneySelectionStore", () => {
             isInitialised: false,
             recentJourneyIds: [],
             ephemeralJourneys: [],
-            predictionRecentJourneyIds: [],
+            currentEphemeralJourney: undefined,
             activeJourney: {type: "predicted"},
-            previousActiveJourneys: [],
         });
 
         store.initialise();
 
         expect(store.isInitialised).toBe(true);
         expect(store.recentJourneyIds).toEqual([savedJourney.id]);
-        expect(store.predictionRecentJourneyIds).toEqual([savedJourney.id]);
     });
 
     it("starts with the scheduled prediction", () => {
@@ -70,6 +68,16 @@ describe("useJourneySelectionStore", () => {
             type: "saved",
             id: savedJourney.id,
         });
+        expect(store.recentJourneyIds).toEqual([savedJourney.id]);
+    });
+
+    it("does not add the prediction to recent history", () => {
+        const store = getJourneySelectionStore();
+        store.selectJourney(savedJourney.id);
+
+        store.selectJourney(predictedJourney.id);
+
+        expect(store.activeJourney).toEqual({type: "predicted"});
         expect(store.recentJourneyIds).toEqual([savedJourney.id]);
     });
 
@@ -110,7 +118,10 @@ describe("useJourneySelectionStore", () => {
 
         expect(store.activeJourney).toEqual({
             type: "ephemeral",
+        });
+        expect(store.currentEphemeralJourney).toEqual({
             id: "man-to-liv",
+            ...manchesterToLiverpool,
         });
         expect(store.activeJourneyDetails).toEqual({
             id: "man-to-liv",
@@ -119,7 +130,7 @@ describe("useJourneySelectionStore", () => {
         expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
     });
 
-    it("uses a recent ephemeral journey as the next page prediction", () => {
+    it("does not use recent history as a prediction", () => {
         useDashboardConfigStore().saveConfig(getConfigWithoutActiveSchedule());
         const firstStore = getJourneySelectionStore();
         firstStore.selectEphemeralJourney(manchesterToLiverpool);
@@ -128,12 +139,13 @@ describe("useJourneySelectionStore", () => {
         const restoredStore = getJourneySelectionStore();
 
         expect(restoredStore.activeJourney).toEqual({type: "predicted"});
-        expect(restoredStore.predictedJourneyId).toBe("man-to-liv");
-        expect(restoredStore.activeJourneyDetails).toEqual({
-            id: "man-to-liv",
-            ...manchesterToLiverpool,
+        expect(restoredStore.predictedJourneyId).toBeUndefined();
+        expect(restoredStore.activeJourneyDetails).toBeUndefined();
+        expect(restoredStore.recentJourneyIds).toEqual(["man-to-liv"]);
+        expect(restoredStore.journeyChoices[0]).toEqual({
+            name: "Recent",
+            journeys: [{id: "man-to-liv", ...manchesterToLiverpool}],
         });
-        expect(restoredStore.activeJourneyIsEphemeral).toBe(true);
     });
 
     it("saves an ephemeral journey without changing its ID", () => {
@@ -147,7 +159,8 @@ describe("useJourneySelectionStore", () => {
             id: "man-to-liv",
         });
         expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
-        expect(store.activeJourneyIsEphemeral).toBe(false);
+        expect(store.activeJourney.type).toBe("saved");
+        expect(store.currentEphemeralJourney).toBeUndefined();
         expect(
             useDashboardConfigStore().config.journeys.find(
                 (journey) => journey.id === "man-to-liv"
@@ -155,7 +168,7 @@ describe("useJourneySelectionStore", () => {
         ).toEqual({id: "man-to-liv", ...manchesterToLiverpool});
     });
 
-    it("saves a predicted ephemeral journey without creating an override", () => {
+    it("selects a recent ephemeral journey after a page refresh", () => {
         useDashboardConfigStore().saveConfig(getConfigWithoutActiveSchedule());
         getJourneySelectionStore().selectEphemeralJourney(
             manchesterToLiverpool
@@ -163,13 +176,16 @@ describe("useJourneySelectionStore", () => {
         recreateStores();
         const store = getJourneySelectionStore();
 
-        store.saveActiveJourney();
+        store.selectJourney("man-to-liv");
 
-        expect(store.activeJourney).toEqual({type: "predicted"});
-        expect(store.activeJourneyIsEphemeral).toBe(false);
+        expect(store.activeJourney).toEqual({type: "ephemeral"});
+        expect(store.currentEphemeralJourney).toEqual({
+            id: "man-to-liv",
+            ...manchesterToLiverpool,
+        });
     });
 
-    it("clears an ephemeral journey back to the prediction", () => {
+    it("clears to the prediction instead of the previous saved override", () => {
         const store = getJourneySelectionStore();
         store.selectEphemeralJourney(manchesterToLiverpool);
 
@@ -180,20 +196,19 @@ describe("useJourneySelectionStore", () => {
         expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
     });
 
-    it("clears an ephemeral journey back to the previous saved override", () => {
+    it("clears an ephemeral journey back to the prediction", () => {
         const store = getJourneySelectionStore();
         store.selectJourney(savedJourney.id);
         store.selectEphemeralJourney(manchesterToLiverpool);
 
         store.clearActiveJourney();
 
-        expect(store.activeJourney).toEqual({
-            type: "saved",
-            id: savedJourney.id,
-        });
+        expect(store.activeJourney).toEqual({type: "predicted"});
+        expect(store.activeJourneyDetails).toEqual(predictedJourney);
+        expect(store.currentEphemeralJourney).toBeUndefined();
     });
 
-    it("restores the old prediction as an override when prediction changes", () => {
+    it("clears an override to the current prediction", () => {
         const store = getJourneySelectionStore();
         store.selectEphemeralJourney(manchesterToLiverpool);
         const config = structuredClone(manchesterDashboardConfig);
@@ -202,13 +217,11 @@ describe("useJourneySelectionStore", () => {
 
         store.clearActiveJourney();
 
-        expect(store.activeJourney).toEqual({
-            type: "saved",
-            id: predictedJourney.id,
-        });
+        expect(store.activeJourney).toEqual({type: "predicted"});
+        expect(store.activeJourneyDetails).toEqual(config.journeys[1]);
     });
 
-    it("clears consecutive ephemeral journeys in selection order", () => {
+    it("clears consecutive ephemeral journeys directly to the prediction", () => {
         const store = getJourneySelectionStore();
         store.selectEphemeralJourney(manchesterToLiverpool);
         store.selectEphemeralJourney({
@@ -217,13 +230,8 @@ describe("useJourneySelectionStore", () => {
         });
 
         store.clearActiveJourney();
-        expect(store.activeJourney).toEqual({
-            type: "ephemeral",
-            id: "man-to-liv",
-        });
-
-        store.clearActiveJourney();
         expect(store.activeJourney).toEqual({type: "predicted"});
+        expect(store.clearActiveJourney()).toBe(false);
     });
 });
 

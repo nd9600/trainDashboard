@@ -30,9 +30,7 @@ export const JourneyMemorySchema = z.object({
 export type JourneyMemory = z.infer<typeof JourneyMemorySchema>;
 
 export type ActiveJourney =
-    | {type: "predicted"}
-    | {type: "saved"; id: string}
-    | {type: "ephemeral"; id: string};
+    {type: "predicted"} | {type: "saved"; id: string} | {type: "ephemeral"};
 
 export interface JourneyChoices {
     name: "Predicted" | "Recent" | "Saved";
