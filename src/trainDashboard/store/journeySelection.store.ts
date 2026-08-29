@@ -7,6 +7,7 @@ import type {
 } from "../dto/dashboardConfig.dto";
 import {
     createEphemeralJourney,
+    hasSameJourneyFields,
     JourneyMemorySchema,
     type ActiveJourney,
     type EphemeralJourney,
@@ -63,45 +64,62 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             return this.currentJourneyPrediction.predictedJourneyId;
         },
 
+        savedJourneyIds(): Set<string> {
+            return new Set(
+                useDashboardConfigStore().config.journeys.map(
+                    (journey) => journey.id
+                )
+            );
+        },
+
+        journeysById(state): Map<string, Journey> {
+            const savedJourneys = useDashboardConfigStore().config.journeys;
+            return new Map(
+                [...state.ephemeralJourneys, ...savedJourneys].map(
+                    (journey) => [journey.id, journey]
+                )
+            );
+        },
+
         activeJourneyId(state): string | undefined {
             return state.activeJourney.type === "predicted"
                 ? this.predictedJourneyId
                 : state.activeJourney.id;
         },
 
-        activeJourneyDetails(state): Journey | undefined {
+        activeJourneyDetails(): Journey | undefined {
             return this.activeJourneyId
-                ? getJourneysById(state).get(this.activeJourneyId)
+                ? this.journeysById.get(this.activeJourneyId)
                 : undefined;
         },
 
         activeJourneyIsEphemeral(): boolean {
             return (
-                this.activeJourneyId !== undefined
-                && !getSavedJourneyIds().has(this.activeJourneyId)
+                this.activeJourneyId !== undefined &&
+                !this.savedJourneyIds.has(this.activeJourneyId)
             );
         },
 
         journeyChoices(state): JourneyChoices[] {
-            const journeysById = getJourneysById(state);
             const predictedJourney = this.predictedJourneyId
-                ? journeysById.get(this.predictedJourneyId)
+                ? this.journeysById.get(this.predictedJourneyId)
                 : undefined;
             const recentJourneys = state.recentJourneyIds
                 .filter((journeyId) => journeyId !== this.predictedJourneyId)
                 .flatMap((journeyId) => {
-                    const journey = journeysById.get(journeyId);
+                    const journey = this.journeysById.get(journeyId);
                     return journey ? [journey] : [];
                 })
                 .slice(0, 3);
             const recentJourneyIds = new Set(
                 recentJourneys.map((journey) => journey.id)
             );
-            const otherSavedJourneys = getSavedJourneys().filter(
-                (journey) =>
-                    journey.id !== this.predictedJourneyId &&
-                    !recentJourneyIds.has(journey.id)
-            );
+            const otherSavedJourneys =
+                useDashboardConfigStore().config.journeys.filter(
+                    (journey) =>
+                        journey.id !== this.predictedJourneyId &&
+                        !recentJourneyIds.has(journey.id)
+                );
             const groups: JourneyChoices[] = [
                 {
                     name: "Predicted",
@@ -133,27 +151,19 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 return false;
             }
 
-            const journeysById = getJourneysById(this);
-
-            if (!journeysById.has(journeyId)) {
+            if (!this.journeysById.has(journeyId)) {
                 return false;
             }
 
-            const savedJourneyIds = getSavedJourneyIds();
             const selection: ActiveJourney =
                 journeyId === this.predictedJourneyId
                     ? {type: "predicted"}
-                    : savedJourneyIds.has(journeyId)
+                    : this.savedJourneyIds.has(journeyId)
                       ? {type: "saved", id: journeyId}
                       : {type: "ephemeral", id: journeyId};
 
-            setActiveJourney(
-                this,
-                selection,
-                this.predictedJourneyId,
-                savedJourneyIds
-            );
-            saveMemory(this);
+            this.setActiveJourney(selection);
+            this.saveMemory();
             return true;
         },
 
@@ -168,28 +178,21 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 return false;
             }
 
-            const journeysById = getJourneysById(this);
-            const existingJourney = [...journeysById.values()].find((journey) =>
-                hasSameJourneyFields(journey, parsedJourney)
+            const existingJourney = [...this.journeysById.values()].find(
+                (journey) => hasSameJourneyFields(journey, parsedJourney)
             );
 
             if (existingJourney) {
                 return this.selectJourney(existingJourney.id);
             }
 
-            const predictedJourneyId = this.predictedJourneyId;
             const journey = createEphemeralJourney(
                 fields,
-                journeysById.keys()
+                this.journeysById.keys()
             )!;
             this.ephemeralJourneys = [...this.ephemeralJourneys, journey];
-            setActiveJourney(
-                this,
-                {type: "ephemeral", id: journey.id},
-                predictedJourneyId,
-                getSavedJourneyIds()
-            );
-            saveMemory(this);
+            this.setActiveJourney({type: "ephemeral", id: journey.id});
+            this.saveMemory();
             return true;
         },
 
@@ -203,7 +206,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             }
 
             const ephemeralJourneyId = this.activeJourneyId;
-            const journey = getJourneysById(this).get(ephemeralJourneyId);
+            const journey = this.journeysById.get(ephemeralJourneyId);
 
             if (!journey) {
                 return false;
@@ -215,15 +218,20 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 return false;
             }
 
-            this.predictionRecentJourneyIds = replaceJourneyId(
-                this.predictionRecentJourneyIds,
-                ephemeralJourneyId,
-                savedJourney.id
+            const replaceEphemeralJourneyId = (journeyIds: string[]) => [
+                ...new Set(
+                    journeyIds.map((journeyId) =>
+                        journeyId === ephemeralJourneyId
+                            ? savedJourney.id
+                            : journeyId
+                    )
+                ),
+            ];
+            this.predictionRecentJourneyIds = replaceEphemeralJourneyId(
+                this.predictionRecentJourneyIds
             );
-            this.recentJourneyIds = replaceJourneyId(
-                this.recentJourneyIds,
-                ephemeralJourneyId,
-                savedJourney.id
+            this.recentJourneyIds = replaceEphemeralJourneyId(
+                this.recentJourneyIds
             );
             this.ephemeralJourneys = this.ephemeralJourneys.filter(
                 (candidate) => candidate.id !== ephemeralJourneyId
@@ -233,7 +241,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 this.activeJourney.type === "predicted"
                     ? {type: "predicted"}
                     : {type: "saved", id: savedJourney.id};
-            saveMemory(this);
+            this.saveMemory();
             return true;
         },
 
@@ -248,157 +256,71 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             const previousJourney = this.previousActiveJourneys.pop() ?? {
                 type: "predicted" as const,
             };
-            this.activeJourney = normaliseActiveJourney(
-                previousJourney,
-                this.predictedJourneyId,
-                getJourneysById(this)
-            );
-            saveMemory(this);
+            this.activeJourney =
+                previousJourney.type === "predicted" ||
+                !this.journeysById.has(previousJourney.id) ||
+                previousJourney.id === this.predictedJourneyId
+                    ? {type: "predicted"}
+                    : previousJourney;
+            this.saveMemory();
             return true;
+        },
+
+        setActiveJourney(selection: ActiveJourney): void {
+            const predictedJourneyId = this.predictedJourneyId;
+            const activeJourneyId =
+                this.activeJourney.type === "predicted"
+                    ? predictedJourneyId
+                    : this.activeJourney.id;
+
+            if (selection.type === "predicted" || selection.type === "saved") {
+                this.previousActiveJourneys = [];
+            } else if (selection.id !== activeJourneyId) {
+                let previousJourney = this.activeJourney;
+
+                if (previousJourney.type === "predicted" && activeJourneyId) {
+                    previousJourney = this.savedJourneyIds.has(activeJourneyId)
+                        ? {type: "saved", id: activeJourneyId}
+                        : {type: "ephemeral", id: activeJourneyId};
+                }
+
+                this.previousActiveJourneys.push({...previousJourney});
+            }
+
+            this.activeJourney = selection;
+            const selectedJourneyId =
+                selection.type === "predicted"
+                    ? predictedJourneyId
+                    : selection.id;
+
+            if (selectedJourneyId) {
+                this.recentJourneyIds = [
+                    selectedJourneyId,
+                    ...this.recentJourneyIds.filter(
+                        (journeyId) => journeyId !== selectedJourneyId
+                    ),
+                ].slice(0, 50);
+            }
+        },
+
+        saveMemory(): void {
+            const retainedJourneyIds = new Set([
+                ...this.predictionRecentJourneyIds,
+                ...this.recentJourneyIds,
+                ...(this.activeJourney.type === "ephemeral"
+                    ? [this.activeJourney.id]
+                    : []),
+                ...this.previousActiveJourneys.flatMap((selection) =>
+                    selection.type === "ephemeral" ? [selection.id] : []
+                ),
+            ]);
+            this.ephemeralJourneys = this.ephemeralJourneys.filter((journey) =>
+                retainedJourneyIds.has(journey.id)
+            );
+            memoryStorage.saveToLocalStorage({
+                recentJourneyIds: this.recentJourneyIds,
+                ephemeralJourneys: this.ephemeralJourneys,
+            });
         },
     },
 });
-
-function getSavedJourneys(): Journey[] {
-    return useDashboardConfigStore().config.journeys;
-}
-
-function getSavedJourneyIds(): Set<string> {
-    return new Set(getSavedJourneys().map((journey) => journey.id));
-}
-
-function getJourneysById(state: JourneySelectionState): Map<string, Journey> {
-    return new Map(
-        [...state.ephemeralJourneys, ...getSavedJourneys()].map((journey) => [
-            journey.id,
-            journey,
-        ])
-    );
-}
-
-function setActiveJourney(
-    state: JourneySelectionState,
-    selection: ActiveJourney,
-    predictedJourneyId: string | undefined,
-    savedJourneyIds: Set<string>
-): void {
-    const activeJourneyId =
-        state.activeJourney.type === "predicted"
-            ? predictedJourneyId
-            : state.activeJourney.id;
-
-    if (selection.type === "predicted" || selection.type === "saved") {
-        state.previousActiveJourneys = [];
-    } else if (selection.id !== activeJourneyId) {
-        state.previousActiveJourneys.push(
-            getRestorableActiveJourney(
-                state.activeJourney,
-                activeJourneyId,
-                savedJourneyIds
-            )
-        );
-    }
-
-    state.activeJourney = selection;
-    const selectedJourneyId =
-        selection.type === "predicted" ? predictedJourneyId : selection.id;
-
-    if (selectedJourneyId) {
-        state.recentJourneyIds = [
-            selectedJourneyId,
-            ...state.recentJourneyIds.filter(
-                (journeyId) => journeyId !== selectedJourneyId
-            ),
-        ].slice(0, 50);
-    }
-}
-
-function getRestorableActiveJourney(
-    activeJourney: ActiveJourney,
-    activeJourneyId: string | undefined,
-    savedJourneyIds: Set<string>
-): ActiveJourney {
-    if (activeJourney.type !== "predicted") {
-        return {...activeJourney};
-    }
-
-    if (!activeJourneyId) {
-        return {type: "predicted"};
-    }
-
-    return savedJourneyIds.has(activeJourneyId)
-        ? {type: "saved", id: activeJourneyId}
-        : {type: "ephemeral", id: activeJourneyId};
-}
-
-function normaliseActiveJourney(
-    activeJourney: ActiveJourney,
-    predictedJourneyId: string | undefined,
-    journeysById: Map<string, Journey>
-): ActiveJourney {
-    if (activeJourney.type === "predicted") {
-        return activeJourney;
-    }
-
-    if (!journeysById.has(activeJourney.id)) {
-        return {type: "predicted"};
-    }
-
-    return activeJourney.id === predictedJourneyId
-        ? {type: "predicted"}
-        : activeJourney;
-}
-
-function hasSameJourneyFields(first: Journey, second: Journey): boolean {
-    return (
-        hasSameLocation(first.origin, second.origin) &&
-        hasSameLocation(first.destination, second.destination) &&
-        first.viaCrs === second.viaCrs
-    );
-}
-
-function hasSameLocation(
-    first: Journey["origin"],
-    second: Journey["origin"]
-): boolean {
-    return (
-        first.type === second.type &&
-        first.groupId === second.groupId &&
-        (first.type === "group" ||
-            (second.type === "station" && first.crs === second.crs))
-    );
-}
-
-function replaceJourneyId(
-    journeyIds: string[],
-    oldJourneyId: string,
-    newJourneyId: string
-): string[] {
-    return [
-        ...new Set(
-            journeyIds.map((journeyId) =>
-                journeyId === oldJourneyId ? newJourneyId : journeyId
-            )
-        ),
-    ];
-}
-
-function saveMemory(state: JourneySelectionState): void {
-    const retainedJourneyIds = new Set([
-        ...state.predictionRecentJourneyIds,
-        ...state.recentJourneyIds,
-        ...(state.activeJourney.type === "ephemeral"
-            ? [state.activeJourney.id]
-            : []),
-        ...state.previousActiveJourneys.flatMap((selection) =>
-            selection.type === "ephemeral" ? [selection.id] : []
-        ),
-    ]);
-    state.ephemeralJourneys = state.ephemeralJourneys.filter((journey) =>
-        retainedJourneyIds.has(journey.id)
-    );
-    memoryStorage.saveToLocalStorage({
-        recentJourneyIds: state.recentJourneyIds,
-        ephemeralJourneys: state.ephemeralJourneys,
-    });
-}

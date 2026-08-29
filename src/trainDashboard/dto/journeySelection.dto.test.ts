@@ -1,5 +1,13 @@
 import {describe, expect, it} from "vitest";
-import {createEphemeralJourney} from "./journeySelection.dto";
+import {
+    createEphemeralJourney,
+    hasSameJourneyFields,
+} from "./journeySelection.dto";
+
+const manchesterToLiverpool = {
+    origin: {type: "station" as const, crs: "MAN"},
+    destination: {type: "station" as const, crs: "LIV"},
+};
 
 describe("createEphemeralJourney", () => {
     it("uses the same journey fields as configured journeys", () => {
@@ -42,5 +50,26 @@ describe("createEphemeralJourney", () => {
                 destination: {type: "station", crs: "MAN"},
             })
         ).toBeUndefined();
+    });
+});
+
+describe("hasSameJourneyFields", () => {
+    it("compares route fields without comparing IDs", () => {
+        expect(
+            hasSameJourneyFields(
+                {id: "saved", ...manchesterToLiverpool},
+                {id: "temporary", ...manchesterToLiverpool}
+            )
+        ).toBe(true);
+        expect(
+            hasSameJourneyFields(
+                {id: "saved", ...manchesterToLiverpool},
+                {
+                    id: "temporary",
+                    ...manchesterToLiverpool,
+                    viaCrs: "CRE",
+                }
+            )
+        ).toBe(false);
     });
 });

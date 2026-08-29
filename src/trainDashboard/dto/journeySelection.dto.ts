@@ -58,6 +58,14 @@ export function createEphemeralJourney(
     };
 }
 
+export function hasSameJourneyFields(first: Journey, second: Journey): boolean {
+    return (
+        hasSameLocation(first.origin, second.origin) &&
+        hasSameLocation(first.destination, second.destination) &&
+        first.viaCrs === second.viaCrs
+    );
+}
+
 function getAvailableJourneyId(
     baseId: string,
     existingJourneyIds: Iterable<string>
@@ -72,4 +80,16 @@ function getAvailableJourneyId(
     }
 
     return id;
+}
+
+function hasSameLocation(
+    first: Journey["origin"],
+    second: Journey["origin"]
+): boolean {
+    return (
+        first.type === second.type &&
+        first.groupId === second.groupId &&
+        (first.type === "group" ||
+            (second.type === "station" && first.crs === second.crs))
+    );
 }
