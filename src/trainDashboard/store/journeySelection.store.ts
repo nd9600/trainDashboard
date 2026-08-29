@@ -10,7 +10,7 @@ import {
     JourneyMemorySchema,
     type ActiveJourney,
     type EphemeralJourney,
-    type JourneyChoiceGroup,
+    type JourneyChoices,
 } from "../dto/journeySelection.dto";
 import {
     getJourneyPrediction,
@@ -45,12 +45,22 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
     }),
 
     getters: {
-        activeSchedule(state): DisplaySchedule | undefined {
-            return getPrediction(state).activeSchedule;
+        currentJourneyPrediction(state): JourneyPrediction {
+            const config = useDashboardConfigStore().config;
+            return getJourneyPrediction(
+                config.schedules,
+                [...state.ephemeralJourneys, ...config.journeys],
+                state.predictionRecentJourneyIds,
+                useDashboardClockStore().currentClock
+            );
         },
 
-        predictedJourneyId(state): string | undefined {
-            return getPrediction(state).predictedJourneyId;
+        activeSchedule(): DisplaySchedule | undefined {
+            return this.currentJourneyPrediction.activeSchedule;
+        },
+
+        predictedJourneyId(): string | undefined {
+            return this.currentJourneyPrediction.predictedJourneyId;
         },
 
         activeJourneyId(state): string | undefined {
@@ -67,12 +77,12 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
 
         activeJourneyIsEphemeral(): boolean {
             return (
-                this.activeJourneyId !== undefined &&
-                !getSavedJourneyIds().has(this.activeJourneyId)
+                this.activeJourneyId !== undefined
+                && !getSavedJourneyIds().has(this.activeJourneyId)
             );
         },
 
-        journeyChoices(state): JourneyChoiceGroup[] {
+        journeyChoices(state): JourneyChoices[] {
             const journeysById = getJourneysById(state);
             const predictedJourney = this.predictedJourneyId
                 ? journeysById.get(this.predictedJourneyId)
@@ -92,7 +102,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                     journey.id !== this.predictedJourneyId &&
                     !recentJourneyIds.has(journey.id)
             );
-            const groups: JourneyChoiceGroup[] = [
+            const groups: JourneyChoices[] = [
                 {
                     name: "Predicted",
                     journeys: predictedJourney ? [predictedJourney] : [],
@@ -248,16 +258,6 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
         },
     },
 });
-
-function getPrediction(state: JourneySelectionState): JourneyPrediction {
-    const config = useDashboardConfigStore().config;
-    return getJourneyPrediction(
-        config.schedules,
-        [...state.ephemeralJourneys, ...config.journeys],
-        state.predictionRecentJourneyIds,
-        useDashboardClockStore().currentClock
-    );
-}
 
 function getSavedJourneys(): Journey[] {
     return useDashboardConfigStore().config.journeys;

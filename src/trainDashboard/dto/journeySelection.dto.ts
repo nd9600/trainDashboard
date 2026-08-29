@@ -34,7 +34,7 @@ export type ActiveJourney =
     | {type: "saved"; id: string}
     | {type: "ephemeral"; id: string};
 
-export interface JourneyChoiceGroup {
+export interface JourneyChoices {
     name: "Predicted" | "Recent" | "Saved";
     journeys: Journey[];
 }
