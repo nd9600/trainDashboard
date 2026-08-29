@@ -1,35 +1,36 @@
 import {z} from "zod";
 
-const apiTimeSchema = z.string();
+const ApiTimeSchema = z.string();
 
-const callingPointSchema = z.object({
+const CallingPointSchema = z.object({
     locationName: z.string().optional(),
     crs: z.string(),
-    st: apiTimeSchema,
-    et: apiTimeSchema.nullish(),
+    st: ApiTimeSchema,
+    et: ApiTimeSchema.nullish(),
     isCancelled: z.boolean().optional(),
 });
 
-const callingPointListSchema = z.object({
-    callingPoint: z.array(callingPointSchema),
+const CallingPointListSchema = z.object({
+    callingPoint: z.array(CallingPointSchema),
     serviceType: z.enum(["train", "bus", "ferry"]).optional(),
     serviceChangeRequired: z.boolean().optional(),
     assocIsCancelled: z.boolean().optional(),
 });
 
-const departureServiceSchema = z.object({
-    std: apiTimeSchema,
-    etd: apiTimeSchema.nullish(),
+const DepartureServiceSchema = z.object({
+    std: ApiTimeSchema,
+    etd: ApiTimeSchema.nullish(),
     platform: z.string().nullish(),
     isCancelled: z.boolean().optional(),
     serviceID: z.string(),
     subsequentCallingPoints: z
-        .array(callingPointListSchema)
+        .array(CallingPointListSchema)
         .nullish()
         .transform((callingPoints) => callingPoints ?? []),
 });
+export type DepartureService = z.infer<typeof DepartureServiceSchema>;
 
-export const departureBoardSchema = z.object({
+export const DepartureBoardSchema = z.object({
     generatedAt: z.string().nullish(),
     locationName: z.string().nullish(),
     crs: z.string(),
@@ -38,10 +39,8 @@ export const departureBoardSchema = z.object({
     platformAvailable: z.boolean().optional(),
     areServicesAvailable: z.boolean().optional(),
     trainServices: z
-        .array(departureServiceSchema)
+        .array(DepartureServiceSchema)
         .nullish()
         .transform((services) => services ?? []),
 });
-
-export type DepartureBoard = z.output<typeof departureBoardSchema>;
-export type DepartureService = z.output<typeof departureServiceSchema>;
+export type DepartureBoard = z.infer<typeof DepartureBoardSchema>;

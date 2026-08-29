@@ -1,11 +1,11 @@
 import {describe, expect, it} from "vitest";
 import {manchesterDashboardConfig} from "../../testing/manchesterDashboardConfig.fixture";
 import {
-    dashboardConfigSchema,
-    timeSchema,
+    DashboardConfigSchema,
+    TimeSchema,
     type DashboardConfig,
 } from "../../dto/dashboardConfig.dto";
-import {type CurrentClock, getActiveSchedule} from "../journeySelection";
+import {type CurrentClock, getJourneyPrediction} from "../journeyPrediction";
 import {getStationRoutes} from "./journeyRoutes";
 import {createEphemeralJourney} from "../../dto/journeySelection.dto";
 
@@ -185,7 +185,7 @@ describe("journey planning", () => {
 
         origin.crs = "EDY";
 
-        expect(dashboardConfigSchema.safeParse(config).success).toBe(false);
+        expect(DashboardConfigSchema.safeParse(config).success).toBe(false);
     });
 
     it("rejects overlapping schedules", () => {
@@ -199,32 +199,37 @@ describe("journey planning", () => {
             journeyId: "heaton-chapel-to-manchester-piccadilly",
         });
 
-        expect(dashboardConfigSchema.safeParse(config).success).toBe(false);
+        expect(DashboardConfigSchema.safeParse(config).success).toBe(false);
     });
 
     it("rejects an invalid schedule time", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.schedules[0]!.startsAt = "a1:22";
 
-        expect(dashboardConfigSchema.safeParse(config).success).toBe(false);
+        expect(DashboardConfigSchema.safeParse(config).success).toBe(false);
     });
 
     it.each(["00:00", "23:59", "24:00"])(
         "accepts the supported time %s",
         (time) => {
-            expect(timeSchema.safeParse(time).success).toBe(true);
+            expect(TimeSchema.safeParse(time).success).toBe(true);
         }
     );
 });
 
 function getJourneyPlan(config: DashboardConfig, currentClock: CurrentClock) {
-    const schedule = getActiveSchedule(config.schedules, currentClock);
+    const prediction = getJourneyPrediction(
+        config.schedules,
+        config.journeys,
+        [],
+        currentClock
+    );
     const configuredJourney = config.journeys.find(
-        (journey) => journey.id === schedule?.journeyId
+        (journey) => journey.id === prediction.predictedJourneyId
     );
 
     return {
-        schedule,
+        schedule: prediction.activeSchedule,
         routes: getStationRoutes(
             configuredJourney ? [configuredJourney] : [],
             config.stationGroups

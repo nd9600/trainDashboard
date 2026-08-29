@@ -1,5 +1,5 @@
 import {
-    departureBoardSchema,
+    DepartureBoardSchema,
     type DepartureBoard,
 } from "../dto/liveDepartureBoard.dto";
 
@@ -43,5 +43,5 @@ export async function fetchDepartureBoard(
         );
     }
 
-    return departureBoardSchema.parse(await response.json());
+    return DepartureBoardSchema.parse(await response.json());
 }

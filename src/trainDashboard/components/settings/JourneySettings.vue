@@ -50,7 +50,7 @@ import type {
 } from "../../dto/dashboardConfig.dto";
 import {
     dashboardConfigErrorMessages,
-    dashboardConfigSchema,
+    DashboardConfigSchema,
 } from "../../dto/dashboardConfig.dto";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import SchedulesSettings from "./schedules/SchedulesSettings.vue";
@@ -102,7 +102,7 @@ function handleChange(): void {
 }
 
 function validateDraft(): boolean {
-    const result = dashboardConfigSchema.safeParse(draft.value);
+    const result = DashboardConfigSchema.safeParse(draft.value);
     errors.value = result.success
         ? []
         : dashboardConfigErrorMessages(result.error);
@@ -140,9 +140,7 @@ function removeGroup(groupIndex: number): void {
         .map((journey) => journey.id);
 
     const affectedScheduleCount = draft.value.schedules.filter((schedule) =>
-        removedJourneyIds.some(
-            (journeyId) => schedule.journeyId === journeyId
-        )
+        removedJourneyIds.some((journeyId) => schedule.journeyId === journeyId)
     ).length;
 
     const consequence = removedJourneyIds.length

@@ -3,14 +3,14 @@ import {ref} from "vue";
 import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
 import {
     dashboardConfigErrorMessages,
-    dashboardConfigSchema,
+    DashboardConfigSchema,
     type DashboardConfig,
     type Journey,
 } from "../dto/dashboardConfig.dto";
 
 const storage = useLocalStorageTyped(
     "train-dashboard-config-v3",
-    dashboardConfigSchema,
+    DashboardConfigSchema,
     {
         version: 3,
         stationGroups: [],
@@ -26,7 +26,7 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         success: boolean;
         errors: string[];
     } {
-        const result = dashboardConfigSchema.safeParse(candidate);
+        const result = DashboardConfigSchema.safeParse(candidate);
 
         if (!result.success) {
             return {

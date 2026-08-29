@@ -1,36 +1,33 @@
 import {z} from "zod";
 import {
-    crsCodeSchema,
-    journeyFieldsSchema,
-    journeySchema,
+    CrsCodeSchema,
+    JourneyFieldsSchema,
+    JourneySchema,
     type Journey,
     type JourneyFields,
 } from "./dashboardConfig.dto";
 
-const stationLocationSchema = z.object({
+const StationLocationSchema = z.object({
     type: z.literal("station"),
-    crs: crsCodeSchema,
+    crs: CrsCodeSchema,
 });
 
-const ephemeralJourneyFieldsSchema = journeyFieldsSchema
-    .extend({
-        origin: stationLocationSchema,
-        destination: stationLocationSchema,
-    })
-    .refine((journey) => journey.origin.crs !== journey.destination.crs);
+const EphemeralJourneyFieldsSchema = JourneyFieldsSchema.extend({
+    origin: StationLocationSchema,
+    destination: StationLocationSchema,
+}).refine((journey) => journey.origin.crs !== journey.destination.crs);
 
-const ephemeralJourneySchema = journeySchema.extend({
-    origin: stationLocationSchema,
-    destination: stationLocationSchema,
+const EphemeralJourneySchema = JourneySchema.extend({
+    origin: StationLocationSchema,
+    destination: StationLocationSchema,
 });
-type StationJourney = z.output<typeof ephemeralJourneySchema>;
+export type EphemeralJourney = z.infer<typeof EphemeralJourneySchema>;
 
-export const journeyMemorySchema = z.object({
+export const JourneyMemorySchema = z.object({
     recentJourneyIds: z.array(z.string().min(1)).max(50),
-    ephemeralJourneys: z.array(ephemeralJourneySchema),
+    ephemeralJourneys: z.array(EphemeralJourneySchema),
 });
-
-export type JourneyMemory = z.output<typeof journeyMemorySchema>;
+export type JourneyMemory = z.infer<typeof JourneyMemorySchema>;
 
 export type ActiveJourney =
     | {type: "predicted"}
@@ -45,8 +42,8 @@ export interface JourneyChoiceGroup {
 export function createEphemeralJourney(
     fields: JourneyFields,
     existingJourneyIds: Iterable<string> = []
-): StationJourney | undefined {
-    const result = ephemeralJourneyFieldsSchema.safeParse(fields);
+): EphemeralJourney | undefined {
+    const result = EphemeralJourneyFieldsSchema.safeParse(fields);
 
     if (!result.success) {
         return undefined;

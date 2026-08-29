@@ -1,10 +1,10 @@
 import {
-    dashboardConfigSchema,
+    DashboardConfigSchema,
     type DashboardConfig,
 } from "../dto/dashboardConfig.dto";
 
 export const defaultDashboardConfig: DashboardConfig =
-    dashboardConfigSchema.parse({
+    DashboardConfigSchema.parse({
         version: 3,
         stationGroups: [
             {

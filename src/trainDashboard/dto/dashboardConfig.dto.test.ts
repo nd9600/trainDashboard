@@ -2,10 +2,10 @@ import {describe, expect, it} from "vitest";
 import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
 import {
     dashboardConfigErrorMessages,
-    dashboardConfigSchema,
+    DashboardConfigSchema,
 } from "./dashboardConfig.dto";
 
-describe("dashboardConfigSchema", () => {
+describe("DashboardConfigSchema", () => {
     it("allows a journey that is not used by a schedule", () => {
         const config = structuredClone(manchesterDashboardConfig);
         const journeyId = config.journeys.at(0)!.id;
@@ -16,7 +16,7 @@ describe("dashboardConfigSchema", () => {
             }
         }
 
-        const result = dashboardConfigSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
         expect(result.success).toBe(true);
     });
@@ -29,7 +29,7 @@ describe("dashboardConfigSchema", () => {
             destination: {type: "station", crs: "LIV"},
         });
 
-        const result = dashboardConfigSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
         expect(result.success).toBe(true);
     });
@@ -38,7 +38,7 @@ describe("dashboardConfigSchema", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.stationGroups[0]!.stations[0]!.crs = "not-a-station";
 
-        const result = dashboardConfigSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
         expect(result.success).toBe(false);
         expect(dashboardConfigErrorMessages(result.error!)).toContain(
@@ -50,7 +50,7 @@ describe("dashboardConfigSchema", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.stationGroups[0]!.stations[1]!.crs = "HTC";
 
-        const result = dashboardConfigSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
         expect(result.success).toBe(false);
         expect(result.error?.issues).toContainEqual(
@@ -67,7 +67,7 @@ describe("dashboardConfigSchema", () => {
         config.journeys[1]!.origin = config.journeys[0]!.origin;
         config.journeys[1]!.destination = config.journeys[0]!.destination;
 
-        const result = dashboardConfigSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
         expect(result.success).toBe(false);
         expect(result.error?.issues).toContainEqual(

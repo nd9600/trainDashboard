@@ -46,9 +46,10 @@ sequenceDiagram
     participant Boards as Departure-board stage
     participant API as Rail Data Marketplace
 
-    Selection->>Config: Read schedules, journeys, and station groups
-    Selection->>Clock: Read the current clock
+    Store->>Selection: initialise()
     Selection->>Selection: Load recent journey IDs and ephemeral journeys
+    Selection->>Config: Read schedules and journeys
+    Selection->>Clock: Read the current clock
     Selection->>Selection: Compute schedule and predicted journey ID
     Selection->>Selection: Resolve the active selection to one Journey
     Store->>Selection: Read the resolved active journey
@@ -103,6 +104,8 @@ A matching schedule supplies the predicted journey. If no schedule matches, the 
 
 The prediction uses the history loaded when the page starts. A new selection remains a temporary override during that page session.
 
+The selection store starts with explicit empty state. The train-services store calls `initialise()` before its first refresh. The action loads memory once.
+
 The selection immediately appears in the Recent section. A page refresh can use it as the recent-history prediction.
 
 Saved and ephemeral journeys use the same `Journey` shape. An ephemeral journey uses station endpoints and can include one connecting station.
@@ -122,15 +125,13 @@ flowchart TD
     dashboard[TrainDashboard.vue]
     store[useTrainServicesStore]
     pipeline[getDashboardJourneys]
-    active[getActiveSchedule]
+    prediction[getJourneyPrediction]
     switcher[JourneySwitcher.vue]
     ephemeralForm[EphemeralJourneyForm.vue]
     maker[JourneyMaker.vue]
     selectionStore[useJourneySelectionStore]
     clockStore[useDashboardClockStore]
     configStore[useDashboardConfigStore]
-    selectionRules[journeySelection.ts]
-    journeyMemory[journeyMemory.ts]
     createEphemeral[createEphemeralJourney]
     stationInput[StationInput.vue]
     routes[getStationRoutes]
@@ -156,9 +157,7 @@ flowchart TD
     store --> selectionStore
     store --> configStore
     store --> clockStore
-    selectionStore --> selectionRules
-    selectionStore --> journeyMemory
-    selectionRules --> active
+    selectionStore --> prediction
     selectionStore --> configStore
     selectionStore --> clockStore
     pipeline --> routes
@@ -193,13 +192,12 @@ flowchart TD
 
 ## Source map
 
-- `src/trainDashboard/store/trainServices.store.ts` refreshes train data for the resolved active journey.
-- `src/trainDashboard/store/journeySelection.store.ts` is the Options API store for active selection and its four user actions.
+- `src/trainDashboard/store/trainServices.store.ts` initialises journey selection and refreshes train data for the resolved active journey.
+- `src/trainDashboard/store/journeySelection.store.ts` owns explicit selection state, memory, choices, transitions, and its four user actions.
 - `src/trainDashboard/store/dashboardClock.store.ts` owns the current dashboard clock and minute timer.
 - `src/trainDashboard/store/dashboardConfig.store.ts` saves a journey in the configuration.
 - `src/trainDashboard/dto/journeySelection.dto.ts` defines active selection and journey-memory shapes.
-- `src/trainDashboard/journeys/journeySelection.ts` calculates schedules, predictions, choices, transitions, and retained ephemeral journeys.
-- `src/trainDashboard/journeys/journeyMemory.ts` loads and saves recent journey IDs and ephemeral journey definitions.
+- `src/trainDashboard/journeys/journeyPrediction.ts` selects the active schedule and predicted journey ID.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
 - `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands journeys into station routes.
 - `src/trainDashboard/journeys/timetable/departureBoards.ts` creates and deduplicates departure-board requests.

@@ -1,7 +1,7 @@
 import {z} from "zod";
 import {stationNames} from "../stations/stationNames";
 
-export const daySchema = z.union([
+export const DaySchema = z.union([
     z.literal(0),
     z.literal(1),
     z.literal(2),
@@ -10,15 +10,16 @@ export const daySchema = z.union([
     z.literal(5),
     z.literal(6),
 ]);
+export type Day = z.infer<typeof DaySchema>;
 
-export const timeSchema = z
+export const TimeSchema = z
     .string()
     .regex(
         /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/,
         "Enter a time from 00:00 to 24:00."
     );
 
-export const crsCodeSchema = z
+export const CrsCodeSchema = z
     .string()
     .trim()
     .transform((code) => code.toUpperCase())
@@ -27,7 +28,7 @@ export const crsCodeSchema = z
         "Enter a valid CRS station code."
     );
 
-const idSchema = z
+const IdSchema = z
     .string()
     .min(1)
     .regex(
@@ -35,19 +36,19 @@ const idSchema = z
         "Use lowercase letters, numbers, and hyphens."
     );
 
-const locationGroupIdSchema = z
+const LocationGroupIdSchema = z
     .string()
     .min(1, "Choose a station or group.")
-    .pipe(idSchema);
+    .pipe(IdSchema);
 
-export const stationGroupSchema = z
+export const StationGroupSchema = z
     .object({
-        id: idSchema,
+        id: IdSchema,
         name: z.string().trim().min(1, "Enter a group name."),
         stations: z
             .array(
                 z.object({
-                    crs: crsCodeSchema,
+                    crs: CrsCodeSchema,
                     walkMinutes: z.number().int().min(0).optional(),
                 })
             )
@@ -69,35 +70,39 @@ export const stationGroupSchema = z
             stationCodes.add(station.crs);
         });
     });
+export type StationGroup = z.infer<typeof StationGroupSchema>;
 
-export const locationReferenceSchema = z.discriminatedUnion("type", [
+export const LocationReferenceSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.literal("station"),
-        groupId: locationGroupIdSchema.optional(),
-        crs: crsCodeSchema,
+        groupId: LocationGroupIdSchema.optional(),
+        crs: CrsCodeSchema,
     }),
     z.object({
         type: z.literal("group"),
-        groupId: locationGroupIdSchema,
+        groupId: LocationGroupIdSchema,
     }),
 ]);
+export type LocationReference = z.infer<typeof LocationReferenceSchema>;
 
-export const journeyFieldsSchema = z.object({
-    origin: locationReferenceSchema,
-    destination: locationReferenceSchema,
-    viaCrs: crsCodeSchema.optional(),
+export const JourneyFieldsSchema = z.object({
+    origin: LocationReferenceSchema,
+    destination: LocationReferenceSchema,
+    viaCrs: CrsCodeSchema.optional(),
 });
+export type JourneyFields = z.infer<typeof JourneyFieldsSchema>;
 
-export const journeySchema = journeyFieldsSchema.extend({id: idSchema});
+export const JourneySchema = JourneyFieldsSchema.extend({id: IdSchema});
+export type Journey = z.infer<typeof JourneySchema>;
 
-export const displayScheduleSchema = z
+export const DisplayScheduleSchema = z
     .object({
-        id: idSchema,
+        id: IdSchema,
         name: z.string().trim().min(1, "Enter a schedule name."),
-        days: z.array(daySchema).min(1, "Select at least one day."),
-        startsAt: timeSchema,
-        endsAt: timeSchema,
-        journeyId: idSchema,
+        days: z.array(DaySchema).min(1, "Select at least one day."),
+        startsAt: TimeSchema,
+        endsAt: TimeSchema,
+        journeyId: IdSchema,
     })
     .refine(
         (schedule) =>
@@ -107,17 +112,18 @@ export const displayScheduleSchema = z
             path: ["endsAt"],
         }
     );
+export type DisplaySchedule = z.infer<typeof DisplayScheduleSchema>;
 
-const dashboardConfigBaseSchema = z.object({
+const DashboardConfigBaseSchema = z.object({
     version: z.literal(3),
-    stationGroups: z.array(stationGroupSchema),
-    journeys: z.array(journeySchema).min(1, "Add at least one journey."),
+    stationGroups: z.array(StationGroupSchema),
+    journeys: z.array(JourneySchema).min(1, "Add at least one journey."),
     schedules: z
-        .array(displayScheduleSchema)
+        .array(DisplayScheduleSchema)
         .min(1, "Add at least one schedule."),
 });
 
-export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
+export const DashboardConfigSchema = DashboardConfigBaseSchema.superRefine(
     (config, context) => {
         reportDuplicateIds(
             config.stationGroups,
@@ -245,6 +251,7 @@ export const dashboardConfigSchema = dashboardConfigBaseSchema.superRefine(
         });
     }
 );
+export type DashboardConfig = z.infer<typeof DashboardConfigSchema>;
 
 function getStationPairKey(
     journey: Journey,
@@ -270,14 +277,6 @@ function getStationPairKey(
         })
         .join("->");
 }
-
-export type Day = z.output<typeof daySchema>;
-export type StationGroup = z.output<typeof stationGroupSchema>;
-export type LocationReference = z.output<typeof locationReferenceSchema>;
-export type JourneyFields = z.output<typeof journeyFieldsSchema>;
-export type Journey = z.output<typeof journeySchema>;
-export type DisplaySchedule = z.output<typeof displayScheduleSchema>;
-export type DashboardConfig = z.output<typeof dashboardConfigSchema>;
 
 export function dashboardConfigErrorMessages(error: z.ZodError): string[] {
     return error.issues.map((issue) => {

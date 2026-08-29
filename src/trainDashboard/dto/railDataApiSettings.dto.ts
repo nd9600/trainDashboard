@@ -1,7 +1,6 @@
 import {z} from "zod";
 
-export const railDataApiSettingsSchema = z.object({
+export const RailDataApiSettingsSchema = z.object({
     consumerKey: z.string().trim(),
 });
-
-export type RailDataApiSettings = z.output<typeof railDataApiSettingsSchema>;
+export type RailDataApiSettings = z.infer<typeof RailDataApiSettingsSchema>;

@@ -13,6 +13,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const dashboardClockStore = useDashboardClockStore();
     const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
+    journeySelectionStore.initialise();
 
     ///// state /////
     const routes = ref<JourneyRoute[]>([]);
