@@ -53,17 +53,20 @@ import {computed} from "vue";
 import {formatTime} from "@/utilities/time.utility";
 import {stationColour} from "../stations/stationColours";
 import {stationName} from "../stations/stations";
+import {useDashboardClockStore} from "../store/dashboardClock.store";
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useJourneySelectionStore} from "../store/journeySelection.store";
 import JourneySwitcher from "./journeys/JourneySwitcher.vue";
 
 const trainServicesStore = useTrainServicesStore();
+const dashboardClockStore = useDashboardClockStore();
 const journeySelectionStore = useJourneySelectionStore();
 const {isLoadingJourneys, journeys, recommendedJourney} =
     storeToRefs(trainServicesStore);
-const {activeJourneyIsEphemeral, activeJourneyId, currentMinutes} = storeToRefs(
+const {activeJourneyIsEphemeral, activeJourneyId} = storeToRefs(
     journeySelectionStore
 );
+const {currentMinutes} = storeToRefs(dashboardClockStore);
 
 const headerJourney = computed(
     () => recommendedJourney.value ?? journeys.value.at(0)

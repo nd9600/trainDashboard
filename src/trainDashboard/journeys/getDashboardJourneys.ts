@@ -1,6 +1,6 @@
 import type {Journey, StationGroup} from "../dto/dashboardConfig.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
-import type {CurrentClock} from "./planning/journeySelection";
+import type {CurrentClock} from "./journeySelection";
 import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";
 import {getDepartureBoards} from "./timetable/departureBoards";
 import {getTrainOptions} from "./timetable/trainOptions";

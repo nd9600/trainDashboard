@@ -10,7 +10,11 @@
             v-if="activeSchedule || activeJourney.type !== 'predicted'"
             class="text-xs text-ink-subtle"
         >
-            {{ activeJourney.type === "predicted" ? activeSchedule?.name : "&nbsp;" }}
+            {{
+                activeJourney.type === "predicted"
+                    ? activeSchedule?.name
+                    : "&nbsp;"
+            }}
         </p>
         <ListboxButton
             class="appButton appButton--secondary max-w-full justify-start whitespace-normal text-left border-none p-1"
@@ -132,6 +136,7 @@ import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {JourneyFields} from "../../dto/dashboardConfig.dto";
+import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import {useJourneySelectionStore} from "../../store/journeySelection.store";
 import {
     getJourneyLabelDetails,
@@ -143,6 +148,7 @@ import JourneyLabel from "./JourneyLabel.vue";
 const newJourneyOptionId = "__new-journey__";
 
 const journeySelectionStore = useJourneySelectionStore();
+const dashboardConfigStore = useDashboardConfigStore();
 const {
     activeJourneyId,
     activeJourney,
@@ -150,10 +156,11 @@ const {
     activeJourneyIsEphemeral,
     activeSchedule,
     journeyChoices,
-    stationGroups,
 } = storeToRefs(journeySelectionStore);
+const {config} = storeToRefs(dashboardConfigStore);
 
 const isCreatingEphemeralJourney = ref(false);
+const stationGroups = computed(() => config.value.stationGroups);
 const switcherButtonLabel = computed(() => {
     if (!activeJourneyDetails.value) {
         return "Choose a journey";

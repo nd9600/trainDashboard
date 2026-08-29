@@ -108,12 +108,12 @@ import JourneyTimelines from "./journeys/JourneyTimelines.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useDashboardConfigStore} from "../store/dashboardConfig.store";
-import {useJourneySelectionStore} from "../store/journeySelection.store";
+import {useDashboardClockStore} from "../store/dashboardClock.store";
 import DashboardHeader from "./DashboardHeader.vue";
 import {getRoutesWithoutTimetabledJourneys} from "@/trainDashboard/journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
 
 const trainServicesStore = useTrainServicesStore();
-const journeySelectionStore = useJourneySelectionStore();
+const dashboardClockStore = useDashboardClockStore();
 const dashboardConfigStore = useDashboardConfigStore();
 const settingsModal = ref<{
     open: () => void;
@@ -121,7 +121,7 @@ const settingsModal = ref<{
 } | null>(null);
 const {isLoadingJourneys, journeyLoadError, journeys, routes} =
     storeToRefs(trainServicesStore);
-const {currentMinutes} = storeToRefs(journeySelectionStore);
+const {currentMinutes} = storeToRefs(dashboardClockStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
 
 const hasJourneyData = computed(() => journeys.value.length > 0);

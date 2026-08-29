@@ -3,11 +3,15 @@ import {computed, ref, watch} from "vue";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {getDashboardJourneys} from "../journeys/getDashboardJourneys";
 import type {JourneyRoute} from "../journeys/planning/journeyRoutes";
+import {useDashboardClockStore} from "./dashboardClock.store";
+import {useDashboardConfigStore} from "./dashboardConfig.store";
 import {useJourneySelectionStore} from "./journeySelection.store";
 import {useRailDataApiStore} from "./railDataApi.store";
 
 export const useTrainServicesStore = defineStore("train-services", () => {
     const journeySelectionStore = useJourneySelectionStore();
+    const dashboardClockStore = useDashboardClockStore();
+    const dashboardConfigStore = useDashboardConfigStore();
     const apiStore = useRailDataApiStore();
 
     ///// state /////
@@ -31,8 +35,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         try {
             const dashboardJourneys = await getDashboardJourneys(
                 journeySelectionStore.activeJourneyDetails,
-                journeySelectionStore.stationGroups,
-                journeySelectionStore.currentClock,
+                dashboardConfigStore.config.stationGroups,
+                dashboardClockStore.currentClock,
                 consumerKey
             );
 
@@ -56,8 +60,8 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     watch(
         [
             () => journeySelectionStore.activeJourneyDetails,
-            () => journeySelectionStore.stationGroups,
-            () => journeySelectionStore.currentMinutes,
+            () => dashboardConfigStore.config.stationGroups,
+            () => dashboardClockStore.currentMinutes,
             () => apiStore.settings.consumerKey,
         ],
         refreshJourneys,

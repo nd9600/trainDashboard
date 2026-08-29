@@ -5,7 +5,7 @@ import {
     timeSchema,
     type DashboardConfig,
 } from "../../dto/dashboardConfig.dto";
-import {type CurrentClock, getActiveSchedule} from "./journeySelection";
+import {type CurrentClock, getActiveSchedule} from "../journeySelection";
 import {getStationRoutes} from "./journeyRoutes";
 import {createEphemeralJourney} from "../../dto/journeySelection.dto";
 

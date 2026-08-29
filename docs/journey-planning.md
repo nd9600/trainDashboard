@@ -39,6 +39,7 @@ sequenceDiagram
     participant UI as TrainDashboard
     participant Switcher as JourneySwitcher
     participant Selection as journeySelection store
+    participant Clock as dashboardClock store
     participant Store as trainServices store
     participant Config as dashboardConfig store
     participant Pipeline as getDashboardJourneys
@@ -46,10 +47,13 @@ sequenceDiagram
     participant API as Rail Data Marketplace
 
     Selection->>Config: Read schedules, journeys, and station groups
+    Selection->>Clock: Read the current clock
     Selection->>Selection: Load recent journey IDs and ephemeral journeys
     Selection->>Selection: Compute schedule and predicted journey ID
     Selection->>Selection: Resolve the active selection to one Journey
-    Store->>Selection: Read active journey, station groups, and clock
+    Store->>Selection: Read the resolved active journey
+    Store->>Config: Read station groups
+    Store->>Clock: Read the current clock
     Store->>Pipeline: getDashboardJourneys(journey, stationGroups, currentClock, consumerKey)
     Pipeline->>Pipeline: getStationRoutes(...)
     Pipeline->>Boards: getDepartureBoards(...)
@@ -123,7 +127,10 @@ flowchart TD
     ephemeralForm[EphemeralJourneyForm.vue]
     maker[JourneyMaker.vue]
     selectionStore[useJourneySelectionStore]
+    clockStore[useDashboardClockStore]
     configStore[useDashboardConfigStore]
+    selectionRules[journeySelection.ts]
+    journeyMemory[journeyMemory.ts]
     createEphemeral[createEphemeralJourney]
     stationInput[StationInput.vue]
     routes[getStationRoutes]
@@ -147,8 +154,13 @@ flowchart TD
     dashboard --> store
     store --> pipeline
     store --> selectionStore
-    selectionStore --> active
+    store --> configStore
+    store --> clockStore
+    selectionStore --> selectionRules
+    selectionStore --> journeyMemory
+    selectionRules --> active
     selectionStore --> configStore
+    selectionStore --> clockStore
     pipeline --> routes
     routes --> stations
     routes --> options
@@ -165,7 +177,9 @@ flowchart TD
     pipeline --> recommended
 
     dashboard --> switcher
+    dashboard --> clockStore
     switcher --> selectionStore
+    switcher --> configStore
     switcher --> ephemeralForm
     ephemeralForm --> maker
     maker --> stationInput
@@ -180,11 +194,13 @@ flowchart TD
 ## Source map
 
 - `src/trainDashboard/store/trainServices.store.ts` refreshes train data for the resolved active journey.
-- `src/trainDashboard/store/journeySelection.store.ts` owns prediction, active selection, recent IDs, ephemeral journeys, and switcher groups.
+- `src/trainDashboard/store/journeySelection.store.ts` is the Options API store for active selection and its four user actions.
+- `src/trainDashboard/store/dashboardClock.store.ts` owns the current dashboard clock and minute timer.
 - `src/trainDashboard/store/dashboardConfig.store.ts` saves a journey in the configuration.
 - `src/trainDashboard/dto/journeySelection.dto.ts` defines active selection and journey-memory shapes.
+- `src/trainDashboard/journeys/journeySelection.ts` calculates schedules, predictions, choices, transitions, and retained ephemeral journeys.
+- `src/trainDashboard/journeys/journeyMemory.ts` loads and saves recent journey IDs and ephemeral journey definitions.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
-- `src/trainDashboard/journeys/planning/journeySelection.ts` selects the active schedule for the current clock.
 - `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands journeys into station routes.
 - `src/trainDashboard/journeys/timetable/departureBoards.ts` creates and deduplicates departure-board requests.
 - `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
