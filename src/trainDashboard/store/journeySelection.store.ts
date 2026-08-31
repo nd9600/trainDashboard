@@ -71,9 +71,13 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
         journeysById(state): Map<string, Journey> {
             const savedJourneys = useDashboardConfigStore().config.journeys;
             return new Map(
-                [...state.ephemeralJourneys, ...savedJourneys].map(
-                    (journey) => [journey.id, journey]
-                )
+                [
+                    ...state.ephemeralJourneys,
+                    ...(state.currentEphemeralJourney
+                        ? [state.currentEphemeralJourney]
+                        : []),
+                    ...savedJourneys,
+                ].map((journey) => [journey.id, journey])
             );
         },
 
@@ -242,6 +246,85 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             );
             this.currentEphemeralJourney = undefined;
             this.activeJourney = {type: "saved", id: savedJourney.id};
+            this.saveMemory();
+            return true;
+        },
+
+        editActiveJourney(fields: JourneyFields): boolean {
+            const activeJourneyDetails = this.activeJourneyDetails;
+
+            if (
+                !this.isInitialised ||
+                this.activeJourney.type === "predicted" ||
+                !activeJourneyDetails ||
+                useDashboardConfigStore().config.schedules.some(
+                    (schedule) => schedule.journeyId === activeJourneyDetails.id
+                )
+            ) {
+                return false;
+            }
+
+            if (this.activeJourney.type === "ephemeral") {
+                const parsedJourney = createEphemeralJourney(fields);
+
+                if (!parsedJourney || !this.currentEphemeralJourney) {
+                    return false;
+                }
+
+                const updatedJourney: EphemeralJourney = {
+                    ...parsedJourney,
+                    id: this.currentEphemeralJourney.id,
+                };
+                this.ephemeralJourneys = this.ephemeralJourneys.map(
+                    (journey) =>
+                        journey.id === updatedJourney.id
+                            ? updatedJourney
+                            : journey
+                );
+                this.currentEphemeralJourney = updatedJourney;
+                this.saveMemory();
+                return true;
+            }
+
+            return useDashboardConfigStore().updateJourney({
+                id: activeJourneyDetails.id,
+                ...fields,
+            });
+        },
+
+        removeRecentJourney(journeyId: string): boolean {
+            if (
+                !this.isInitialised ||
+                !this.recentJourneyIds.includes(journeyId)
+            ) {
+                return false;
+            }
+
+            this.recentJourneyIds = this.recentJourneyIds.filter(
+                (recentJourneyId) => recentJourneyId !== journeyId
+            );
+            this.saveMemory();
+            return true;
+        },
+
+        removeSavedJourney(journeyId: string): boolean {
+            if (
+                !this.isInitialised ||
+                !this.savedJourneyIds.has(journeyId) ||
+                !useDashboardConfigStore().removeJourney(journeyId)
+            ) {
+                return false;
+            }
+
+            this.recentJourneyIds = this.recentJourneyIds.filter(
+                (recentJourneyId) => recentJourneyId !== journeyId
+            );
+
+            if (this.activeJourneyId === journeyId) {
+                this.activeJourney = {type: "predicted"};
+                this.currentEphemeralJourney = undefined;
+            }
+
             this.saveMemory();
             return true;
         },

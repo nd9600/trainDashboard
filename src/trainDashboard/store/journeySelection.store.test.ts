@@ -185,6 +185,100 @@ describe("useJourneySelectionStore", () => {
         });
     });
 
+    it("removes a journey from recent history without removing a saved journey", () => {
+        const store = getJourneySelectionStore();
+        store.selectJourney(savedJourney.id);
+
+        store.removeRecentJourney(savedJourney.id);
+
+        expect(store.recentJourneyIds).toEqual([]);
+        expect(useDashboardConfigStore().config.journeys).toContainEqual(
+            savedJourney
+        );
+        expect(store.journeyChoices.at(-1)).toMatchObject({
+            name: "Saved",
+            journeys: expect.arrayContaining([savedJourney]),
+        });
+    });
+
+    it("keeps an active ephemeral journey after removing it from history", () => {
+        const store = getJourneySelectionStore();
+        store.selectEphemeralJourney(manchesterToLiverpool);
+
+        store.removeRecentJourney("man-to-liv");
+
+        expect(store.recentJourneyIds).toEqual([]);
+        expect(store.activeJourneyDetails).toEqual({
+            id: "man-to-liv",
+            ...manchesterToLiverpool,
+        });
+        expect(
+            JSON.parse(
+                localStorage.getItem("train-dashboard-journey-memory-v2") ?? ""
+            )
+        ).toEqual({recentJourneyIds: [], ephemeralJourneys: []});
+    });
+
+    it("removes an unscheduled saved journey", () => {
+        const unscheduledJourney = manchesterDashboardConfig.journeys[3]!;
+        const store = getJourneySelectionStore();
+
+        expect(store.removeSavedJourney(unscheduledJourney.id)).toBe(true);
+        expect(useDashboardConfigStore().config.journeys).not.toContainEqual(
+            unscheduledJourney
+        );
+    });
+
+    it("does not remove a journey used by a schedule", () => {
+        const store = getJourneySelectionStore();
+
+        expect(store.removeSavedJourney(predictedJourney.id)).toBe(false);
+        expect(useDashboardConfigStore().config.journeys).toContainEqual(
+            predictedJourney
+        );
+    });
+
+    it("edits an unscheduled active saved journey", () => {
+        const unscheduledJourney = manchesterDashboardConfig.journeys[3]!;
+        const store = getJourneySelectionStore();
+        store.selectJourney(unscheduledJourney.id);
+
+        expect(
+            store.editActiveJourney({...unscheduledJourney, viaCrs: "CRE"})
+        ).toBe(true);
+        expect(store.activeJourneyDetails).toEqual({
+            ...unscheduledJourney,
+            viaCrs: "CRE",
+        });
+    });
+
+    it("does not edit an active journey used by a schedule", () => {
+        const store = getJourneySelectionStore();
+        store.selectJourney(savedJourney.id);
+
+        expect(store.editActiveJourney({...savedJourney, viaCrs: "CRE"})).toBe(
+            false
+        );
+        expect(store.activeJourneyDetails).toEqual(savedJourney);
+    });
+
+    it("edits an active ephemeral journey", () => {
+        const store = getJourneySelectionStore();
+        store.selectEphemeralJourney(manchesterToLiverpool);
+
+        expect(
+            store.editActiveJourney({
+                ...manchesterToLiverpool,
+                viaCrs: "CRE",
+            })
+        ).toBe(true);
+        expect(store.activeJourneyDetails).toEqual({
+            id: "man-to-liv",
+            ...manchesterToLiverpool,
+            viaCrs: "CRE",
+        });
+    });
+
     it("clears to the prediction instead of the previous saved override", () => {
         const store = getJourneySelectionStore();
         store.selectEphemeralJourney(manchesterToLiverpool);

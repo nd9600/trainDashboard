@@ -70,6 +70,46 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         return result.success ? journey : undefined;
     }
 
+    function updateJourney(candidate: Journey): boolean {
+        if (
+            config.value.schedules.some(
+                (schedule) => schedule.journeyId === candidate.id
+            ) ||
+            !config.value.journeys.some(
+                (journey) => journey.id === candidate.id
+            )
+        ) {
+            return false;
+        }
+
+        return saveConfig({
+            ...config.value,
+            journeys: config.value.journeys.map((journey) =>
+                journey.id === candidate.id ? candidate : journey
+            ),
+        }).success;
+    }
+
+    function removeJourney(journeyId: string): boolean {
+        if (
+            !config.value.journeys.some(
+                (journey) => journey.id === journeyId
+            ) ||
+            config.value.schedules.some(
+                (schedule) => schedule.journeyId === journeyId
+            )
+        ) {
+            return false;
+        }
+
+        return saveConfig({
+            ...config.value,
+            journeys: config.value.journeys.filter(
+                (journey) => journey.id !== journeyId
+            ),
+        }).success;
+    }
+
     function getAvailableJourneyId(baseId: string): string {
         const existingIds = new Set(
             config.value.journeys.map((journey) => journey.id)
@@ -85,5 +125,11 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         return id;
     }
 
-    return {config, saveConfig, saveJourney};
+    return {
+        config,
+        saveConfig,
+        saveJourney,
+        updateJourney,
+        removeJourney,
+    };
 });

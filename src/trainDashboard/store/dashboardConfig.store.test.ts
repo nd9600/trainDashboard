@@ -51,6 +51,29 @@ describe("useDashboardConfigStore", () => {
             viaCrs: "CRE",
         });
     });
+
+    it("updates and removes only unscheduled journeys", () => {
+        const store = useDashboardConfigStore();
+        store.saveConfig(manchesterDashboardConfig);
+        const scheduledJourney = store.config.journeys[0]!;
+        const unscheduledJourney = store.config.journeys[3]!;
+
+        expect(
+            store.updateJourney({...unscheduledJourney, viaCrs: "CRE"})
+        ).toBe(true);
+        expect(store.updateJourney({...scheduledJourney, viaCrs: "CRE"})).toBe(
+            false
+        );
+        expect(store.removeJourney(scheduledJourney.id)).toBe(false);
+        expect(store.removeJourney(unscheduledJourney.id)).toBe(true);
+
+        expect(store.config.journeys).toContainEqual(scheduledJourney);
+        expect(
+            store.config.journeys.some(
+                (journey) => journey.id === unscheduledJourney.id
+            )
+        ).toBe(false);
+    });
 });
 
 class MemoryStorage implements Storage {

@@ -96,6 +96,28 @@ sequenceDiagram
         Selection-->>Store: Restore the current predicted journey
         Store->>Pipeline: Refresh the active journey
     end
+
+    opt Remove a journey choice
+        UI->>Switcher: Select x
+        alt Recent journey
+            Switcher->>Selection: removeRecentJourney(journeyId)
+            Selection->>Selection: Remove the journey ID from history
+        else Unscheduled saved journey
+            Switcher->>Selection: removeSavedJourney(journeyId)
+            Selection->>Config: removeJourney(journeyId)
+        end
+    end
+
+    opt Edit an unscheduled active journey
+        UI->>Switcher: Select Edit
+        Switcher->>Selection: editActiveJourney(fields)
+        alt Ephemeral journey
+            Selection->>Selection: Update ephemeral journey memory
+        else Saved journey
+            Selection->>Config: updateJourney(journey)
+        end
+        Selection-->>Store: Resolved active journey changed
+    end
 ```
 
 A station-pair request occurs only once during each planning request.
@@ -114,6 +136,8 @@ The Save action adds the same journey to the configuration. Its ID stays the sam
 
 Recent history contains journey IDs only. Ephemeral journey definitions remain in journey memory while a recent or active selection refers to them.
 
+Removing a recent journey only removes its history entry. A saved journey can be removed or edited only when no schedule uses it.
+
 The Clear action restores the current schedule prediction. It does not add another recent-history entry.
 
 Connection options that use the same first train are shown as one journey. The option that arrives first remains visible. Other onward trains appear as alternatives on the second leg.
@@ -123,11 +147,12 @@ Connection options that use the same first train are shown as one journey. The o
 ```mermaid
 flowchart TD
     dashboard[TrainDashboard.vue]
+    header[DashboardHeader.vue]
     store[useTrainServicesStore]
     pipeline[getDashboardJourneys]
     prediction[getJourneyPrediction]
     switcher[JourneySwitcher.vue]
-    ephemeralForm[EphemeralJourneyForm.vue]
+    journeyForm[JourneyForm.vue]
     maker[JourneyMaker.vue]
     selectionStore[useJourneySelectionStore]
     clockStore[useDashboardClockStore]
@@ -175,12 +200,14 @@ flowchart TD
     pipeline --> sort
     pipeline --> recommended
 
+    dashboard --> header
     dashboard --> switcher
     dashboard --> clockStore
+    header --> switcher
     switcher --> selectionStore
     switcher --> configStore
-    switcher --> ephemeralForm
-    ephemeralForm --> maker
+    switcher --> journeyForm
+    journeyForm --> maker
     maker --> stationInput
     selectionStore --> createEphemeral
 
@@ -193,9 +220,9 @@ flowchart TD
 ## Source map
 
 - `src/trainDashboard/store/trainServices.store.ts` initialises journey selection and refreshes train data for the resolved active journey.
-- `src/trainDashboard/store/journeySelection.store.ts` owns explicit selection state, memory, choices, transitions, and its four user actions.
+- `src/trainDashboard/store/journeySelection.store.ts` owns selection state, memory, choices, and journey actions.
 - `src/trainDashboard/store/dashboardClock.store.ts` owns the current dashboard clock and minute timer.
-- `src/trainDashboard/store/dashboardConfig.store.ts` saves a journey in the configuration.
+- `src/trainDashboard/store/dashboardConfig.store.ts` saves, updates, and removes journeys in the configuration.
 - `src/trainDashboard/dto/journeySelection.dto.ts` defines active selection and journey-memory shapes.
 - `src/trainDashboard/journeys/journeyPrediction.ts` selects the active schedule and predicted journey ID.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
@@ -204,8 +231,10 @@ flowchart TD
 - `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
 - `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains and valid connections.
 - `src/trainDashboard/journeys/timetable/timetabledJourneys.ts` builds sections, filters journeys, and sorts results.
-- `src/trainDashboard/components/journeys/JourneySwitcher.vue` shows journeys, opens the station picker, and shows the Save action.
-- `src/trainDashboard/components/journeys/EphemeralJourneyForm.vue` owns the temporary journey draft and its Use and Cancel actions.
+- `src/trainDashboard/components/TrainDashboard.vue` shows the journey switcher when there is no resolved active journey.
+- `src/trainDashboard/components/DashboardHeader.vue` shows the compact journey switcher when an active journey exists.
+- `src/trainDashboard/components/journeys/JourneySwitcher.vue` selects, edits, and removes eligible journey choices.
+- `src/trainDashboard/components/journeys/JourneyForm.vue` owns new and edited journey drafts and their submit and Cancel actions.
 - `src/trainDashboard/components/journeys/JourneyMaker.vue` builds configured and ephemeral journeys from endpoints and an optional connection.
 - `src/trainDashboard/components/settings/stationGroups/StationInput.vue` selects stations for journey endpoints and connections.
 - `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits the displayed journey list to six results.

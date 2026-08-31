@@ -1,6 +1,5 @@
 <template>
     <Listbox
-        v-if="journeyChoices.length"
         :modelValue="activeJourneyId"
         as="div"
         class="relative mr-4 flex w-fit max-w-full flex-col items-start gap-2"
@@ -17,9 +16,14 @@
             }}
         </p>
         <ListboxButton
-            class="appButton appButton--secondary max-w-full justify-start whitespace-normal text-left border-none p-1"
+            class="appButton appButton--secondary max-w-full justify-start whitespace-normal border-none p-1 text-left"
+            :class="
+                activeJourneyDetails
+                    ? undefined
+                    : 'sr-only focus:not-sr-only focus:relative focus:m-1'
+            "
             :aria-label="switcherButtonLabel"
-            :disabled="isCreatingEphemeralJourney"
+            :disabled="isCreatingEphemeralJourney || isEditingJourney"
         >
             <JourneyLabel
                 v-if="activeJourneyDetails"
@@ -34,7 +38,17 @@
         </ListboxButton>
 
         <ListboxOptions
-            class="absolute top-full left-0 z-20 mt-1 max-h-[80vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line-strong bg-paper shadow-lg focus:outline-none"
+            :static="
+                !activeJourneyDetails &&
+                !isCreatingEphemeralJourney &&
+                !isEditingJourney
+            "
+            class="z-20 max-h-[80vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line-strong bg-paper shadow-lg focus:outline-none"
+            :class="
+                activeJourneyDetails
+                    ? 'absolute top-full left-0 mt-1'
+                    : undefined
+            "
         >
             <template v-for="section in journeyChoices" :key="section.name">
                 <li
@@ -51,7 +65,7 @@
                     :value="journey.id"
                 >
                     <li
-                        class="flex items-center cursor-pointer gap-3 px-3 py-2 text-left transition-colors"
+                        class="group flex cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors"
                         :class="{'bg-surface': active}"
                     >
                         <span
@@ -82,6 +96,19 @@
                                 Current journey.
                             </span>
                         </span>
+                        <button
+                            v-if="canRemoveJourney(section.name, journey.id)"
+                            class="ml-2 px-4 py-2 cursor-pointer border-0 bg-inherit text-ink-subtle opacity-0 group-hover:opacity-100 hover:text-ink"
+                            type="button"
+                            tabindex="-1"
+                            :title="getRemoveTitle(section.name)"
+                            :aria-label="getRemoveTitle(section.name)"
+                            @click.stop="
+                                removeJourney(section.name, journey.id)
+                            "
+                        >
+                            x
+                        </button>
                     </li>
                 </ListboxOption>
             </template>
@@ -99,13 +126,28 @@
             </ListboxOption>
         </ListboxOptions>
 
-        <div v-if="activeJourney.type === 'ephemeral'">
+        <div
+            v-if="
+                activeJourney.type !== 'predicted' &&
+                !isCreatingEphemeralJourney &&
+                !isEditingJourney
+            "
+        >
             <button
+                v-if="activeJourney.type === 'ephemeral'"
                 class="appButton appButton--quiet px-0 py-1 text-xs text-primary"
                 type="button"
                 @click="saveActiveJourney"
             >
                 Save
+            </button>
+            <button
+                v-if="canEditActiveJourney"
+                class="appButton appButton--quiet px-0 py-1 text-xs text-primary"
+                type="button"
+                @click="isEditingJourney = true"
+            >
+                Edit
             </button>
             <button
                 class="appButton appButton--quiet px-0 py-1 text-xs text-secondary"
@@ -116,10 +158,21 @@
             </button>
         </div>
 
-        <EphemeralJourneyForm
+        <JourneyForm
             v-if="isCreatingEphemeralJourney"
-            @use="useEphemeralJourney"
+            @submit="useEphemeralJourney"
             @cancel="isCreatingEphemeralJourney = false"
+        />
+        <JourneyForm
+            v-else-if="isEditingJourney && activeJourneyDetails"
+            :key="activeJourneyDetails.id"
+            :initialJourney="activeJourneyDetails"
+            :endpointMode="activeJourneyEndpointMode"
+            :stationGroups="stationGroups"
+            :journeys="config.journeys"
+            submitLabel="Save"
+            @submit="editActiveJourney"
+            @cancel="isEditingJourney = false"
         />
     </Listbox>
 </template>
@@ -135,13 +188,14 @@ import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {JourneyFields} from "../../dto/dashboardConfig.dto";
+import type {JourneyChoices} from "../../dto/journeySelection.dto";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import {useJourneySelectionStore} from "../../store/journeySelection.store";
 import {
     getJourneyLabelDetails,
     getJourneyLabelText,
 } from "../../journeys/journeyLabels";
-import EphemeralJourneyForm from "./EphemeralJourneyForm.vue";
+import JourneyForm from "./JourneyForm.vue";
 import JourneyLabel from "./JourneyLabel.vue";
 
 const newJourneyOptionId = "__new-journey__";
@@ -158,7 +212,29 @@ const {
 const {config} = storeToRefs(dashboardConfigStore);
 
 const isCreatingEphemeralJourney = ref(false);
+const isEditingJourney = ref(false);
 const stationGroups = computed(() => config.value.stationGroups);
+const scheduledJourneyIds = computed(
+    () => new Set(config.value.schedules.map((schedule) => schedule.journeyId))
+);
+const canEditActiveJourney = computed(
+    () =>
+        activeJourneyDetails.value !== undefined &&
+        !scheduledJourneyIds.value.has(activeJourneyDetails.value.id)
+);
+const activeJourneyEndpointMode = computed<"locations" | "stations">(() => {
+    const journey = activeJourneyDetails.value;
+
+    if (
+        journey &&
+        (journey.origin.groupId !== undefined ||
+            journey.destination.groupId !== undefined)
+    ) {
+        return "locations";
+    }
+
+    return "stations";
+});
 const switcherButtonLabel = computed(() => {
     if (!activeJourneyDetails.value) {
         return "Choose a journey";
@@ -178,6 +254,7 @@ function selectJourney(journeyId: string): void {
     }
 
     isCreatingEphemeralJourney.value = false;
+    isEditingJourney.value = false;
     journeySelectionStore.selectJourney(journeyId);
 }
 
@@ -191,6 +268,44 @@ function useEphemeralJourney(journey: JourneyFields): void {
 
 function saveActiveJourney(): void {
     journeySelectionStore.saveActiveJourney();
+}
+
+function editActiveJourney(journey: JourneyFields): void {
+    if (!journeySelectionStore.editActiveJourney(journey)) {
+        return;
+    }
+
+    isEditingJourney.value = false;
+}
+
+function canRemoveJourney(
+    sectionName: JourneyChoices["name"],
+    journeyId: string
+): boolean {
+    return (
+        sectionName === "Recent" ||
+        (sectionName === "Saved" && !scheduledJourneyIds.value.has(journeyId))
+    );
+}
+
+function getRemoveTitle(sectionName: JourneyChoices["name"]): string {
+    return sectionName === "Recent"
+        ? "Remove from recent journeys"
+        : "Remove saved journey";
+}
+
+function removeJourney(
+    sectionName: JourneyChoices["name"],
+    journeyId: string
+): void {
+    if (sectionName === "Recent") {
+        journeySelectionStore.removeRecentJourney(journeyId);
+        return;
+    }
+
+    if (sectionName === "Saved") {
+        journeySelectionStore.removeSavedJourney(journeyId);
+    }
 }
 
 function clearActiveJourney(): void {

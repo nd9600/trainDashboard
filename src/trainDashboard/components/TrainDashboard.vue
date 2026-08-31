@@ -30,9 +30,7 @@
                         <p
                             class="mt-3 border-l-2 border-japonica pl-3 text-sm text-ink-muted"
                         >
-                            For example: add “Home” with Manchester Piccadilly,
-                            add “Work” with Euston and Kings Cross, then
-                            schedule Home → Work on weekday mornings.
+                            For example: add “Home” with Manchester Piccadilly, add “Work” with Euston and Kings Cross, then schedule Home → Work on weekday mornings (RIP HS2 Phase 2b).
                         </p>
                         <button
                             class="appButton appButton--primary mt-4"
@@ -45,6 +43,9 @@
                     </div>
                 </div>
             </section>
+            <div v-else-if="!activeJourneyDetails" class="mx-2 mt-8 sm:mx-0">
+                <JourneySwitcher />
+            </div>
             <div
                 v-else-if="isLoadingJourneys && !hasJourneyData"
                 class="mt-8 rounded-lg border border-line bg-surface p-4 text-ink-muted"
@@ -73,21 +74,12 @@
                         Open API settings
                     </button>
                 </p>
-                <section>
-                    <JourneyTimelines
-                        v-if="journeys.length > 0"
-                        :journeys="journeys"
-                        :currentMinutes="currentMinutes"
-                        :flushOnMobile="true"
-                    />
-                    <p
-                        v-else
-                        class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
-                        role="status"
-                    >
-                        There is no journey.
-                    </p>
-                </section>
+                <JourneyTimelines
+                    v-if="journeys.length > 0"
+                    :journeys="journeys"
+                    :currentMinutes="currentMinutes"
+                    :flushOnMobile="true"
+                />
 
                 <NoJourneysFound
                     v-if="routesWithoutTimetabledJourneys.length > 0"
@@ -109,12 +101,15 @@ import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useDashboardConfigStore} from "../store/dashboardConfig.store";
 import {useDashboardClockStore} from "../store/dashboardClock.store";
+import {useJourneySelectionStore} from "../store/journeySelection.store";
 import DashboardHeader from "./DashboardHeader.vue";
 import {getRoutesWithoutTimetabledJourneys} from "@/trainDashboard/journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
+import JourneySwitcher from "./journeys/JourneySwitcher.vue";
 
 const trainServicesStore = useTrainServicesStore();
 const dashboardClockStore = useDashboardClockStore();
 const dashboardConfigStore = useDashboardConfigStore();
+const journeySelectionStore = useJourneySelectionStore();
 const settingsModal = ref<{
     open: () => void;
     openApiSettings: () => void;
@@ -123,6 +118,7 @@ const {isLoadingJourneys, journeyLoadError, journeys, routes} =
     storeToRefs(trainServicesStore);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
+const {activeJourneyDetails} = storeToRefs(journeySelectionStore);
 
 const hasJourneyData = computed(() => journeys.value.length > 0);
 const hasNoJourneyConfiguration = computed(

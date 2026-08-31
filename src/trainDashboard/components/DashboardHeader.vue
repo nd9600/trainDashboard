@@ -1,6 +1,6 @@
 <template>
     <header class="min-w-0">
-        <JourneySwitcher />
+        <JourneySwitcher v-if="activeJourneyDetails" />
         <h1
             class="mt-8 mb-1 font-display text-4xl"
             :class="isLoadingJourneys ? 'text-surface' : ''"
@@ -63,7 +63,9 @@ const dashboardClockStore = useDashboardClockStore();
 const journeySelectionStore = useJourneySelectionStore();
 const {isLoadingJourneys, journeys, recommendedJourney} =
     storeToRefs(trainServicesStore);
-const {activeJourney, activeJourneyId} = storeToRefs(journeySelectionStore);
+const {activeJourney, activeJourneyDetails, activeJourneyId} = storeToRefs(
+    journeySelectionStore
+);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 
 const headerJourney = computed(
