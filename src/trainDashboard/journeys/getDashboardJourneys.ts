@@ -28,7 +28,11 @@ export async function getDashboardJourneys(
         return {routes, journeys: []};
     }
 
-    const departureBoards = await getDepartureBoards(consumerKey, routes);
+    const departureBoards = await getDepartureBoards(
+        consumerKey,
+        routes,
+        currentClock.minutes
+    );
     const trainOptions = getTrainOptions(
         routes,
         departureBoards,

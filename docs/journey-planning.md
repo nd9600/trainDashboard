@@ -57,9 +57,12 @@ sequenceDiagram
     Store->>Clock: Read the current clock
     Store->>Pipeline: getDashboardJourneys(journey, stationGroups, currentClock, consumerKey)
     Pipeline->>Pipeline: getStationRoutes(...)
-    Pipeline->>Boards: getDepartureBoards(...)
-    Boards->>API: fetchDepartureBoard(...) for each unique request
-    API-->>Boards: Departure-board responses
+    Pipeline->>Boards: getDepartureBoards(..., currentMinutes)
+    Boards->>API: Request direct and first-train boards
+    API-->>Boards: Direct and first-train boards
+    Boards->>Boards: Find the earliest catchable transfer time
+    Boards->>API: Request onward boards from each transfer time
+    API-->>Boards: Onward boards
     Boards-->>Pipeline: Validated departure boards
     Pipeline->>Pipeline: getTrainOptions(...)
     Pipeline->>Pipeline: combineAlternativeOnwardTrains(...)
@@ -120,7 +123,9 @@ sequenceDiagram
     end
 ```
 
-A station-pair request occurs only once during each planning request.
+Each unique departure-board request occurs once during each planning request.
+
+An onward request starts at the earliest arrival of a catchable first train, plus three minutes. This prevents earlier local trains from filling the ten-row response.
 
 A matching schedule supplies the predicted journey. If no schedule matches, there is no predicted journey.
 
@@ -191,6 +196,7 @@ flowchart TD
 
     pipeline --> boards
     boards --> api
+    boards --> direct
     pipeline --> trains
     trains --> direct
     trains --> alternatives
@@ -227,9 +233,10 @@ flowchart TD
 - `src/trainDashboard/journeys/journeyPrediction.ts` selects the active schedule and predicted journey ID.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
 - `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands journeys into station routes.
-- `src/trainDashboard/journeys/timetable/departureBoards.ts` creates and deduplicates departure-board requests.
+- `src/trainDashboard/journeys/timetable/departureBoards.ts` loads direct and first-train boards, then requests onward boards from the first catchable transfer time.
 - `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
-- `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains and valid connections.
+- `src/trainDashboard/journeys/timetable/trainLegs.ts` converts departure services into timed train legs.
+- `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains, validates connections, and groups alternatives.
 - `src/trainDashboard/journeys/timetable/timetabledJourneys.ts` builds sections, filters journeys, and sorts results.
 - `src/trainDashboard/components/TrainDashboard.vue` shows the journey switcher when there is no resolved active journey.
 - `src/trainDashboard/components/DashboardHeader.vue` shows the compact journey switcher when an active journey exists.

@@ -269,6 +269,62 @@ describe("journey timetable stages", () => {
         });
     });
 
+    it("requests onward trains from the first catchable transfer time", async () => {
+        const requests: DepartureBoardRequest[] = [];
+        vi.spyOn(
+            railDataMarketplaceApi,
+            "fetchDepartureBoard"
+        ).mockImplementation(async (_consumerKey, request) => {
+            requests.push(request);
+
+            if (request.destinationCrs === "GLQ") {
+                return {
+                    crs: "EDB",
+                    trainServices: [
+                        service("fast-first-train", "18:15", "GLQ", "19:06"),
+                    ],
+                };
+            }
+
+            return {
+                crs: "GLQ",
+                trainServices:
+                    request.timeOffsetMinutes === 0
+                        ? Array.from({length: 10}, (_, index) =>
+                              service(
+                                  `too-early-${index}`,
+                                  formatApiTime(18 * 60 + 5 + index * 7),
+                                  "CHC",
+                                  formatApiTime(18 * 60 + 7 + index * 7)
+                              )
+                          )
+                        : [
+                              service(
+                                  "catchable-onward-train",
+                                  "19:13",
+                                  "CHC",
+                                  "19:15"
+                              ),
+                          ],
+            };
+        });
+
+        const journeys = await getTimetabledJourneys(
+            "test-key",
+            [journeyRoute("EDB", "CHC", 0, 0, "GLQ")],
+            18 * 60 + 2,
+            false
+        );
+
+        expect(requests.map((request) => request.timeOffsetMinutes)).toEqual([
+            0, 67,
+        ]);
+        expect(journeys[0]!.trainLegs).toMatchObject([
+            {departure: 18 * 60 + 15, arrival: 19 * 60 + 6},
+            {departure: 19 * 60 + 13, arrival: 19 * 60 + 15},
+        ]);
+    });
+
     it("shows slower onward trains as alternatives", async () => {
         mockDepartureBoards({
             "HTC-MAN": [service("first-train", "10:05", "MAN", "10:20")],
@@ -501,6 +557,7 @@ async function getTimetabledJourneys(
     const departureBoards = await getDepartureBoards(
         consumerKey,
         stationRoutes,
+        currentMinutes,
         requestCache
     );
     const trainOptions = getTrainOptions(
