@@ -6,15 +6,9 @@ import {
     getDepartureBoards,
     type DepartureBoardRequestCache,
 } from "./departureBoards";
-import {getTrainOptions} from "./trainOptions";
-import {
-    makeTimetabledJourneys,
-    getCatchableJourneys,
-    markRecommendedJourney,
-    sortJourneysByArrival,
-} from "./timetabledJourneys";
+import {planTimetabledJourneys} from "./planTimetabledJourneys";
 
-describe("journey timetable stages", () => {
+describe("journey timetable planning", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -22,8 +16,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
             [journeyRoute("HTC", "EDY", 15, 8)],
-            8 * 60,
-            false
+            8 * 60
         );
 
         expect(journeys[0]).toMatchObject({
@@ -50,8 +43,7 @@ describe("journey timetable stages", () => {
                 journeyRoute("HTC", "EDY", 15, 8),
                 journeyRoute("HTC", "MAN", 15, 15),
             ],
-            8 * 60,
-            true
+            8 * 60
         );
 
         expect(journeys.filter((journey) => journey.recommended)).toHaveLength(
@@ -69,8 +61,7 @@ describe("journey timetable stages", () => {
                 journeyRoute("HTC", "MAN", 15, 15),
                 journeyRoute("HTC", "EDY", 15, 8),
             ],
-            8 * 60,
-            false
+            8 * 60
         );
 
         expect(
@@ -92,8 +83,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             "test-key",
             [journeyRoute("HTC", "EDY", 0, 0)],
-            10 * 60,
-            false
+            10 * 60
         );
 
         expect(
@@ -105,8 +95,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
             [journeyRoute("HTC", "EDY", 25, 8)],
-            8 * 60,
-            false
+            8 * 60
         );
 
         expect(journeys).toHaveLength(1);
@@ -127,8 +116,7 @@ describe("journey timetable stages", () => {
         await getTimetabledJourneys(
             "test-key",
             [journeyRoute("HTC", "EDY", 15, 8)],
-            8 * 60,
-            false
+            8 * 60
         );
 
         expect(requests).toEqual([
@@ -146,26 +134,23 @@ describe("journey timetable stages", () => {
             "test-key",
             [route],
             8 * 60,
-            false,
             departureBoardRequestCache
         );
         await getTimetabledJourneys(
             "test-key",
             [route],
             8 * 60,
-            false,
             departureBoardRequestCache
         );
 
         expect(departureBoardRequestCache).toHaveLength(1);
     });
 
-    it("omits a journeys until timetable data is available for it", async () => {
+    it("omits a journey until timetable data is available for it", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(17 * 60),
             [journeyRoute("LIV", "MAN", 0, 0)],
-            17 * 60,
-            false
+            17 * 60
         );
 
         expect(journeys).toEqual([]);
@@ -175,8 +160,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
             [journeyRoute("HTC", "EDY", undefined, undefined)],
-            8 * 60,
-            true
+            8 * 60
         );
 
         expect(journeys[0]).toMatchObject({
@@ -219,8 +203,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             "test-key",
             [journeyRoute("HTC", "EDY", 15, 8)],
-            8 * 60,
-            false
+            8 * 60
         );
 
         expect(journeys[0]).toMatchObject({
@@ -238,8 +221,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(15 * 60),
             [journeyRoute("BNA", "LIV", 5, 0, "MAN")],
-            15 * 60,
-            false
+            15 * 60
         );
 
         expect(journeys[0]).toMatchObject({
@@ -312,8 +294,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             "test-key",
             [journeyRoute("EDB", "CHC", 0, 0, "GLQ")],
-            18 * 60 + 2,
-            false
+            18 * 60 + 2
         );
 
         expect(requests.map((request) => request.timeOffsetMinutes)).toEqual([
@@ -337,8 +318,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             "test-key",
             [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            10 * 60,
-            false
+            10 * 60
         );
 
         expect(journeys).toHaveLength(1);
@@ -366,8 +346,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             "test-key",
             [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            10 * 60,
-            false
+            10 * 60
         );
 
         expect(journeys).toHaveLength(1);
@@ -389,8 +368,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             "test-key",
             [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            10 * 60,
-            false
+            10 * 60
         );
 
         expect(journeys).toHaveLength(1);
@@ -409,8 +387,7 @@ describe("journey timetable stages", () => {
         const journeys = await getTimetabledJourneys(
             "test-key",
             [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            15 * 60,
-            false
+            15 * 60
         );
 
         expect(journeys[0]!.trainLegs).toMatchObject([
@@ -551,7 +528,6 @@ async function getTimetabledJourneys(
     consumerKey: string,
     stationRoutes: JourneyRoute[],
     currentMinutes: number,
-    recommendJourney: boolean,
     requestCache: DepartureBoardRequestCache = new Map()
 ) {
     const departureBoards = await getDepartureBoards(
@@ -560,19 +536,9 @@ async function getTimetabledJourneys(
         currentMinutes,
         requestCache
     );
-    const trainOptions = getTrainOptions(
+    return planTimetabledJourneys(
         stationRoutes,
         departureBoards,
         currentMinutes
     );
-    const journeysWithSections = makeTimetabledJourneys(trainOptions);
-    const catchableJourneys = getCatchableJourneys(
-        journeysWithSections,
-        currentMinutes
-    );
-    const journeysSortedByArrival = sortJourneysByArrival(catchableJourneys);
-
-    return recommendJourney
-        ? markRecommendedJourney(journeysSortedByArrival)
-        : journeysSortedByArrival;
 }

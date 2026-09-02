@@ -3,13 +3,7 @@ import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import type {CurrentClock} from "./journeyPrediction";
 import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";
 import {getDepartureBoards} from "./timetable/departureBoards";
-import {getTrainOptions} from "./timetable/trainOptions";
-import {
-    makeTimetabledJourneys,
-    getCatchableJourneys,
-    markRecommendedJourney,
-    sortJourneysByArrival,
-} from "./timetable/timetabledJourneys";
+import {planTimetabledJourneys} from "./timetable/planTimetabledJourneys";
 
 export interface DashboardJourneys {
     routes: JourneyRoute[];
@@ -33,20 +27,12 @@ export async function getDashboardJourneys(
         routes,
         currentClock.minutes
     );
-    const trainOptions = getTrainOptions(
-        routes,
-        departureBoards,
-        currentClock.minutes
-    );
-    const timetabledJourneys = makeTimetabledJourneys(trainOptions);
-    const catchableJourneys = getCatchableJourneys(
-        timetabledJourneys,
-        currentClock.minutes
-    );
-    const journeysSortedByArrival = sortJourneysByArrival(catchableJourneys);
-
     return {
         routes,
-        journeys: markRecommendedJourney(journeysSortedByArrival),
+        journeys: planTimetabledJourneys(
+            routes,
+            departureBoards,
+            currentClock.minutes
+        ),
     };
 }

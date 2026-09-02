@@ -1,247 +1,108 @@
 # Journey planning
 
-The dashboard converts the current time and saved settings into journeys that a passenger can catch.
+Journey planning starts with one resolved active journey. See [journey selection](journey-selection.md) for how the app selects that journey.
 
-```text
-Current time
-      ↓
-Active schedule
-      ↓
-Scheduled journey ID
-      ↓
-Predicted journey ID
-      ↓
-Active selection: predicted, saved ID, or current ephemeral journey
-      ↓
-Resolved active journey
-      ↓
-Concrete station routes
-      ↓
-Departure-board requests
-      ↓
-Direct trains and valid connections
-      ↓
-Alternative trains grouped by shared first train
-      ↓
-Walking and waiting sections
-      ↓
-Remove journeys you cannot catch
-      ↓
-Sort by arrival
-      ↓
-Show the first six
-```
-
-## Sequence diagram
+## Planning flow
 
 ```mermaid
-sequenceDiagram
-    participant UI as TrainDashboard
-    participant Switcher as JourneySwitcher
-    participant Selection as journeySelection store
-    participant Clock as dashboardClock store
-    participant Store as trainServices store
-    participant Config as dashboardConfig store
-    participant Pipeline as getDashboardJourneys
-    participant Boards as Departure-board stage
-    participant API as Rail Data Marketplace
+flowchart LR
+    journey[Active journey]
+    routes[Station routes]
+    boards[Departure boards]
+    planner[planTimetabledJourneys]
+    journeys[Catchable journeys sorted by finish time]
+    display[First six journeys]
 
-    Store->>Selection: initialise()
-    Selection->>Selection: Load recent journey IDs and ephemeral journeys
-    Selection->>Config: Read schedules and journeys
-    Selection->>Clock: Read the current clock
-    Selection->>Selection: Compute schedule and predicted journey ID
-    Selection->>Selection: Resolve the active selection to one Journey
-    Store->>Selection: Read the resolved active journey
-    Store->>Config: Read station groups
-    Store->>Clock: Read the current clock
-    Store->>Pipeline: getDashboardJourneys(journey, stationGroups, currentClock, consumerKey)
-    Pipeline->>Pipeline: getStationRoutes(...)
-    Pipeline->>Boards: getDepartureBoards(..., currentMinutes)
-    Boards->>API: Request direct and first-train boards
-    API-->>Boards: Direct and first-train boards
-    Boards->>Boards: Find the earliest catchable transfer time
-    Boards->>API: Request onward boards from each transfer time
-    API-->>Boards: Onward boards
-    Boards-->>Pipeline: Validated departure boards
-    Pipeline->>Pipeline: getTrainOptions(...)
-    Pipeline->>Pipeline: combineAlternativeOnwardTrains(...)
-    Pipeline->>Pipeline: makeTimetabledJourneys(...)
-    Pipeline->>Pipeline: getCatchableJourneys(...)
-    Pipeline->>Pipeline: sortJourneysByArrival(...)
-    Pipeline-->>Store: Routes and timetabled journeys
-    Store-->>UI: Routes and timetabled journeys
-    UI->>UI: Show the first six journeys
-
-    UI->>Switcher: Open predicted, recent, and saved journeys
-    alt Select an existing journey
-        UI->>Switcher: Select a journey
-        Switcher->>Selection: selectJourney(journeyId)
-    else Select a station-to-station journey
-        UI->>Switcher: Choose Go somewhere else
-        Switcher->>Switcher: Select two stations and an optional connection
-        Switcher->>Selection: selectEphemeralJourney(fields)
-    end
-    Selection->>Selection: Set the active selection and update recent IDs
-    Selection-->>Store: Resolved active journey changed
-    Store->>Pipeline: Refresh the active journey
-
-    opt Save a station-to-station journey
-        UI->>Switcher: Select Save
-        Switcher->>Selection: saveActiveJourney()
-        Selection->>Config: saveJourney(journey)
-        Selection->>Selection: Remove the journey from ephemeral memory
-    end
-
-    opt Clear a station-to-station journey
-        UI->>Switcher: Select Clear
-        Switcher->>Selection: clearActiveJourney()
-        Selection-->>Store: Restore the current predicted journey
-        Store->>Pipeline: Refresh the active journey
-    end
-
-    opt Remove a journey choice
-        UI->>Switcher: Select x
-        alt Recent journey
-            Switcher->>Selection: removeRecentJourney(journeyId)
-            Selection->>Selection: Remove the journey ID from history
-        else Unscheduled saved journey
-            Switcher->>Selection: removeSavedJourney(journeyId)
-            Selection->>Config: removeJourney(journeyId)
-        end
-    end
-
-    opt Edit an unscheduled active journey
-        UI->>Switcher: Select Edit
-        Switcher->>Selection: editActiveJourney(fields)
-        alt Ephemeral journey
-            Selection->>Selection: Update ephemeral journey memory
-        else Saved journey
-            Selection->>Config: updateJourney(journey)
-        end
-        Selection-->>Store: Resolved active journey changed
-    end
+    journey --> routes
+    routes --> boards
+    boards --> planner
+    routes --> planner
+    planner --> journeys
+    journeys --> display
 ```
 
-Each unique departure-board request occurs once during each planning request.
+`getStationRoutes` expands station groups into concrete origin and destination pairs. It removes pairs that use the same station.
 
-An onward request starts at the earliest arrival of a catchable first train, plus three minutes. This prevents earlier local trains from filling the ten-row response.
+A configured connecting station creates a direct route and a connected route. It creates only a direct route when the connecting station is an endpoint.
 
-A matching schedule supplies the predicted journey. If no schedule matches, there is no predicted journey.
+See [departure-board requests](departure-boards.md) for how the app loads direct, first-train, and onward boards.
 
-Recent history does not affect prediction. A new selection remains a temporary override during that page session.
+`planTimetabledJourneys` is the planning interface. It hides train matching, connection rules, section construction, filtering, sorting, and recommendation.
 
-The selection store starts with explicit empty state. The train-services store calls `initialise()` before its first refresh. The action loads memory once.
-
-The selection immediately appears in the Recent section. A page refresh restores the current schedule prediction.
-
-Saved and ephemeral journeys use the same `Journey` shape. An ephemeral journey uses station endpoints and can include one connecting station.
-
-The Save action adds the same journey to the configuration. Its ID stays the same unless that ID is already in use.
-
-Recent history contains journey IDs only. Ephemeral journey definitions remain in journey memory while a recent or active selection refers to them.
-
-Removing a recent journey only removes its history entry. A saved journey can be removed or edited only when no schedule uses it.
-
-The Clear action restores the current schedule prediction. It does not add another recent-history entry.
-
-Connection options that use the same first train are shown as one journey. The option that arrives first remains visible. Other onward trains appear as alternatives on the second leg.
-
-## Call graph
+## Connection construction
 
 ```mermaid
 flowchart TD
-    dashboard[TrainDashboard.vue]
-    header[DashboardHeader.vue]
-    store[useTrainServicesStore]
-    pipeline[getDashboardJourneys]
-    prediction[getJourneyPrediction]
-    switcher[JourneySwitcher.vue]
-    journeyForm[JourneyForm.vue]
-    maker[JourneyMaker.vue]
-    selectionStore[useJourneySelectionStore]
-    clockStore[useDashboardClockStore]
-    configStore[useDashboardConfigStore]
-    createEphemeral[createEphemeralJourney]
-    stationInput[StationInput.vue]
-    routes[getStationRoutes]
-    stations[getStationsForLocation]
-    options[getRouteOptions]
-    boards[getDepartureBoards]
-    api[fetchDepartureBoard]
-    trains[getTrainOptions]
-    direct[getDirectTrainLegs]
-    service[getTrainLeg]
-    alternatives[combineAlternativeOnwardTrains]
-    sections[makeTimetabledJourneys]
-    catchable[getCatchableJourneys]
-    sort[sortJourneysByArrival]
-    recommended[markRecommendedJourney]
-    missing[getRoutesWithoutTimetabledJourneys]
-    timelines[JourneyTimelines.vue]
-    cards[JourneyCards.vue]
-    charts[JourneyCharts.vue]
+    onward[Take one onward train]
+    matching[Find catchable first trains]
+    any{Any first trains?}
+    discard[Discard this onward train]
+    order[Order first trains by latest departure]
+    plan[Use the latest first train]
+    firstAlternatives[Attach earlier first trains as alternatives]
+    group[Group plans that use the same first train]
+    onwardMain[Show the onward train that arrives first]
+    onwardAlternatives[Attach other onward trains as alternatives]
 
-    dashboard --> store
-    store --> pipeline
-    store --> selectionStore
-    store --> configStore
-    store --> clockStore
-    selectionStore --> prediction
-    selectionStore --> configStore
-    selectionStore --> clockStore
-    pipeline --> routes
-    routes --> stations
-    routes --> options
-
-    pipeline --> boards
-    boards --> api
-    boards --> direct
-    pipeline --> trains
-    trains --> direct
-    trains --> alternatives
-    direct --> service
-    pipeline --> sections
-    pipeline --> catchable
-    pipeline --> sort
-    pipeline --> recommended
-
-    dashboard --> header
-    dashboard --> switcher
-    dashboard --> clockStore
-    header --> switcher
-    switcher --> selectionStore
-    switcher --> configStore
-    switcher --> journeyForm
-    journeyForm --> maker
-    maker --> stationInput
-    selectionStore --> createEphemeral
-
-    dashboard --> missing
-    dashboard --> timelines
-    timelines -->|slice 0, 6| cards
-    timelines -->|slice 0, 6| charts
+    onward --> matching
+    matching --> any
+    any -->|No| discard
+    any -->|Yes| order
+    order --> plan
+    plan --> firstAlternatives
+    firstAlternatives --> group
+    group --> onwardMain
+    onwardMain --> onwardAlternatives
 ```
+
+A catchable first train must meet all these rules:
+
+- The passenger can complete the origin walk before departure.
+- The first train arrives at least three minutes before the onward train departs.
+- The first and onward trains have different service IDs.
+
+## Filtering and ordering
+
+The planner adds walk, train, and wait sections to each train plan.
+
+It removes a journey when its first section starts before the current time. This includes the origin walk when its duration is known.
+
+It sorts journeys by the end of the final section. This includes the destination walk when its duration is known.
+
+When two journeys finish together, the journey that starts later comes first.
+
+The first sorted journey with known origin and destination walking times is recommended.
+
+## Presentation
+
+```mermaid
+flowchart LR
+    planned[All sorted journeys]
+    platforms[Find consistent platforms]
+    firstSix[Take the first six]
+    adjust[Hide consistent platform numbers]
+    mobile[Mobile cards]
+    desktop[Desktop charts]
+
+    planned --> platforms
+    planned --> firstSix
+    platforms --> adjust
+    firstSix --> adjust
+    adjust --> mobile
+    adjust --> desktop
+```
+
+The planner returns all sorted journeys. `JourneyTimelines` applies the six-journey display limit.
+
+Platform consistency uses all planned journeys. A platform is hidden when multiple services use the same known platform for one station pair.
 
 ## Source map
 
-- `src/trainDashboard/store/trainServices.store.ts` initialises journey selection and refreshes train data for the resolved active journey.
-- `src/trainDashboard/store/journeySelection.store.ts` owns selection state, memory, choices, and journey actions.
-- `src/trainDashboard/store/dashboardClock.store.ts` owns the current dashboard clock and minute timer.
-- `src/trainDashboard/store/dashboardConfig.store.ts` saves, updates, and removes journeys in the configuration.
-- `src/trainDashboard/dto/journeySelection.dto.ts` defines active selection and journey-memory shapes.
-- `src/trainDashboard/journeys/journeyPrediction.ts` selects the active schedule and predicted journey ID.
-- `src/trainDashboard/journeys/getDashboardJourneys.ts` shows the complete pipeline in order.
-- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands journeys into station routes.
-- `src/trainDashboard/journeys/timetable/departureBoards.ts` loads direct and first-train boards, then requests onward boards from the first catchable transfer time.
-- `src/trainDashboard/api/railDataMarketplace.api.ts` requests and validates departure boards.
+- `src/trainDashboard/journeys/getDashboardJourneys.ts` expands the active journey, loads boards, and calls the planner.
+- `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands a journey into concrete station routes.
+- `src/trainDashboard/journeys/timetable/planTimetabledJourneys.ts` owns planning rules and returns sorted, recommended journeys.
 - `src/trainDashboard/journeys/timetable/trainLegs.ts` converts departure services into timed train legs.
-- `src/trainDashboard/journeys/timetable/trainOptions.ts` finds direct trains, validates connections, and groups alternatives.
-- `src/trainDashboard/journeys/timetable/timetabledJourneys.ts` builds sections, filters journeys, and sorts results.
-- `src/trainDashboard/components/TrainDashboard.vue` shows the journey switcher when there is no resolved active journey.
-- `src/trainDashboard/components/DashboardHeader.vue` shows the compact journey switcher when an active journey exists.
-- `src/trainDashboard/components/journeys/JourneySwitcher.vue` selects, edits, and removes eligible journey choices.
-- `src/trainDashboard/components/journeys/JourneyForm.vue` owns new and edited journey drafts and their submit and Cancel actions.
-- `src/trainDashboard/components/journeys/JourneyMaker.vue` builds configured and ephemeral journeys from endpoints and an optional connection.
-- `src/trainDashboard/components/settings/stationGroups/StationInput.vue` selects stations for journey endpoints and connections.
-- `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits the displayed journey list to six results.
+- `src/trainDashboard/dto/timetabledJourney.dto.ts` defines the planned journey and section shapes.
+- `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits results and prepares platform display.
+- `src/trainDashboard/components/journeys/JourneyCards.vue` shows mobile journeys.
+- `src/trainDashboard/components/journeys/JourneyCharts.vue` shows desktop journeys.
