@@ -85,7 +85,7 @@ function getConnectionPlans(
         viaCrs,
         currentMinutes
     );
-    
+
     const onwardTrainDepartureBoard = getDepartureBoard(departureBoards, viaCrs, route.destination.crs, 0);
     const onwardTrainLegs = getDirectTrainLegs(
         onwardTrainDepartureBoard,
