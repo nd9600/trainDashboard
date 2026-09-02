@@ -298,7 +298,7 @@ describe("journey timetable planning", () => {
         );
 
         expect(requests.map((request) => request.timeOffsetMinutes)).toEqual([
-            0, 67,
+            0, 119, 67,
         ]);
         expect(journeys[0]!.trainLegs).toMatchObject([
             {departure: 18 * 60 + 15, arrival: 19 * 60 + 6},

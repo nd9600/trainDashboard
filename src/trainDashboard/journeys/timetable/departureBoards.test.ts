@@ -10,6 +10,95 @@ describe("connected-route departure boards", () => {
         vi.restoreAllMocks();
     });
 
+    it("loads a later sparse first-train board before requesting onward trains", async () => {
+        const requests: DepartureBoardRequest[] = [];
+        vi.spyOn(
+            railDataMarketplaceApi,
+            "fetchDepartureBoard"
+        ).mockImplementation(async (_consumerKey, request) => {
+            requests.push(request);
+
+            if (request.originCrs === "HTC") {
+                return {
+                    crs: "HTC",
+                    trainServices:
+                        request.timeOffsetMinutes === 119
+                            ? [service("later-first", "13:05", "MAN", "13:10")]
+                            : [
+                                  service(
+                                      "initial-first",
+                                      "11:05",
+                                      "MAN",
+                                      "11:10"
+                                  ),
+                              ],
+                };
+            }
+
+            return {
+                crs: "MAN",
+                trainServices:
+                    request.timeOffsetMinutes === 119
+                        ? [service("later-onward", "13:20", "LIV", "14:00")]
+                        : [service("initial-onward", "11:30", "LIV", "12:10")],
+            };
+        });
+
+        const boards = await getDepartureBoards(
+            "test-key",
+            [connectedRoute],
+            11 * 60
+        );
+
+        expect(
+            requests.map(
+                (request) =>
+                    `${request.originCrs}-${request.destinationCrs}:${request.timeOffsetMinutes}`
+            )
+        ).toEqual(["HTC-MAN:0", "HTC-MAN:119", "MAN-LIV:13", "MAN-LIV:119"]);
+        expect(
+            getDepartureBoard(boards, "HTC", "MAN", 0).trainServices.map(
+                (trainService) => trainService.serviceID
+            )
+        ).toEqual(["initial-first", "later-first"]);
+    });
+
+    it("does not extend a first-train board that has six catchable trains", async () => {
+        const requests: DepartureBoardRequest[] = [];
+        const sixFirstTrains = Array.from({length: 6}, (_, index) => {
+            const departureMinutes = 11 * 60 + 5 + index * 10;
+
+            return service(
+                `first-${index}`,
+                formatApiTime(departureMinutes),
+                "MAN",
+                formatApiTime(departureMinutes + 5)
+            );
+        });
+        vi.spyOn(
+            railDataMarketplaceApi,
+            "fetchDepartureBoard"
+        ).mockImplementation(async (_consumerKey, request) => {
+            requests.push(request);
+
+            return {
+                crs: request.originCrs,
+                trainServices:
+                    request.originCrs === "HTC"
+                        ? sixFirstTrains
+                        : [service("onward", "12:50", "LIV", "13:30")],
+            };
+        });
+
+        await getDepartureBoards("test-key", [connectedRoute], 11 * 60);
+
+        expect(
+            requests
+                .filter((request) => request.originCrs === "HTC")
+                .map((request) => request.timeOffsetMinutes)
+        ).toEqual([0]);
+    });
+
     it.each([
         {
             name: "one onward request covers all first trains",
@@ -163,4 +252,13 @@ function service(
             },
         ],
     };
+}
+
+function formatApiTime(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    return `${hours.toString().padStart(2, "0")}:${remainingMinutes
+        .toString()
+        .padStart(2, "0")}`;
 }

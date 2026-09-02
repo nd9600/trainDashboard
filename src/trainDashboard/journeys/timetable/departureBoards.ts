@@ -3,6 +3,7 @@ import type {
     DepartureBoard,
     DepartureService,
 } from "../../dto/liveDepartureBoard.dto";
+import type {TrainLeg} from "../../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "../planning/journeyRoutes";
 import {getDirectTrainLegs, minimumTransferMinutes} from "./trainLegs";
 
@@ -16,6 +17,7 @@ interface DepartureBoardRequest {
 }
 
 const maximumTimeOffsetMinutes = 119;
+const minimumFirstTrainCount = 6;
 
 export async function getDepartureBoards(
     consumerKey: string,
@@ -28,6 +30,47 @@ export async function getDepartureBoards(
         getFirstDepartureBoardRequests(stationRoutes),
         requestCache
     );
+    const laterFirstBoardRequests = stationRoutes.flatMap((route) => {
+        if (
+            !route.viaCrs ||
+            getCatchableFirstTrainLegs(route, departureBoards, currentMinutes)
+                .length >= minimumFirstTrainCount
+        ) {
+            return [];
+        }
+
+        const firstRequest = getFirstDepartureBoardRequest(route);
+
+        if (firstRequest.timeOffsetMinutes >= maximumTimeOffsetMinutes) {
+            return [];
+        }
+
+        return [
+            {
+                canonicalKey: getRequestKey(firstRequest),
+                request: {
+                    ...firstRequest,
+                    timeOffsetMinutes: maximumTimeOffsetMinutes,
+                },
+            },
+        ];
+    });
+    const laterFirstBoards = await fetchDepartureBoards(
+        consumerKey,
+        laterFirstBoardRequests.map(({request}) => request),
+        requestCache
+    );
+
+    laterFirstBoardRequests.forEach(({canonicalKey, request}) => {
+        departureBoards.set(
+            canonicalKey,
+            mergeDepartureBoards(
+                departureBoards.get(canonicalKey)!,
+                laterFirstBoards.get(getRequestKey(request))!
+            )
+        );
+    });
+
     const onwardBoards = await Promise.all(
         stationRoutes.map(async (route) => {
             if (!route.viaCrs) {
@@ -40,20 +83,10 @@ export async function getDepartureBoards(
                 timeOffsetMinutes: 0,
             };
             const canonicalKey = getRequestKey(canonicalRequest);
-            const firstTrainLegs = getDirectTrainLegs(
-                getDepartureBoard(
-                    departureBoards,
-                    route.origin.crs,
-                    route.viaCrs,
-                    route.origin.walkMinutes ?? 0
-                ),
-                route.origin.crs,
-                route.viaCrs,
+            const firstTrainLegs = getCatchableFirstTrainLegs(
+                route,
+                departureBoards,
                 currentMinutes
-            ).filter(
-                (trainLeg) =>
-                    trainLeg.departure - (route.origin.walkMinutes ?? 0) >=
-                    currentMinutes
             );
             const transferReadyTimes = Array.from(
                 new Set(
@@ -187,11 +220,41 @@ export function getDepartureBoard(
 function getFirstDepartureBoardRequests(
     stationRoutes: JourneyRoute[]
 ): DepartureBoardRequest[] {
-    return stationRoutes.map((route) => ({
+    return stationRoutes.map(getFirstDepartureBoardRequest);
+}
+
+function getFirstDepartureBoardRequest(
+    route: JourneyRoute
+): DepartureBoardRequest {
+    return {
         originCrs: route.origin.crs,
         destinationCrs: route.viaCrs ?? route.destination.crs,
         timeOffsetMinutes: route.origin.walkMinutes ?? 0,
-    }));
+    };
+}
+
+function getCatchableFirstTrainLegs(
+    route: JourneyRoute,
+    departureBoards: DepartureBoards,
+    currentMinutes: number
+): TrainLeg[] {
+    const firstRequest = getFirstDepartureBoardRequest(route);
+
+    return getDirectTrainLegs(
+        getDepartureBoard(
+            departureBoards,
+            firstRequest.originCrs,
+            firstRequest.destinationCrs,
+            firstRequest.timeOffsetMinutes
+        ),
+        firstRequest.originCrs,
+        firstRequest.destinationCrs,
+        currentMinutes
+    ).filter(
+        (trainLeg) =>
+            trainLeg.departure - firstRequest.timeOffsetMinutes >=
+            currentMinutes
+    );
 }
 
 function getRequestKey(request: DepartureBoardRequest): string {
