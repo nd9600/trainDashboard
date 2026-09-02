@@ -15,10 +15,13 @@ sequenceDiagram
     Boards->>API: Request direct and first-train boards
     API-->>Boards: Up to ten services per board
     Boards->>Parser: Parse catchable first-train legs
-    Parser-->>Boards: First-train arrival times
-    Boards->>Boards: Earliest arrival plus three minutes
-    Boards->>API: Request onward boards from that offset
-    API-->>Boards: Onward services
+    Parser-->>Boards: Sorted transfer-ready times
+    loop Until all transfer-ready times have onward coverage
+        Boards->>API: Request onward board from next uncovered time
+        API-->>Boards: Onward services
+        Boards->>Parser: Parse onward departure times
+        Boards->>Boards: Merge services and find next uncovered time
+    end
     Boards-->>Dashboard: Departure boards keyed by station pair
 ```
 
@@ -26,15 +29,19 @@ sequenceDiagram
 
 Direct routes request the origin-to-destination board. The request starts after the configured origin walk.
 
-Connected routes first request the origin-to-connection board. The app then finds the earliest catchable first-train arrival.
+Connected routes first request the origin-to-connection board. The app then finds the transfer-ready time for each catchable first train.
 
-The onward request starts three minutes after that arrival. This avoids filling the ten-row response with trains that leave before the passenger arrives.
+Each transfer-ready time is the first-train arrival plus three minutes. The first onward request starts at the earliest transfer-ready time.
+
+The app compares the last onward departure with the remaining transfer-ready times. If a later first train is not covered, another request starts at its transfer-ready time.
+
+The app repeats this process until no transfer-ready times remain. An empty response advances the process to the next transfer-ready time.
 
 Each request asks for ten rows in a 120-minute window. The time offset is limited to 119 minutes.
 
 Identical station-pair and offset requests share one promise during a planning request.
 
-When several routes need different onward offsets for one station pair, the returned services are merged and deduplicated.
+All onward responses for one station pair are merged and deduplicated. This includes overlapping responses and responses used by several routes.
 
 ## Source map
 

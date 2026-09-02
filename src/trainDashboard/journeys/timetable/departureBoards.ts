@@ -28,87 +28,121 @@ export async function getDepartureBoards(
         getFirstDepartureBoardRequests(stationRoutes),
         requestCache
     );
-    const onwardRequests = stationRoutes.flatMap((route) => {
-        if (!route.viaCrs) {
-            return [];
-        }
+    const onwardBoards = await Promise.all(
+        stationRoutes.map(async (route) => {
+            if (!route.viaCrs) {
+                return;
+            }
 
-        const canonicalRequest = {
-            originCrs: route.viaCrs,
-            destinationCrs: route.destination.crs,
-            timeOffsetMinutes: 0,
-        };
-        const canonicalKey = getRequestKey(canonicalRequest);
-
-        if (!departureBoards.has(canonicalKey)) {
-            departureBoards.set(canonicalKey, {
-                crs: route.viaCrs,
-                trainServices: [],
-            });
-        }
-
-        const firstTrainLegs = getDirectTrainLegs(
-            getDepartureBoard(
-                departureBoards,
+            const canonicalRequest = {
+                originCrs: route.viaCrs,
+                destinationCrs: route.destination.crs,
+                timeOffsetMinutes: 0,
+            };
+            const canonicalKey = getRequestKey(canonicalRequest);
+            const firstTrainLegs = getDirectTrainLegs(
+                getDepartureBoard(
+                    departureBoards,
+                    route.origin.crs,
+                    route.viaCrs,
+                    route.origin.walkMinutes ?? 0
+                ),
                 route.origin.crs,
                 route.viaCrs,
-                route.origin.walkMinutes ?? 0
-            ),
-            route.origin.crs,
-            route.viaCrs,
-            currentMinutes
-        ).filter(
-            (trainLeg) =>
-                trainLeg.departure - (route.origin.walkMinutes ?? 0) >=
                 currentMinutes
-        );
-        const earliestArrival = Math.min(
-            ...firstTrainLegs.map((trainLeg) => trainLeg.arrival)
-        );
+            ).filter(
+                (trainLeg) =>
+                    trainLeg.departure - (route.origin.walkMinutes ?? 0) >=
+                    currentMinutes
+            );
+            const transferReadyTimes = Array.from(
+                new Set(
+                    firstTrainLegs.map(
+                        (trainLeg) => trainLeg.arrival + minimumTransferMinutes
+                    )
+                )
+            ).sort((first, second) => first - second);
 
-        if (!Number.isFinite(earliestArrival)) {
-            return [];
-        }
-
-        return [
-            {
+            return {
                 canonicalKey,
-                request: {
-                    ...canonicalRequest,
-                    timeOffsetMinutes: Math.min(
-                        Math.max(
-                            earliestArrival +
-                                minimumTransferMinutes -
-                                currentMinutes,
-                            0
-                        ),
-                        maximumTimeOffsetMinutes
-                    ),
-                },
-            },
-        ];
-    });
-    const onwardBoards = await fetchDepartureBoards(
-        consumerKey,
-        onwardRequests.map(({request}) => request),
-        requestCache
+                board: await fetchOnwardDepartureBoards(
+                    consumerKey,
+                    canonicalRequest,
+                    transferReadyTimes,
+                    currentMinutes,
+                    requestCache
+                ),
+            };
+        })
     );
 
-    onwardRequests.forEach(({canonicalKey, request}) => {
-        const onwardBoard = onwardBoards.get(getRequestKey(request));
-
-        if (onwardBoard) {
-            departureBoards.set(
-                canonicalKey,
-                mergeDepartureBoards(
-                    departureBoards.get(canonicalKey)!,
-                    onwardBoard
-                )
-            );
+    onwardBoards.forEach((result) => {
+        if (!result) {
+            return;
         }
+
+        departureBoards.set(
+            result.canonicalKey,
+            mergeDepartureBoards(
+                departureBoards.get(result.canonicalKey) ?? {
+                    crs: result.board.crs,
+                    trainServices: [],
+                },
+                result.board
+            )
+        );
     });
 
     return departureBoards;
+}
+
+async function fetchOnwardDepartureBoards(
+    consumerKey: string,
+    canonicalRequest: DepartureBoardRequest,
+    transferReadyTimes: number[],
+    currentMinutes: number,
+    requestCache: DepartureBoardRequestCache
+): Promise<DepartureBoard> {
+    let departureBoard: DepartureBoard = {
+        crs: canonicalRequest.originCrs,
+        trainServices: [],
+    };
+    let nextTransferReadyTime = transferReadyTimes.at(0);
+
+    while (nextTransferReadyTime !== undefined) {
+        const request = {
+            ...canonicalRequest,
+            timeOffsetMinutes: Math.min(
+                Math.max(nextTransferReadyTime - currentMinutes, 0),
+                maximumTimeOffsetMinutes
+            ),
+        };
+        const boards = await fetchDepartureBoards(
+            consumerKey,
+            [request],
+            requestCache
+        );
+        const board = boards.get(getRequestKey(request))!;
+
+        departureBoard = mergeDepartureBoards(departureBoard, board);
+
+        const latestOnwardDeparture = getDirectTrainLegs(
+            board,
+            canonicalRequest.originCrs,
+            canonicalRequest.destinationCrs,
+            currentMinutes
+        ).at(-1)?.departure;
+        const coveredUntil = Math.max(
+            nextTransferReadyTime,
+            latestOnwardDeparture ?? nextTransferReadyTime
+        );
+
+        nextTransferReadyTime = transferReadyTimes.find(
+            (transferReadyTime) => transferReadyTime > coveredUntil
+        );
+    }
+
+    return departureBoard;
 }
 
 async function fetchDepartureBoards(
