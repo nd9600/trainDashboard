@@ -37,7 +37,7 @@
                 :schedule="schedule"
                 :journeys="journeys"
                 :stationGroups="stationGroups"
-                @edit="selectedScheduleId = schedule.id"
+                @edit="openSchedule(schedule.id)"
             />
 
             <button
@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed, nextTick, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {
     DisplaySchedule,
@@ -89,7 +89,7 @@ const selectedScheduleEntry = computed(() => {
         : {schedule: schedules.value[index]!, index};
 });
 
-function addSchedule(): void {
+async function addSchedule(): Promise<void> {
     const journey = createEmptyJourney();
     const scheduleId = newId("schedule");
 
@@ -105,8 +105,14 @@ function addSchedule(): void {
             journeyId: journey.id,
         },
     ];
-    selectedScheduleId.value = scheduleId;
     emit("changed");
+    await openSchedule(scheduleId);
+}
+
+async function openSchedule(scheduleId: string): Promise<void> {
+    selectedScheduleId.value = scheduleId;
+    await nextTick();
+    document.getElementById(`schedule-${scheduleId}-name`)?.focus();
 }
 
 function closeSchedule(): void {

@@ -5,7 +5,12 @@
                 <span class="mb-1 block text-xs text-ink-subtle">
                     Group name
                 </span>
-                <input v-model="group.name" class="appInput" required />
+                <input
+                    :id="`group-${group.id}-name`"
+                    v-model="group.name"
+                    class="appInput"
+                    required
+                />
             </label>
             <button
                 class="appButton appButton--danger px-2 py-1"
@@ -71,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import {nextTick} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {StationGroup} from "../../../dto/dashboardConfig.dto";
 import StationInput from "./StationInput.vue";
@@ -82,9 +88,14 @@ const emit = defineEmits<{
     remove: [];
 }>();
 
-function addStation(): void {
+async function addStation(): Promise<void> {
+    const stationIndex = group.value.stations.length;
     group.value.stations.push({crs: ""});
     emit("changed");
+    await nextTick();
+    document
+        .getElementById(`group-${group.value.id}-station-${stationIndex}`)
+        ?.focus();
 }
 
 function removeStation(stationIndex: number): void {

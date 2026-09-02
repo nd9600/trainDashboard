@@ -19,6 +19,7 @@
             </span>
             <span class="relative block">
                 <input
+                    ref="consumerKeyInput"
                     v-model="draft.consumerKey"
                     class="appInput pr-11"
                     autocomplete="off"
@@ -65,6 +66,7 @@ import {useRailDataApiStore} from "../../../store/railDataApi.store";
 const apiStore = useRailDataApiStore();
 const draft = ref<RailDataApiSettings>(cloneSettings(apiStore.settings));
 const isConsumerKeyVisible = ref(false);
+const consumerKeyInput = ref<HTMLInputElement | null>(null);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
 });
@@ -91,8 +93,13 @@ function cloneSettings(settings: RailDataApiSettings): RailDataApiSettings {
     return {...settings};
 }
 
+function focusConsumerKey(): void {
+    consumerKeyInput.value?.focus();
+}
+
 defineExpose({
     cancel,
+    focusConsumerKey,
     save,
 });
 </script>

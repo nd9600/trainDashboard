@@ -61,7 +61,11 @@
                 <span class="mb-1 block text-xs text-ink-subtle">
                     Use an existing journey
                 </span>
-                <select v-model="selectedJourneyId" class="appInput">
+                <select
+                    ref="journeyPicker"
+                    v-model="selectedJourneyId"
+                    class="appInput"
+                >
                     <option value="">Choose a journey</option>
                     <option
                         v-for="journey in selectableJourneys"
@@ -101,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed, nextTick, ref} from "vue";
 import type {
     DisplaySchedule,
     Journey,
@@ -127,6 +131,7 @@ const journeys = defineModel<Journey[]>("journeys", {required: true});
 const isChangingJourney = ref(false);
 const isEditingJourney = ref(false);
 const selectedJourneyId = ref("");
+const journeyPicker = ref<HTMLSelectElement | null>(null);
 
 const emit = defineEmits<{
     changed: [];
@@ -182,11 +187,13 @@ function createJourney(): void {
     isEditingJourney.value = true;
 }
 
-function toggleJourneyPicker(): void {
+async function toggleJourneyPicker(): Promise<void> {
     isChangingJourney.value = !isChangingJourney.value;
 
     if (isChangingJourney.value) {
         isEditingJourney.value = false;
+        await nextTick();
+        journeyPicker.value?.focus();
     }
 }
 

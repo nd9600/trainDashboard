@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed, nextTick, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import AppTabs from "@/components/AppTabs.vue";
 import AppModal from "@/components/Modal/AppModal.vue";
@@ -87,12 +87,16 @@ interface SettingsHandle {
     save: () => void;
 }
 
+interface ApiSettingsHandle extends SettingsHandle {
+    focusConsumerKey: () => void;
+}
+
 const isOpen = ref(false);
 const hasUnsavedJourneyConfiguration = ref(false);
 const hasUnsavedApiSettings = ref(false);
 const isConfigurationValid = ref(true);
 const journeySettings = ref<SettingsHandle | null>(null);
-const apiSettings = ref<SettingsHandle | null>(null);
+const apiSettings = ref<ApiSettingsHandle | null>(null);
 const activeSection = ref("journeys");
 const hasUnsavedChanges = computed(
     () => hasUnsavedJourneyConfiguration.value || hasUnsavedApiSettings.value
@@ -106,9 +110,11 @@ function openSettings(): void {
     isOpen.value = true;
 }
 
-function openApiSettings(): void {
+async function openApiSettings(): Promise<void> {
     activeSection.value = "api";
     openSettings();
+    await nextTick();
+    apiSettings.value?.focusConsumerKey();
 }
 
 function saveSettings(): void {

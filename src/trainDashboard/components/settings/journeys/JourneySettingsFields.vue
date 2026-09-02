@@ -1,6 +1,7 @@
 <template>
     <div class="space-y-2">
         <JourneyMaker
+            ref="journeyMaker"
             v-model:journey="journey"
             endpointMode="locations"
             originLabel="Start the journey from"
@@ -28,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import {onMounted, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {Journey, StationGroup} from "../../../dto/dashboardConfig.dto";
 import JourneyMaker from "../../journeys/JourneyMaker.vue";
@@ -43,9 +45,14 @@ withDefaults(
 );
 
 const journey = defineModel<Journey>("journey", {required: true});
+const journeyMaker = ref<InstanceType<typeof JourneyMaker>>();
 
 const emit = defineEmits<{
     changed: [];
     remove: [];
 }>();
+
+onMounted(() => {
+    journeyMaker.value?.focusOrigin();
+});
 </script>

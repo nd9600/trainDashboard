@@ -3,6 +3,7 @@
         <div class="flex flex-wrap items-end gap-x-2 gap-y-3">
             <template v-if="endpointMode === 'locations'">
                 <LocationReferenceInput
+                    ref="originLocationInput"
                     v-model="journey.origin"
                     :stationGroups="stationGroups"
                     :excludedGroupId="excludedGroupIdForOrigin"
@@ -23,6 +24,7 @@
                 <label class="block space-y-1 text-xs text-ink-muted">
                     <span>{{ originLabel }}</span>
                     <StationInput
+                        ref="originStationInput"
                         v-model="originCrs"
                         class="min-w-84"
                         :excludedCrsCodes="
@@ -44,6 +46,7 @@
                 <label class="sentenceField">
                     possibly connecting through
                     <StationInput
+                        ref="connectingStationInput"
                         v-model="journey.viaCrs"
                         class="sentenceField__control min-w-52 grow"
                         :excludedCrsCodes="connectingStationExclusions"
@@ -59,6 +62,7 @@
             </template>
             <button
                 v-else
+                ref="addConnectionButton"
                 class="appButton appButton--quiet px-0 py-1 text-xs text-primary underline underline-offset-2"
                 type="button"
                 @click="addConnectingStation"
@@ -75,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from "vue";
+import {computed, nextTick, ref} from "vue";
 import type {
     Journey,
     LocationReference,
@@ -100,6 +104,10 @@ const props = withDefaults(
 
 const journey = defineModel<Journey>("journey", {required: true});
 const emit = defineEmits<{changed: []}>();
+const originLocationInput = ref<InstanceType<typeof LocationReferenceInput>>();
+const originStationInput = ref<InstanceType<typeof StationInput>>();
+const connectingStationInput = ref<InstanceType<typeof StationInput>>();
+const addConnectionButton = ref<HTMLButtonElement | null>(null);
 
 const originCrs = computed({
     get: () =>
@@ -165,14 +173,18 @@ const excludedDestinationKeys = computed(() => {
         .map((candidate) => getLocationKey(candidate.destination));
 });
 
-function addConnectingStation(): void {
+async function addConnectingStation(): Promise<void> {
     journey.value.viaCrs = "";
     emit("changed");
+    await nextTick();
+    connectingStationInput.value?.focus();
 }
 
-function removeConnectingStation(): void {
+async function removeConnectingStation(): Promise<void> {
     delete journey.value.viaCrs;
     emit("changed");
+    await nextTick();
+    addConnectionButton.value?.focus();
 }
 
 function getLocationKey(location: LocationReference): string {
@@ -190,4 +202,15 @@ function getLocationKey(location: LocationReference): string {
 
     return `station:${location.groupId}:${location.crs}`;
 }
+
+function focusOrigin(): void {
+    if (props.endpointMode === "locations") {
+        originLocationInput.value?.focus();
+        return;
+    }
+
+    originStationInput.value?.focus();
+}
+
+defineExpose({focusOrigin});
 </script>

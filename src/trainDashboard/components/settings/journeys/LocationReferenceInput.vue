@@ -2,6 +2,7 @@
     <label class="sentenceField">
         {{ label }}
         <select
+            ref="select"
             v-model="selectedLocationKey"
             class="appInput sentenceField__control min-w-52 grow"
             required
@@ -22,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import type {
     LocationReference,
     StationGroup,
@@ -41,6 +42,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     "update:modelValue": [value: LocationReference];
 }>();
+const select = ref<HTMLSelectElement | null>(null);
 
 interface JourneyLocationOption {
     key: string;
@@ -167,4 +169,10 @@ function locationKey(location: LocationReference): string {
         ? `group:${location.groupId}`
         : `station:${location.groupId}:${location.crs}`;
 }
+
+function focus(): void {
+    select.value?.focus();
+}
+
+defineExpose({focus});
 </script>

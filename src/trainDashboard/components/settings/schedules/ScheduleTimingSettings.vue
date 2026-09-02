@@ -5,6 +5,7 @@
         <label class="sentenceField">
             The
             <input
+                :id="`schedule-${schedule.id}-name`"
                 v-model="schedule.name"
                 class="appInput sentenceField__control w-fit"
                 required

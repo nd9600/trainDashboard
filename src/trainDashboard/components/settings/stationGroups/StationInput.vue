@@ -128,4 +128,10 @@ function selectStation(code: string | null): void {
     emit("update:modelValue", code);
     root.value?.dispatchEvent(new Event("input", {bubbles: true}));
 }
+
+function focus(): void {
+    root.value?.querySelector("input")?.focus();
+}
+
+defineExpose({focus});
 </script>

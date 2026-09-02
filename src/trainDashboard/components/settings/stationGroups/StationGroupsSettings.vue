@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import {nextTick} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {StationGroup} from "../../../dto/dashboardConfig.dto";
 import StationGroupSettingsCard from "./StationGroupSettingsCard.vue";
@@ -50,16 +51,19 @@ const emit = defineEmits<{
     remove: [groupIndex: number];
 }>();
 
-function addGroup(): void {
+async function addGroup(): Promise<void> {
+    const groupId = newId("group");
     stationGroups.value = [
         ...stationGroups.value,
         {
-            id: newId("group"),
+            id: groupId,
             name: "New group",
             stations: [{crs: ""}],
         },
     ];
     emit("changed");
+    await nextTick();
+    document.getElementById(`group-${groupId}-name`)?.focus();
 }
 
 function newId(prefix: string): string {

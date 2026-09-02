@@ -4,6 +4,7 @@
         @submit.prevent="submit"
     >
         <JourneyMaker
+            ref="journeyMaker"
             v-model:journey="journey"
             :endpointMode="endpointMode"
             :stationGroups="stationGroups"
@@ -31,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, toRaw} from "vue";
+import {computed, onMounted, ref, toRaw} from "vue";
 import {
     JourneyFieldsSchema,
     type Journey,
@@ -61,6 +62,7 @@ const emit = defineEmits<{
     cancel: [];
     submit: [journey: JourneyFields];
 }>();
+const journeyMaker = ref<InstanceType<typeof JourneyMaker>>();
 
 const journey = ref<Journey>(
     props.initialJourney
@@ -74,6 +76,10 @@ const journey = ref<Journey>(
 const validJourney = computed(
     () => JourneyFieldsSchema.safeParse(journey.value).success
 );
+
+onMounted(() => {
+    journeyMaker.value?.focusOrigin();
+});
 
 function submit(): void {
     const result = JourneyFieldsSchema.safeParse(journey.value);
