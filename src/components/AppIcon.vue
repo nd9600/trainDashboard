@@ -70,6 +70,15 @@
             <path d="M12 5v14M5 12h14" />
         </template>
 
+        <template v-else-if="name === 'bookmark'">
+            <path d="M6 3h12v18l-6-4-6 4V3Z" />
+        </template>
+
+        <template v-else-if="name === 'pencil'">
+            <path d="m4 20 4.5-1 10-10a2 2 0 0 0-3-3l-10 10L4 20Z" />
+            <path d="m14.5 7.5 3 3" />
+        </template>
+
         <template v-else-if="name === 'trash'">
             <path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6" />
         </template>
@@ -85,6 +94,7 @@
 defineProps<{
     name:
         | "briefcase"
+        | "bookmark"
         | "chevron"
         | "close"
         | "clock"
@@ -93,6 +103,7 @@ defineProps<{
         | "home"
         | "key"
         | "map-pin"
+        | "pencil"
         | "plus"
         | "settings"
         | "train"

@@ -15,27 +15,46 @@
                     : "&nbsp;"
             }}
         </p>
-        <ListboxButton
-            class="appButton appButton--secondary max-w-full justify-start whitespace-normal border-none p-1 text-left"
-            :class="
-                activeJourneyDetails
-                    ? undefined
-                    : 'sr-only focus:not-sr-only focus:relative focus:m-1'
-            "
-            :aria-label="switcherButtonLabel"
-            :disabled="isCreatingEphemeralJourney || isEditingJourney"
-        >
-            <JourneyLabel
-                v-if="activeJourneyDetails"
-                class="text-xs"
-                :details="
-                    getJourneyLabelDetails(activeJourneyDetails, stationGroups)
+        <div class="flex max-w-full items-center gap-1">
+            <ListboxButton
+                class="appButton appButton--secondary min-w-0 max-w-full justify-start whitespace-normal border-none p-1 text-left"
+                :class="
+                    activeJourneyDetails
+                        ? undefined
+                        : 'sr-only focus:not-sr-only focus:relative focus:m-1'
                 "
-                :shouldSayWhenDirect="false"
-            />
-            <span v-else>Choose a journey</span>
-            <AppIcon class="size-3 rotate-90" name="chevron" />
-        </ListboxButton>
+                :aria-label="switcherButtonLabel"
+                :disabled="isCreatingEphemeralJourney || isEditingJourney"
+            >
+                <JourneyLabel
+                    v-if="activeJourneyDetails"
+                    class="text-xs"
+                    :details="
+                        getJourneyLabelDetails(
+                            activeJourneyDetails,
+                            stationGroups
+                        )
+                    "
+                    :shouldSayWhenDirect="false"
+                />
+                <span v-else>Choose a journey</span>
+                <AppIcon class="size-3 rotate-90" name="chevron" />
+            </ListboxButton>
+            <button
+                v-if="
+                    activeJourney.type !== 'predicted' &&
+                    !isCreatingEphemeralJourney &&
+                    !isEditingJourney
+                "
+                class="appButton appButton--quiet appButton--icon size-7 shrink-0 text-ink-subtle"
+                type="button"
+                title="Clear temporary journey"
+                aria-label="Clear temporary journey"
+                @click="clearActiveJourney"
+            >
+                <AppIcon class="size-3.5" name="close" />
+            </button>
+        </div>
 
         <ListboxOptions
             :static="
@@ -98,16 +117,14 @@
                         </span>
                         <button
                             v-if="canRemoveJourney(section.name, journey.id)"
-                            class="ml-2 px-4 py-2 cursor-pointer border-0 bg-inherit text-ink-subtle opacity-0 group-hover:opacity-100 hover:text-ink"
+                            class="ml-2 rounded-md px-2 py-2 cursor-pointer border-0 bg-inherit text-ink-subtle opacity-0 group-hover:opacity-100 hover:text-ink hover:bg-paper"
                             type="button"
                             tabindex="-1"
                             :title="getRemoveTitle(section.name)"
                             :aria-label="getRemoveTitle(section.name)"
-                            @click.stop="
-                                removeJourney(section.name, journey.id)
-                            "
+                            @click.stop="removeJourney(section.name, journey.id)"
                         >
-                            x
+                            <AppIcon class="size-3.5" name="close" />
                         </button>
                     </li>
                 </ListboxOption>
@@ -130,31 +147,28 @@
             v-if="
                 activeJourney.type !== 'predicted' &&
                 !isCreatingEphemeralJourney &&
-                !isEditingJourney
+                !isEditingJourney &&
+                (activeJourney.type === 'ephemeral' || canEditActiveJourney)
             "
+            class="flex items-center gap-2"
         >
             <button
                 v-if="activeJourney.type === 'ephemeral'"
-                class="appButton appButton--quiet px-0 py-1 text-xs text-primary"
+                class="appButton appButton--primary px-2 py-1 text-xs"
                 type="button"
                 @click="saveActiveJourney"
             >
+                <AppIcon class="size-3.5" name="bookmark" />
                 Save
             </button>
             <button
                 v-if="canEditActiveJourney"
-                class="appButton appButton--quiet px-0 py-1 text-xs text-primary"
+                class="appButton appButton--secondary px-2 py-1 text-xs"
                 type="button"
                 @click="isEditingJourney = true"
             >
+                <AppIcon class="size-3.5" name="pencil" />
                 Edit
-            </button>
-            <button
-                class="appButton appButton--quiet px-0 py-1 text-xs text-secondary"
-                type="button"
-                @click="clearActiveJourney"
-            >
-                Clear
             </button>
         </div>
 
