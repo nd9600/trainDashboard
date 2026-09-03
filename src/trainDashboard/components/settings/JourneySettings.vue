@@ -44,10 +44,7 @@
 <script setup lang="ts">
 import {ref} from "vue";
 import AppTabs from "@/components/AppTabs.vue";
-import type {
-    DashboardConfig,
-    LocationReference,
-} from "../../dto/dashboardConfig.dto";
+import type {DashboardConfig} from "../../dto/dashboardConfig.dto";
 import {
     dashboardConfigErrorMessages,
     DashboardConfigSchema,
@@ -57,7 +54,9 @@ import SchedulesSettings from "./schedules/SchedulesSettings.vue";
 import StationGroupsSettings from "./stationGroups/StationGroupsSettings.vue";
 
 const dashboardConfigStore = useDashboardConfigStore();
-const draft = ref<DashboardConfig>(cloneConfig(dashboardConfigStore.config));
+const draft = ref<DashboardConfig>(
+    structuredClone(dashboardConfigStore.config)
+);
 const errors = ref<string[]>([]);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
@@ -65,7 +64,6 @@ const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
 const isValid = ref(true);
 
 const emit = defineEmits<{
-    saved: [];
     validChange: [isValid: boolean];
 }>();
 
@@ -83,22 +81,21 @@ function save(): void {
     errors.value = result.errors;
 
     if (result.success) {
-        draft.value = cloneConfig(dashboardConfigStore.config);
-        setHasUnsavedChanges(false);
-        emit("saved");
+        draft.value = structuredClone(dashboardConfigStore.config);
+        hasUnsavedChanges.value = false;
     }
 }
 
 function cancel(): void {
-    draft.value = cloneConfig(dashboardConfigStore.config);
+    draft.value = structuredClone(dashboardConfigStore.config);
     errors.value = [];
-    setHasUnsavedChanges(false);
+    hasUnsavedChanges.value = false;
     setValid(true);
 }
 
 function handleChange(): void {
     validateDraft();
-    setHasUnsavedChanges(true);
+    hasUnsavedChanges.value = true;
 }
 
 function validateDraft(): boolean {
@@ -109,14 +106,6 @@ function validateDraft(): boolean {
     setValid(result.success);
 
     return result.success;
-}
-
-function setHasUnsavedChanges(value: boolean): void {
-    if (hasUnsavedChanges.value === value) {
-        return;
-    }
-
-    hasUnsavedChanges.value = value;
 }
 
 function setValid(value: boolean): void {
@@ -134,8 +123,8 @@ function removeGroup(groupIndex: number): void {
     const removedJourneyIds = draft.value.journeys
         .filter(
             (journey) =>
-                referencesGroup(journey.origin, groupId) ||
-                referencesGroup(journey.destination, groupId)
+                journey.origin.groupId === groupId ||
+                journey.destination.groupId === groupId
         )
         .map((journey) => journey.id);
 
@@ -161,23 +150,12 @@ function removeGroup(groupIndex: number): void {
     handleChange();
 }
 
-function referencesGroup(
-    location: LocationReference,
-    groupId: string
-): boolean {
-    return location.groupId === groupId;
-}
-
 function removeJourneyIdsFromSchedules(journeyIds: string[]): void {
     for (const schedule of draft.value.schedules) {
         if (journeyIds.includes(schedule.journeyId)) {
             schedule.journeyId = "";
         }
     }
-}
-
-function cloneConfig(config: DashboardConfig): DashboardConfig {
-    return JSON.parse(JSON.stringify(config)) as DashboardConfig;
 }
 
 defineExpose({

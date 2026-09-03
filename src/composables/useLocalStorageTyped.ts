@@ -1,16 +1,10 @@
 import type {z} from "zod";
 
-/**
- * Load and save data to local storage with a Zod schema.
- */
 export const useLocalStorageTyped = <T extends z.ZodType<unknown>>(
     key: string,
     schema: T,
     defaultValue: z.output<T>
-): {
-    loadFromLocalStorage: () => z.output<T>;
-    saveToLocalStorage: (data: z.output<T>) => void;
-} => {
+) => {
     const loadFromLocalStorage = (): z.output<T> => {
         const parsedData = schema.safeParse(
             JSON.parse(localStorage.getItem(key) ?? "{}")

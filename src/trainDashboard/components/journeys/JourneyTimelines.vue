@@ -3,14 +3,11 @@
         class="sm:hidden"
         :journeys="firstSixJourneys"
         :currentMinutes="currentMinutes"
-        :mustLeaveJourneyId="mustLeaveJourneyId"
-        :flush="flushOnMobile"
     />
     <JourneyCharts
         class="hidden sm:grid"
         :journeys="firstSixJourneys"
         :currentMinutes="currentMinutes"
-        :mustLeaveJourneyId="mustLeaveJourneyId"
         :windowStart="timelineStart"
         :windowEnd="timelineEnd"
     />
@@ -29,8 +26,6 @@ import JourneyCharts from "./JourneyCharts.vue";
 const props = defineProps<{
     journeys: TimetabledJourney[];
     currentMinutes: number;
-    mustLeaveJourneyId?: string;
-    flushOnMobile?: boolean;
 }>();
 
 const routesWithConsistentPlatforms = computed(() =>
@@ -73,7 +68,6 @@ function getAllTrainLegs(journeys: TimetabledJourney[]): TrainLeg[] {
     );
 }
 
-// 7. Limit the sorted journeys only after the planning steps are complete.
 const firstSixJourneys = computed(() =>
     props.journeys
         .slice(0, 6)

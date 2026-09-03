@@ -78,7 +78,6 @@
                     v-if="journeys.length > 0"
                     :journeys="journeys"
                     :currentMinutes="currentMinutes"
-                    :flushOnMobile="true"
                 />
 
                 <NoJourneysFound

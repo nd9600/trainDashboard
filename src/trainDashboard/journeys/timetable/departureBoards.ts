@@ -8,7 +8,7 @@ import type {JourneyRoute} from "../planning/journeyRoutes";
 import {getDirectTrainLegs, minimumTransferMinutes} from "./trainLegs";
 
 export type DepartureBoards = Map<string, DepartureBoard>;
-export type DepartureBoardRequestCache = Map<string, Promise<DepartureBoard>>;
+type DepartureBoardRequestCache = Map<string, Promise<DepartureBoard>>;
 
 interface DepartureBoardRequest {
     originCrs: string;
@@ -32,9 +32,9 @@ const minimumFirstTrainCount = 6;
 export async function getDepartureBoards(
     consumerKey: string,
     stationRoutes: JourneyRoute[],
-    currentMinutes: number,
-    requestCache: DepartureBoardRequestCache = new Map()
+    currentMinutes: number
 ): Promise<DepartureBoards> {
+    const requestCache: DepartureBoardRequestCache = new Map();
     const departureBoards = await fetchDepartureBoards(
         consumerKey,
         getFirstDepartureBoardRequests(stationRoutes),

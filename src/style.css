@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-    --color-casa: #d9a183;
     --color-japonica: #a7442f;
-    --color-saffron: #d68a1f;
 
     --color-canvas: #f6ebdd;
     --color-paper: #fffaf2;

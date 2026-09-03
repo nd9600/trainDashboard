@@ -70,7 +70,7 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         return result.success ? journey : undefined;
     }
 
-    function updateJourney(candidate: Journey): boolean {
+    function updateJourney(candidate: Journey): void {
         if (
             config.value.schedules.some(
                 (schedule) => schedule.journeyId === candidate.id
@@ -79,15 +79,15 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
                 (journey) => journey.id === candidate.id
             )
         ) {
-            return false;
+            return;
         }
 
-        return saveConfig({
+        saveConfig({
             ...config.value,
             journeys: config.value.journeys.map((journey) =>
                 journey.id === candidate.id ? candidate : journey
             ),
-        }).success;
+        });
     }
 
     function removeJourney(journeyId: string): boolean {

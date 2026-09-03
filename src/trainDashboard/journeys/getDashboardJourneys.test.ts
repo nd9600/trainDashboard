@@ -1,7 +1,6 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
 import * as railDataMarketplaceApi from "../api/railDataMarketplace.api";
-import {createEphemeralJourney} from "../dto/journeySelection.dto";
 import {getDashboardJourneys} from "./getDashboardJourneys";
 
 describe("getDashboardJourneys", () => {
@@ -13,7 +12,7 @@ describe("getDashboardJourneys", () => {
         const result = await getDashboardJourneys(
             manchesterDashboardConfig.journeys[0],
             manchesterDashboardConfig.stationGroups,
-            {day: 1, minutes: 8 * 60},
+            8 * 60,
             ""
         );
 
@@ -54,7 +53,7 @@ describe("getDashboardJourneys", () => {
         const result = await getDashboardJourneys(
             manchesterDashboardConfig.journeys[0],
             manchesterDashboardConfig.stationGroups,
-            {day: 1, minutes: 8 * 60},
+            8 * 60,
             "test-key"
         );
 
@@ -62,62 +61,5 @@ describe("getDashboardJourneys", () => {
         expect(
             result.journeys.find((journey) => journey.recommended)?.destination
         ).toBe("EDY");
-    });
-
-    it("expands the journey supplied by the selection store", async () => {
-        const result = await getDashboardJourneys(
-            manchesterDashboardConfig.journeys.find(
-                (journey) => journey.id === "heaton-chapel-to-liverpool"
-            ),
-            manchesterDashboardConfig.stationGroups,
-            {day: 1, minutes: 8 * 60},
-            ""
-        );
-
-        expect(new Set(result.routes.map((route) => route.journeyId))).toEqual(
-            new Set(["heaton-chapel-to-liverpool"])
-        );
-    });
-
-    it("expands a temporary station-to-station journey", async () => {
-        const journey = createEphemeralJourney({
-            origin: {type: "station", crs: "MAN"},
-            destination: {type: "station", crs: "LIV"},
-        })!;
-
-        const result = await getDashboardJourneys(
-            journey,
-            manchesterDashboardConfig.stationGroups,
-            {day: 1, minutes: 8 * 60},
-            ""
-        );
-
-        expect(result.routes).toEqual([
-            expect.objectContaining({
-                journeyId: "man-to-liv",
-                origin: expect.objectContaining({crs: "MAN"}),
-                destination: expect.objectContaining({crs: "LIV"}),
-            }),
-        ]);
-    });
-
-    it("expands a possible connection for a temporary journey", async () => {
-        const journey = createEphemeralJourney({
-            origin: {type: "station", crs: "MAN"},
-            destination: {type: "station", crs: "LIV"},
-            viaCrs: "CRE",
-        })!;
-
-        const result = await getDashboardJourneys(
-            journey,
-            manchesterDashboardConfig.stationGroups,
-            {day: 1, minutes: 8 * 60},
-            ""
-        );
-
-        expect(result.routes.map((route) => route.viaCrs)).toEqual([
-            undefined,
-            "CRE",
-        ]);
     });
 });

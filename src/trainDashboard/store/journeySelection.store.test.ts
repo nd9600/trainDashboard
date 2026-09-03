@@ -1,5 +1,6 @@
 import {createPinia, setActivePinia} from "pinia";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
+import {MemoryStorage} from "../../testing/MemoryStorage";
 import type {DashboardConfig, JourneyFields} from "../dto/dashboardConfig.dto";
 import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
@@ -69,11 +70,6 @@ describe("useJourneySelectionStore", () => {
             id: savedJourney.id,
         });
         expect(store.recentJourneyIds).toEqual([savedJourney.id]);
-    });
-
-    it("does not add the prediction to recent history", () => {
-        const store = getJourneySelectionStore();
-        store.selectJourney(savedJourney.id);
 
         store.selectJourney(predictedJourney.id);
 
@@ -223,7 +219,7 @@ describe("useJourneySelectionStore", () => {
         const unscheduledJourney = manchesterDashboardConfig.journeys[3]!;
         const store = getJourneySelectionStore();
 
-        expect(store.removeSavedJourney(unscheduledJourney.id)).toBe(true);
+        store.removeSavedJourney(unscheduledJourney.id);
         expect(useDashboardConfigStore().config.journeys).not.toContainEqual(
             unscheduledJourney
         );
@@ -232,7 +228,7 @@ describe("useJourneySelectionStore", () => {
     it("does not remove a journey used by a schedule", () => {
         const store = getJourneySelectionStore();
 
-        expect(store.removeSavedJourney(predictedJourney.id)).toBe(false);
+        store.removeSavedJourney(predictedJourney.id);
         expect(useDashboardConfigStore().config.journeys).toContainEqual(
             predictedJourney
         );
@@ -243,9 +239,7 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
         store.selectJourney(unscheduledJourney.id);
 
-        expect(
-            store.editActiveJourney({...unscheduledJourney, viaCrs: "CRE"})
-        ).toBe(true);
+        store.editActiveJourney({...unscheduledJourney, viaCrs: "CRE"});
         expect(store.activeJourneyDetails).toEqual({
             ...unscheduledJourney,
             viaCrs: "CRE",
@@ -256,9 +250,7 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
         store.selectJourney(savedJourney.id);
 
-        expect(store.editActiveJourney({...savedJourney, viaCrs: "CRE"})).toBe(
-            false
-        );
+        store.editActiveJourney({...savedJourney, viaCrs: "CRE"});
         expect(store.activeJourneyDetails).toEqual(savedJourney);
     });
 
@@ -266,40 +258,15 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
         store.selectEphemeralJourney(manchesterToLiverpool);
 
-        expect(
-            store.editActiveJourney({
-                ...manchesterToLiverpool,
-                viaCrs: "CRE",
-            })
-        ).toBe(true);
+        store.editActiveJourney({
+            ...manchesterToLiverpool,
+            viaCrs: "CRE",
+        });
         expect(store.activeJourneyDetails).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
             viaCrs: "CRE",
         });
-    });
-
-    it("clears to the prediction instead of the previous saved override", () => {
-        const store = getJourneySelectionStore();
-        store.selectEphemeralJourney(manchesterToLiverpool);
-
-        store.clearActiveJourney();
-
-        expect(store.activeJourney).toEqual({type: "predicted"});
-        expect(store.activeJourneyDetails).toEqual(predictedJourney);
-        expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
-    });
-
-    it("clears an ephemeral journey back to the prediction", () => {
-        const store = getJourneySelectionStore();
-        store.selectJourney(savedJourney.id);
-        store.selectEphemeralJourney(manchesterToLiverpool);
-
-        store.clearActiveJourney();
-
-        expect(store.activeJourney).toEqual({type: "predicted"});
-        expect(store.activeJourneyDetails).toEqual(predictedJourney);
-        expect(store.currentEphemeralJourney).toBeUndefined();
     });
 
     it("clears an override to the current prediction", () => {
@@ -313,19 +280,8 @@ describe("useJourneySelectionStore", () => {
 
         expect(store.activeJourney).toEqual({type: "predicted"});
         expect(store.activeJourneyDetails).toEqual(config.journeys[1]);
-    });
-
-    it("clears consecutive ephemeral journeys directly to the prediction", () => {
-        const store = getJourneySelectionStore();
-        store.selectEphemeralJourney(manchesterToLiverpool);
-        store.selectEphemeralJourney({
-            origin: {type: "station", crs: "EDY"},
-            destination: {type: "station", crs: "LIV"},
-        });
-
-        store.clearActiveJourney();
-        expect(store.activeJourney).toEqual({type: "predicted"});
-        expect(store.clearActiveJourney()).toBe(false);
+        expect(store.currentEphemeralJourney).toBeUndefined();
+        expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
     });
 });
 
@@ -348,32 +304,4 @@ function getConfigWithoutActiveSchedule(): DashboardConfig {
         },
     ];
     return config;
-}
-
-class MemoryStorage implements Storage {
-    private readonly values = new Map<string, string>();
-
-    get length(): number {
-        return this.values.size;
-    }
-
-    clear(): void {
-        this.values.clear();
-    }
-
-    getItem(key: string): string | null {
-        return this.values.get(key) ?? null;
-    }
-
-    key(index: number): string | null {
-        return [...this.values.keys()][index] ?? null;
-    }
-
-    removeItem(key: string): void {
-        this.values.delete(key);
-    }
-
-    setItem(key: string, value: string): void {
-        this.values.set(key, value);
-    }
 }

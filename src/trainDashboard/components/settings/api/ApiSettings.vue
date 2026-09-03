@@ -1,10 +1,7 @@
 <template>
     <section aria-labelledby="api-settings-heading">
         <h2 id="api-settings-heading" class="text-lg font-semibold">
-            <a
-                class="underline"
-                href="https://raildata.org.uk/"
-            >
+            <a class="underline" href="https://raildata.org.uk/">
                 Rail Data Marketplace
             </a>
         </h2>
@@ -64,7 +61,7 @@ import type {RailDataApiSettings} from "../../../dto/railDataApiSettings.dto";
 import {useRailDataApiStore} from "../../../store/railDataApi.store";
 
 const apiStore = useRailDataApiStore();
-const draft = ref<RailDataApiSettings>(cloneSettings(apiStore.settings));
+const draft = ref<RailDataApiSettings>({...apiStore.settings});
 const isConsumerKeyVisible = ref(false);
 const consumerKeyInput = ref<HTMLInputElement | null>(null);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
@@ -78,19 +75,15 @@ function handleChange(): void {
 
 function save(): void {
     apiStore.saveSettings(draft.value);
-    draft.value = cloneSettings(apiStore.settings);
+    draft.value = {...apiStore.settings};
     isConsumerKeyVisible.value = false;
     hasUnsavedChanges.value = false;
 }
 
 function cancel(): void {
-    draft.value = cloneSettings(apiStore.settings);
+    draft.value = {...apiStore.settings};
     isConsumerKeyVisible.value = false;
     hasUnsavedChanges.value = false;
-}
-
-function cloneSettings(settings: RailDataApiSettings): RailDataApiSettings {
-    return {...settings};
 }
 
 function focusConsumerKey(): void {

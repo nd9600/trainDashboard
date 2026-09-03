@@ -10,21 +10,6 @@ const manchesterToLiverpool = {
 };
 
 describe("createEphemeralJourney", () => {
-    it("uses the same journey fields as configured journeys", () => {
-        const journey = createEphemeralJourney({
-            origin: {type: "station", crs: "MAN"},
-            destination: {type: "station", crs: "LIV"},
-            viaCrs: "CRE",
-        });
-
-        expect(journey).toEqual({
-            id: "man-to-liv",
-            origin: {type: "station", crs: "MAN"},
-            destination: {type: "station", crs: "LIV"},
-            viaCrs: "CRE",
-        });
-    });
-
     it("allocates a configured journey ID", () => {
         const journey = createEphemeralJourney(
             {

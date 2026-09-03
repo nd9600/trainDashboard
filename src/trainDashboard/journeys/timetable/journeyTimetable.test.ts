@@ -1,11 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import type {DepartureBoardRequest} from "../../api/railDataMarketplace.api";
 import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
 import type {JourneyRoute} from "../planning/journeyRoutes";
-import {
-    getDepartureBoards,
-    type DepartureBoardRequestCache,
-} from "./departureBoards";
+import {getDepartureBoards} from "./departureBoards";
 import {planTimetabledJourneys} from "./planTimetabledJourneys";
 
 describe("journey timetable planning", () => {
@@ -101,49 +97,6 @@ describe("journey timetable planning", () => {
         expect(journeys).toHaveLength(1);
         expect(journeys[0]!.trainLegs[0]!.departure).toBe(8 * 60 + 50);
         expect(journeys[0]!.segments.at(0)!.start).toBe(8 * 60 + 25);
-    });
-
-    it("requests departures only after the origin walking time", async () => {
-        const requests: DepartureBoardRequest[] = [];
-        vi.spyOn(
-            railDataMarketplaceApi,
-            "fetchDepartureBoard"
-        ).mockImplementation(async (_consumerKey, request) => {
-            requests.push(request);
-            return {crs: request.originCrs, trainServices: []};
-        });
-
-        await getTimetabledJourneys(
-            "test-key",
-            [journeyRoute("HTC", "EDY", 15, 8)],
-            8 * 60
-        );
-
-        expect(requests).toEqual([
-            expect.objectContaining({timeOffsetMinutes: 15}),
-        ]);
-    });
-
-    it("reuses a departure board cache across journey groups", async () => {
-        testApiAt(8 * 60);
-        const departureBoardRequestCache: DepartureBoardRequestCache =
-            new Map();
-        const route = journeyRoute("HTC", "EDY", 15, 8);
-
-        await getTimetabledJourneys(
-            "test-key",
-            [route],
-            8 * 60,
-            departureBoardRequestCache
-        );
-        await getTimetabledJourneys(
-            "test-key",
-            [route],
-            8 * 60,
-            departureBoardRequestCache
-        );
-
-        expect(departureBoardRequestCache).toHaveLength(1);
     });
 
     it("omits a journey until timetable data is available for it", async () => {
@@ -251,14 +204,11 @@ describe("journey timetable planning", () => {
         });
     });
 
-    it("requests onward trains from the first catchable transfer time", async () => {
-        const requests: DepartureBoardRequest[] = [];
+    it("finds an onward train after the first catchable transfer time", async () => {
         vi.spyOn(
             railDataMarketplaceApi,
             "fetchDepartureBoard"
         ).mockImplementation(async (_consumerKey, request) => {
-            requests.push(request);
-
             if (request.destinationCrs === "GLQ") {
                 return {
                     crs: "EDB",
@@ -297,9 +247,6 @@ describe("journey timetable planning", () => {
             18 * 60 + 2
         );
 
-        expect(requests.map((request) => request.timeOffsetMinutes)).toEqual([
-            0, 119, 67,
-        ]);
         expect(journeys[0]!.trainLegs).toMatchObject([
             {departure: 18 * 60 + 15, arrival: 19 * 60 + 6},
             {departure: 19 * 60 + 13, arrival: 19 * 60 + 15},
@@ -527,14 +474,12 @@ function journeyRoute(
 async function getTimetabledJourneys(
     consumerKey: string,
     stationRoutes: JourneyRoute[],
-    currentMinutes: number,
-    requestCache: DepartureBoardRequestCache = new Map()
+    currentMinutes: number
 ) {
     const departureBoards = await getDepartureBoards(
         consumerKey,
         stationRoutes,
-        currentMinutes,
-        requestCache
+        currentMinutes
     );
     return planTimetabledJourneys(
         stationRoutes,

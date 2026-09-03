@@ -5,7 +5,7 @@ import type {
 } from "../../dto/dashboardConfig.dto";
 import {stationName} from "../../stations/stations";
 
-export interface StationEndpoint {
+interface StationEndpoint {
     crs: string;
     walkMinutes?: number;
     locationName: string;
@@ -20,22 +20,16 @@ export interface JourneyRoute {
 }
 
 export function getStationRoutes(
-    journeys: Journey[],
+    journey: Journey | undefined,
     stationGroups: StationGroup[]
 ): JourneyRoute[] {
+    if (!journey) {
+        return [];
+    }
+
     const stationGroupsById = new Map(
         stationGroups.map((group) => [group.id, group])
     );
-
-    return journeys.flatMap((journey) =>
-        getRoutesForJourney(journey, stationGroupsById)
-    );
-}
-
-function getRoutesForJourney(
-    journey: Journey,
-    stationGroupsById: Map<string, StationGroup>
-): JourneyRoute[] {
     const origins = getStationsForLocation(journey.origin, stationGroupsById);
     const destinations = getStationsForLocation(
         journey.destination,

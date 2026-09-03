@@ -1,9 +1,6 @@
 <template>
     <TransitionRoot as="template" :show="isOpen">
-        <Dialog
-            class="relative z-50 text-base"
-            @close="isClosable ? emit('close') : undefined"
-        >
+        <Dialog class="relative z-50 text-base" @close="emit('close')">
             <TransitionChild
                 as="template"
                 enter="duration-300 ease-out"
@@ -17,8 +14,7 @@
             </TransitionChild>
 
             <div
-                class="fixed inset-0 flex items-end justify-center sm:p-4"
-                :class="placementClass"
+                class="fixed inset-0 flex items-end justify-center sm:items-start sm:p-4 sm:pt-[5vh]"
             >
                 <TransitionChild
                     as="template"
@@ -30,15 +26,9 @@
                     leaveTo="translate-y-full opacity-0 sm:translate-y-0 sm:scale-95"
                 >
                     <DialogPanel
-                        :class="
-                            combineClasses(
-                                'relative flex max-h-[90dvh] w-full flex-col rounded-t-xl bg-canvas shadow-xl sm:max-h-full sm:rounded-xl',
-                                rootClass
-                            )
-                        "
+                        class="relative flex max-h-[90dvh] w-full flex-col rounded-t-xl bg-canvas shadow-xl sm:max-h-full sm:w-[min(48rem,calc(100vw-3rem))] sm:rounded-xl"
                     >
                         <button
-                            v-if="isClosable"
                             class="appButton appButton--quiet appButton--icon absolute top-3 right-3 z-10 size-10 rounded-full border-line-strong"
                             type="button"
                             :aria-label="closeLabel"
@@ -51,21 +41,14 @@
                             v-if="$slots.header"
                             class="border-b border-line px-5 py-4 pr-14"
                         >
-                            <DialogTitle
-                                class="text-lg font-semibold text-ink"
-                            >
+                            <DialogTitle class="text-lg font-semibold text-ink">
                                 <slot name="header" />
                             </DialogTitle>
                         </header>
 
                         <div
                             ref="body"
-                            :class="
-                                combineClasses(
-                                    'min-h-0 grow overflow-y-auto',
-                                    bodyClass
-                                )
-                            "
+                            class="min-h-0 grow overflow-y-auto"
                             :tabindex="isBodyOverflowing ? 0 : -1"
                             role="region"
                         >
@@ -73,14 +56,7 @@
                         </div>
 
                         <footer v-if="$slots.footer" class="shrink-0 bg-canvas">
-                            <div
-                                :class="
-                                    combineClasses(
-                                        'border-t border-line px-5 py-4',
-                                        footerClass
-                                    )
-                                "
-                            >
+                            <div class="border-t border-line px-5 py-4">
                                 <slot name="footer" />
                             </div>
                         </footer>
@@ -99,36 +75,14 @@ import {
     TransitionChild,
     TransitionRoot,
 } from "@headlessui/vue";
-import {computed, onBeforeUnmount, ref, watch} from "vue";
+import {onBeforeUnmount, ref, watch} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import {combineClasses, type ClassValue} from "@/utilities/ui.utility";
 
-const props = withDefaults(
-    defineProps<{
-        isOpen: boolean;
-        isClosable?: boolean;
-        closeLabel?: string;
-        spotlightVariantPlacement?: "middle" | "top";
-        rootClass?: ClassValue;
-        bodyClass?: ClassValue;
-        footerClass?: ClassValue;
-    }>(),
-    {
-        isClosable: true,
-        closeLabel: "Close dialog",
-        spotlightVariantPlacement: "middle",
-    }
-);
+defineProps<{isOpen: boolean; closeLabel: string}>();
 
 const emit = defineEmits<{
     close: [];
 }>();
-
-const placementClass = computed(() =>
-    props.spotlightVariantPlacement === "top"
-        ? "sm:items-start sm:pt-[5vh]"
-        : "sm:items-center"
-);
 
 const body = ref<HTMLDivElement | null>(null);
 const isBodyOverflowing = ref(false);

@@ -1,4 +1,3 @@
-// Components use this shared model for both mobile cards and desktop charts.
 export type SegmentKind = "wait" | "walk" | "train";
 
 export interface Segment {

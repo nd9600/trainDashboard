@@ -15,18 +15,15 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const apiStore = useRailDataApiStore();
     journeySelectionStore.initialise();
 
-    ///// state /////
     const routes = ref<JourneyRoute[]>([]);
     const journeys = ref<TimetabledJourney[]>([]);
     const isLoadingJourneys = ref(true);
     const journeyLoadError = ref<string>();
 
-    ///// getters /////
     const recommendedJourney = computed(() =>
         journeys.value.find((journey) => journey.recommended)
     );
 
-    ///// actions /////
     async function refreshJourneys(): Promise<void> {
         isLoadingJourneys.value = true;
         journeyLoadError.value = undefined;
@@ -37,7 +34,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             const dashboardJourneys = await getDashboardJourneys(
                 journeySelectionStore.activeJourneyDetails,
                 dashboardConfigStore.config.stationGroups,
-                dashboardClockStore.currentClock,
+                dashboardClockStore.currentMinutes,
                 consumerKey
             );
 
@@ -57,7 +54,6 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         }
     }
 
-    ///// effects /////
     watch(
         [
             () => journeySelectionStore.activeJourneyDetails,
@@ -69,7 +65,6 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         {immediate: true}
     );
 
-    ///// public interface /////
     return {
         isLoadingJourneys,
         journeyLoadError,

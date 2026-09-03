@@ -29,15 +29,6 @@
             <circle cx="15" cy="15" r="1" />
         </template>
 
-        <template v-else-if="name === 'home'">
-            <path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6" />
-        </template>
-
-        <template v-else-if="name === 'briefcase'">
-            <rect x="3" y="7" width="18" height="13" rx="2" />
-            <path d="M9 7V4h6v3M3 12h18M10 12v2h4v-2" />
-        </template>
-
         <template v-else-if="name === 'settings'">
             <circle cx="12" cy="12" r="3" />
             <path
@@ -93,14 +84,12 @@
 <script setup lang="ts">
 defineProps<{
     name:
-        | "briefcase"
         | "bookmark"
         | "chevron"
         | "close"
         | "clock"
         | "eye"
         | "external-link"
-        | "home"
         | "key"
         | "map-pin"
         | "pencil"

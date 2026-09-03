@@ -18,7 +18,6 @@
                 :key="journey.id"
                 :journey="journey"
                 :currentMinutes="currentMinutes"
-                :mustLeaveJourneyId="mustLeaveJourneyId"
                 :height="rowGap"
             />
         </div>
@@ -42,7 +41,6 @@ import JourneyChartSvg from "./JourneyChartSvg.vue";
 defineProps<{
     journeys: TimetabledJourney[];
     currentMinutes: number;
-    mustLeaveJourneyId?: string;
     windowStart: number;
     windowEnd: number;
 }>();

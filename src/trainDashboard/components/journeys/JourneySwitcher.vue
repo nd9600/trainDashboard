@@ -50,7 +50,7 @@
                 type="button"
                 title="Clear temporary journey"
                 aria-label="Clear temporary journey"
-                @click="clearActiveJourney"
+                @click="journeySelectionStore.clearActiveJourney"
             >
                 <AppIcon class="size-3.5" name="close" />
             </button>
@@ -156,7 +156,7 @@
                 v-if="activeJourney.type === 'ephemeral'"
                 class="appButton appButton--primary px-2 py-1 text-xs"
                 type="button"
-                @click="saveActiveJourney"
+                @click="journeySelectionStore.saveActiveJourney"
             >
                 <AppIcon class="size-3.5" name="bookmark" />
                 Save
@@ -273,22 +273,12 @@ function selectJourney(journeyId: string): void {
 }
 
 function useEphemeralJourney(journey: JourneyFields): void {
-    if (!journeySelectionStore.selectEphemeralJourney(journey)) {
-        return;
-    }
-
+    journeySelectionStore.selectEphemeralJourney(journey);
     isCreatingEphemeralJourney.value = false;
 }
 
-function saveActiveJourney(): void {
-    journeySelectionStore.saveActiveJourney();
-}
-
 function editActiveJourney(journey: JourneyFields): void {
-    if (!journeySelectionStore.editActiveJourney(journey)) {
-        return;
-    }
-
+    journeySelectionStore.editActiveJourney(journey);
     isEditingJourney.value = false;
 }
 
@@ -320,9 +310,5 @@ function removeJourney(
     if (sectionName === "Saved") {
         journeySelectionStore.removeSavedJourney(journeyId);
     }
-}
-
-function clearActiveJourney(): void {
-    journeySelectionStore.clearActiveJourney();
 }
 </script>

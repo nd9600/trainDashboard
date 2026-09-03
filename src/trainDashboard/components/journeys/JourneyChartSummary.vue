@@ -6,7 +6,7 @@
         <div class="min-w-0">
             <JourneyDesktopItinerary :journey="journey" />
             <span
-                v-if="journey.recommended || journey.id === mustLeaveJourneyId"
+                v-if="journey.recommended"
                 class="mt-1 flex items-center gap-1 text-xs font-bold text-danger"
             >
                 <AppIcon class="size-3.5" name="clock" />
@@ -25,7 +25,6 @@ import JourneyDesktopItinerary from "./JourneyDesktopItinerary.vue";
 defineProps<{
     journey: TimetabledJourney;
     currentMinutes: number;
-    mustLeaveJourneyId?: string;
     height: number;
 }>();
 </script>

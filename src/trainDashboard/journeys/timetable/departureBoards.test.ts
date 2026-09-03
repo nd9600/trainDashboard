@@ -99,34 +99,13 @@ describe("connected-route departure boards", () => {
         ).toEqual([0]);
     });
 
-    it.each([
-        {
-            name: "one onward request covers all first trains",
-            onwardServicesByOffset: {
-                13: [service("onward-three", "12:50", "LIV", "13:30")],
-            },
-            expectedOnwardOffsets: [13],
-        },
-        {
-            name: "two onward requests cover all first trains",
-            onwardServicesByOffset: {
-                13: [service("onward-two", "12:10", "LIV", "12:50")],
-                93: [service("onward-three", "12:50", "LIV", "13:30")],
-            },
-            expectedOnwardOffsets: [13, 93],
-        },
-        {
-            name: "three onward requests cover all first trains",
-            onwardServicesByOffset: {
-                13: [service("onward-one", "11:30", "LIV", "12:10")],
-                53: [service("onward-two", "12:10", "LIV", "12:50")],
-                93: [service("onward-three", "12:50", "LIV", "13:30")],
-            },
-            expectedOnwardOffsets: [13, 53, 93],
-        },
-    ])("$name", async ({onwardServicesByOffset, expectedOnwardOffsets}) => {
+    it("requests onward trains for each uncovered transfer time", async () => {
         const requests: DepartureBoardRequest[] = [];
-        mockDepartureBoards(requests, onwardServicesByOffset);
+        mockDepartureBoards(requests, {
+            13: [service("onward-one", "11:30", "LIV", "12:10")],
+            53: [service("onward-two", "12:10", "LIV", "12:50")],
+            93: [service("onward-three", "12:50", "LIV", "13:30")],
+        });
 
         const boards = await getDepartureBoards(
             "test-key",
@@ -138,10 +117,10 @@ describe("connected-route departure boards", () => {
             requests
                 .filter((request) => request.originCrs === "MAN")
                 .map((request) => request.timeOffsetMinutes)
-        ).toEqual(expectedOnwardOffsets);
+        ).toEqual([13, 53, 93]);
         expect(
             getDepartureBoard(boards, "MAN", "LIV", 0).trainServices
-        ).toHaveLength(expectedOnwardOffsets.length);
+        ).toHaveLength(3);
     });
 
     it("deduplicates services returned by overlapping onward requests", async () => {
