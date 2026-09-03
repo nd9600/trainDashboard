@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import type {DisplaySchedule} from "../../../dto/dashboardConfig.dto";
+import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import {scheduleDays} from "./scheduleSettings";
 
 const schedule = defineModel<DisplaySchedule>("schedule", {required: true});

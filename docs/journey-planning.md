@@ -8,15 +8,14 @@ Journey planning starts with one resolved active journey. See [journey selection
 flowchart LR
     journey[Active journey]
     routes[Station routes]
-    boards[Departure boards]
+    timetables[Route timetables]
     planner[planTimetabledJourneys]
     journeys[Catchable journeys sorted by finish time]
     display[First six journeys]
 
     journey --> routes
-    routes --> boards
-    boards --> planner
-    routes --> planner
+    routes --> timetables
+    timetables --> planner
     planner --> journeys
     journeys --> display
 ```
@@ -25,9 +24,37 @@ flowchart LR
 
 A configured connecting station creates a direct route and a connected route. It creates only a direct route when the connecting station is an endpoint.
 
-See [departure-board requests](departure-boards.md) for how the app loads direct, first-train, and onward boards.
+See [departure-board requests](departure-boards.md) for how the app loads direct, first-train, and onward trains.
 
-`planTimetabledJourneys` is the planning interface. It hides train matching, connection rules, section construction, filtering, sorting, and recommendation.
+Each route timetable contains its station route and parsed train legs. A direct route contains first-train legs only. A connected route also contains onward-train legs.
+
+`planTimetabledJourneys` accepts route timetables. It hides train matching, connection rules, section construction, filtering, sorting, and recommendation.
+
+## Call graph
+
+```mermaid
+flowchart TD
+    dashboard[getDashboardJourneys]
+    routes[getStationRoutes]
+    load[loadRouteTimetables]
+    requests[createDepartureBoardLoader]
+    first[loadFirstTrainsForRoutes]
+    onward[loadOnwardDepartureBoard]
+    plan[planTimetabledJourneys]
+    trainPlans[getTrainPlans]
+    make[makeTimetabledJourney]
+
+    dashboard --> routes
+    dashboard --> load
+    load --> requests
+    load --> first
+    load --> onward
+    first --> requests
+    onward --> requests
+    dashboard --> plan
+    plan --> trainPlans
+    plan --> make
+```
 
 ## Connection construction
 
@@ -98,10 +125,17 @@ Platform consistency uses all planned journeys. A platform is hidden when multip
 
 ## Source map
 
-- `src/trainDashboard/journeys/getDashboardJourneys.ts` expands the active journey, loads boards, and calls the planner.
+- `src/trainDashboard/journeys/getDashboardJourneys.ts` expands the active journey, loads route timetables, and calls the planner.
 - `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands a journey into concrete station routes.
+- `src/trainDashboard/journeys/timetable/loadRouteTimetables.ts` loads the train legs for each station route.
+- `src/trainDashboard/journeys/timetable/departureBoards.ts` owns cached departure-board requests and response merging.
+- `src/trainDashboard/journeys/timetable/firstTrainRequests.ts` loads initial and sparse first-train boards.
+- `src/trainDashboard/journeys/timetable/onwardTrainRequests.ts` loads enough onward windows for all transfer-ready times.
 - `src/trainDashboard/journeys/timetable/planTimetabledJourneys.ts` owns planning rules and returns sorted, recommended journeys.
+- `src/trainDashboard/journeys/timetable/trainPlans.ts` matches direct and connected train legs and selects alternatives.
+- `src/trainDashboard/journeys/timetable/makeTimetabledJourney.ts` adds walk, wait, and train sections.
 - `src/trainDashboard/journeys/timetable/trainLegs.ts` converts departure services into timed train legs.
+- `src/trainDashboard/journeys/timetable/planTimetabledJourneys.test.ts` contains a worked connected-journey example.
 - `src/trainDashboard/dto/timetabledJourney.dto.ts` defines the planned journey and section shapes.
 - `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits results and prepares platform display.
 - `src/trainDashboard/components/journeys/JourneyCards.vue` shows mobile journeys.

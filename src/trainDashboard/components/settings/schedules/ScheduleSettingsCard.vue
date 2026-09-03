@@ -35,11 +35,9 @@
 <script setup lang="ts">
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {
-    DisplaySchedule,
-    Journey,
-    StationGroup,
-} from "../../../dto/dashboardConfig.dto";
+import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
+import type {Journey} from "../../../dto/journey.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import {getJourneyLabelDetails} from "../../../journeys/journeyLabels";
 import JourneyLabel from "../../journeys/JourneyLabel.vue";
 import {getActiveDaysText, hasJourneyEndpoints} from "./scheduleSettings";
@@ -55,9 +53,7 @@ const emit = defineEmits<{
 }>();
 
 const selectedJourney = computed(() =>
-    props.journeys.find(
-        (journey) => journey.id === props.schedule.journeyId
-    )
+    props.journeys.find((journey) => journey.id === props.schedule.journeyId)
 );
 const selectedJourneyIsComplete = computed(
     () =>

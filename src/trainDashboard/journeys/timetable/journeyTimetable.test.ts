@@ -1,7 +1,7 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
 import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
 import type {JourneyRoute} from "../planning/journeyRoutes";
-import {getDepartureBoards} from "./departureBoards";
+import {loadRouteTimetables} from "./loadRouteTimetables";
 import {planTimetabledJourneys} from "./planTimetabledJourneys";
 
 describe("journey timetable planning", () => {
@@ -253,56 +253,6 @@ describe("journey timetable planning", () => {
         ]);
     });
 
-    it("shows slower onward trains as alternatives", async () => {
-        mockDepartureBoards({
-            "HTC-MAN": [service("first-train", "10:05", "MAN", "10:20")],
-            "MAN-LIV": [
-                service("slower", "10:25", "LIV", "11:30"),
-                service("faster", "10:35", "LIV", "11:20"),
-            ],
-        });
-
-        const journeys = await getTimetabledJourneys(
-            "test-key",
-            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            10 * 60
-        );
-
-        expect(journeys).toHaveLength(1);
-        expect(journeys[0]!.trainLegs[1]).toMatchObject({
-            departure: 10 * 60 + 35,
-            arrival: 11 * 60 + 20,
-        });
-        expect(journeys[0]!.trainLegs[1]!.alternativeTrainLegs).toEqual([
-            expect.objectContaining({
-                departure: 10 * 60 + 25,
-                arrival: 11 * 60 + 30,
-            }),
-        ]);
-    });
-
-    it("uses the latest first train for the same onward service", async () => {
-        mockDepartureBoards({
-            "HTC-MAN": [
-                service("early-first-train", "10:05", "MAN", "10:20"),
-                service("late-first-train", "10:15", "MAN", "10:30"),
-            ],
-            "MAN-LIV": [service("onward", "10:40", "LIV", "11:20")],
-        });
-
-        const journeys = await getTimetabledJourneys(
-            "test-key",
-            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            10 * 60
-        );
-
-        expect(journeys).toHaveLength(1);
-        expect(journeys[0]!.trainLegs[0]!.departure).toBe(10 * 60 + 15);
-        expect(journeys[0]!.trainLegs[0]!.alternativeTrainLegs).toEqual([
-            expect.objectContaining({departure: 10 * 60 + 5}),
-        ]);
-    });
-
     it("does not treat one through service as a connection to itself", async () => {
         mockDepartureBoards({
             "HTC-MAN": [service("through", "10:05", "MAN", "10:20")],
@@ -476,14 +426,10 @@ async function getTimetabledJourneys(
     stationRoutes: JourneyRoute[],
     currentMinutes: number
 ) {
-    const departureBoards = await getDepartureBoards(
+    const routeTimetables = await loadRouteTimetables(
         consumerKey,
         stationRoutes,
         currentMinutes
     );
-    return planTimetabledJourneys(
-        stationRoutes,
-        departureBoards,
-        currentMinutes
-    );
+    return planTimetabledJourneys(routeTimetables, currentMinutes);
 }

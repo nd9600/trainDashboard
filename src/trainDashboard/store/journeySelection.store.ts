@@ -1,10 +1,7 @@
 import {defineStore} from "pinia";
 import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
-import type {
-    DisplaySchedule,
-    Journey,
-    JourneyFields,
-} from "../dto/dashboardConfig.dto";
+import type {DisplaySchedule} from "../dto/displaySchedule.dto";
+import type {Journey, JourneyFields} from "../dto/journey.dto";
 import {
     createEphemeralJourney,
     hasSameJourneyFields,
@@ -220,10 +217,6 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             const savedJourney = useDashboardConfigStore().saveJourney(
                 this.currentEphemeralJourney
             );
-
-            if (!savedJourney) {
-                return;
-            }
 
             this.recentJourneyIds = [
                 ...new Set(

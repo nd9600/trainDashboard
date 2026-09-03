@@ -1,5 +1,5 @@
 import {describe, expect, it} from "vitest";
-import type {Journey} from "../../dto/dashboardConfig.dto";
+import type {Journey} from "../../dto/journey.dto";
 import {manchesterDashboardConfig} from "../../testing/manchesterDashboardConfig.fixture";
 import {getStationRoutes} from "./journeyRoutes";
 

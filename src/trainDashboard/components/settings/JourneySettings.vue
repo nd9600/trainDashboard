@@ -44,17 +44,17 @@
 <script setup lang="ts">
 import {ref} from "vue";
 import AppTabs from "@/components/AppTabs.vue";
-import type {DashboardConfig} from "../../dto/dashboardConfig.dto";
 import {
     dashboardConfigErrorMessages,
-    DashboardConfigSchema,
-} from "../../dto/dashboardConfig.dto";
+    DashboardConfigDraftSchema,
+    type DashboardConfigDraft,
+} from "../../dto/dashboardConfigDraft.dto";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import SchedulesSettings from "./schedules/SchedulesSettings.vue";
 import StationGroupsSettings from "./stationGroups/StationGroupsSettings.vue";
 
 const dashboardConfigStore = useDashboardConfigStore();
-const draft = ref<DashboardConfig>(
+const draft = ref<DashboardConfigDraft>(
     structuredClone(dashboardConfigStore.config)
 );
 const errors = ref<string[]>([]);
@@ -73,17 +73,15 @@ const editorSections = [
     {value: "schedules", label: "Schedules", icon: "clock" as const},
 ];
 function save(): void {
-    if (!validateDraft()) {
+    const config = validateDraft();
+
+    if (!config) {
         return;
     }
 
-    const result = dashboardConfigStore.saveConfig(draft.value);
-    errors.value = result.errors;
-
-    if (result.success) {
-        draft.value = structuredClone(dashboardConfigStore.config);
-        hasUnsavedChanges.value = false;
-    }
+    dashboardConfigStore.saveConfig(config);
+    draft.value = structuredClone(dashboardConfigStore.config);
+    hasUnsavedChanges.value = false;
 }
 
 function cancel(): void {
@@ -98,14 +96,14 @@ function handleChange(): void {
     hasUnsavedChanges.value = true;
 }
 
-function validateDraft(): boolean {
-    const result = DashboardConfigSchema.safeParse(draft.value);
+function validateDraft(): DashboardConfigDraft | undefined {
+    const result = DashboardConfigDraftSchema.safeParse(draft.value);
     errors.value = result.success
         ? []
         : dashboardConfigErrorMessages(result.error);
     setValid(result.success);
 
-    return result.success;
+    return result.success ? result.data : undefined;
 }
 
 function setValid(value: boolean): void {

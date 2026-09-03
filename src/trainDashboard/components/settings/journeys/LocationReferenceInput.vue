@@ -24,10 +24,8 @@
 
 <script setup lang="ts">
 import {computed, ref} from "vue";
-import type {
-    LocationReference,
-    StationGroup,
-} from "../../../dto/dashboardConfig.dto";
+import type {LocationReference} from "../../../dto/journey.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import {stationDisplayName} from "../../../stations/stations";
 
 const props = defineProps<{

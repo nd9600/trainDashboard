@@ -7,28 +7,42 @@ The dashboard requests departure boards after it expands the active journey into
 ```mermaid
 sequenceDiagram
     participant Dashboard as getDashboardJourneys
-    participant Boards as getDepartureBoards
+    participant Loader as loadRouteTimetables
+    participant First as loadFirstTrainsForRoutes
+    participant Onward as loadOnwardDepartureBoard
+    participant Requests as createDepartureBoardLoader
     participant Parser as getDirectTrainLegs
     participant API as Rail Data Marketplace
 
-    Dashboard->>Boards: Routes and current time
-    Boards->>API: Request direct and first-train boards
-    API-->>Boards: Up to ten services per board
-    Boards->>Parser: Parse catchable first-train legs
+    Dashboard->>Loader: Routes and current time
+    Loader->>First: Routes and current time
+    First->>Requests: Request direct and first-train boards
+    Requests->>API: Fetch uncached boards
+    API-->>Requests: Up to ten services per board
+    Requests-->>First: Departure boards
+    First->>Parser: Parse catchable first-train legs
     alt Connected route has fewer than six first trains
-        Boards->>API: Request later first-train board at 119-minute offset
-        API-->>Boards: Later first-train services
-        Boards->>Boards: Merge first-train services
-        Boards->>Parser: Parse combined first-train board
+        First->>Requests: Request later board at 119-minute offset
+        Requests->>API: Fetch uncached board
+        API-->>Requests: Later first-train services
+        Requests-->>First: Later departure board
+        First->>First: Merge first-train services
+        First->>Parser: Parse combined first-train board
     end
-    Parser-->>Boards: Sorted transfer-ready times
+    First-->>Loader: Catchable first-train legs for each route
+    Loader->>Onward: First-train legs and current time
+    Onward->>Onward: Calculate sorted transfer-ready times
     loop Until all transfer-ready times have onward coverage
-        Boards->>API: Request onward board from next uncovered time
-        API-->>Boards: Onward services
-        Boards->>Parser: Parse onward departure times
-        Boards->>Boards: Merge services and find next uncovered time
+        Onward->>Requests: Request board from next uncovered time
+        Requests->>API: Fetch uncached board
+        API-->>Requests: Onward services
+        Requests-->>Onward: Onward departure board
+        Onward->>Parser: Parse onward departure times
+        Onward->>Onward: Merge services and find next uncovered time
     end
-    Boards-->>Dashboard: Departure boards keyed by station pair
+    Onward-->>Loader: Combined onward departure board
+    Loader->>Parser: Parse onward train legs
+    Loader-->>Dashboard: Each route with its first and onward train legs
 ```
 
 ## Request rules
@@ -53,9 +67,16 @@ Identical station-pair and offset requests share one promise during a planning r
 
 All responses for one station pair are merged and deduplicated. This includes overlapping responses and responses used by several routes.
 
+`loadRouteTimetables` returns one `RouteTimetable` for each station route. A route timetable contains parsed first-train legs and optional onward-train legs.
+
+`createDepartureBoardLoader` owns request keys and the request cache. `loadFirstTrainsForRoutes` owns the sparse first-train extension. `loadOnwardDepartureBoard` owns the repeated onward-window requests.
+
 ## Source map
 
-- `src/trainDashboard/journeys/timetable/departureBoards.ts` creates requests, applies offsets, caches requests, and merges onward boards.
+- `src/trainDashboard/journeys/timetable/loadRouteTimetables.ts` loads the first and onward trains for each route.
+- `src/trainDashboard/journeys/timetable/departureBoards.ts` creates requests, caches requests, and merges boards.
+- `src/trainDashboard/journeys/timetable/firstTrainRequests.ts` loads and extends first-train boards.
+- `src/trainDashboard/journeys/timetable/onwardTrainRequests.ts` loads the required onward-board windows.
 - `src/trainDashboard/journeys/timetable/trainLegs.ts` parses services and arrival times.
 - `src/trainDashboard/api/railDataMarketplace.api.ts` sends and validates Rail Data Marketplace requests.
 - `src/trainDashboard/dto/liveDepartureBoard.dto.ts` defines validated departure-board data.

@@ -3,9 +3,9 @@ import type {DepartureBoardRequest} from "../../api/railDataMarketplace.api";
 import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
 import type {DepartureService} from "../../dto/liveDepartureBoard.dto";
 import type {JourneyRoute} from "../planning/journeyRoutes";
-import {getDepartureBoard, getDepartureBoards} from "./departureBoards";
+import {loadRouteTimetables} from "./loadRouteTimetables";
 
-describe("connected-route departure boards", () => {
+describe("route timetable requests", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -44,7 +44,7 @@ describe("connected-route departure boards", () => {
             };
         });
 
-        const boards = await getDepartureBoards(
+        const [routeTimetable] = await loadRouteTimetables(
             "test-key",
             [connectedRoute],
             11 * 60
@@ -57,9 +57,7 @@ describe("connected-route departure boards", () => {
             )
         ).toEqual(["HTC-MAN:0", "HTC-MAN:119", "MAN-LIV:13", "MAN-LIV:119"]);
         expect(
-            getDepartureBoard(boards, "HTC", "MAN", 0).trainServices.map(
-                (trainService) => trainService.serviceID
-            )
+            routeTimetable!.firstTrainLegs.map((trainLeg) => trainLeg.serviceId)
         ).toEqual(["initial-first", "later-first"]);
     });
 
@@ -90,7 +88,7 @@ describe("connected-route departure boards", () => {
             };
         });
 
-        await getDepartureBoards("test-key", [connectedRoute], 11 * 60);
+        await loadRouteTimetables("test-key", [connectedRoute], 11 * 60);
 
         expect(
             requests
@@ -107,7 +105,7 @@ describe("connected-route departure boards", () => {
             93: [service("onward-three", "12:50", "LIV", "13:30")],
         });
 
-        const boards = await getDepartureBoards(
+        const [routeTimetable] = await loadRouteTimetables(
             "test-key",
             [connectedRoute],
             11 * 60
@@ -118,9 +116,7 @@ describe("connected-route departure boards", () => {
                 .filter((request) => request.originCrs === "MAN")
                 .map((request) => request.timeOffsetMinutes)
         ).toEqual([13, 53, 93]);
-        expect(
-            getDepartureBoard(boards, "MAN", "LIV", 0).trainServices
-        ).toHaveLength(3);
+        expect(routeTimetable!.onwardTrainLegs).toHaveLength(3);
     });
 
     it("deduplicates services returned by overlapping onward requests", async () => {
@@ -131,15 +127,15 @@ describe("connected-route departure boards", () => {
             53: [duplicateService, service("later", "12:10", "LIV", "12:50")],
         });
 
-        const boards = await getDepartureBoards(
+        const [routeTimetable] = await loadRouteTimetables(
             "test-key",
             [connectedRoute],
             11 * 60
         );
 
         expect(
-            getDepartureBoard(boards, "MAN", "LIV", 0).trainServices.map(
-                (trainService) => trainService.serviceID
+            routeTimetable!.onwardTrainLegs!.map(
+                (trainLeg) => trainLeg.serviceId
             )
         ).toEqual(["duplicate", "later"]);
     });
@@ -148,7 +144,7 @@ describe("connected-route departure boards", () => {
         const requests: DepartureBoardRequest[] = [];
         mockDepartureBoards(requests, {});
 
-        const boards = await getDepartureBoards(
+        const [routeTimetable] = await loadRouteTimetables(
             "test-key",
             [connectedRoute],
             11 * 60
@@ -159,9 +155,7 @@ describe("connected-route departure boards", () => {
                 .filter((request) => request.originCrs === "MAN")
                 .map((request) => request.timeOffsetMinutes)
         ).toEqual([13, 53, 93]);
-        expect(
-            getDepartureBoard(boards, "MAN", "LIV", 0).trainServices
-        ).toEqual([]);
+        expect(routeTimetable!.onwardTrainLegs).toEqual([]);
     });
 });
 

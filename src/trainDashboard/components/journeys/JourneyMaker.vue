@@ -80,11 +80,8 @@
 
 <script setup lang="ts">
 import {computed, nextTick, ref} from "vue";
-import type {
-    Journey,
-    LocationReference,
-    StationGroup,
-} from "../../dto/dashboardConfig.dto";
+import type {Journey, LocationReference} from "../../dto/journey.dto";
+import type {StationGroup} from "../../dto/stationGroup.dto";
 import LocationReferenceInput from "../settings/journeys/LocationReferenceInput.vue";
 import StationInput from "../settings/stationGroups/StationInput.vue";
 

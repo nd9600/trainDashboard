@@ -122,7 +122,9 @@
                             tabindex="-1"
                             :title="getRemoveTitle(section.name)"
                             :aria-label="getRemoveTitle(section.name)"
-                            @click.stop="removeJourney(section.name, journey.id)"
+                            @click.stop="
+                                removeJourney(section.name, journey.id)
+                            "
                         >
                             <AppIcon class="size-3.5" name="close" />
                         </button>
@@ -201,7 +203,7 @@ import {
 import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {JourneyFields} from "../../dto/dashboardConfig.dto";
+import type {JourneyFields} from "../../dto/journey.dto";
 import type {JourneyChoices} from "../../dto/journeySelection.dto";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import {useJourneySelectionStore} from "../../store/journeySelection.store";

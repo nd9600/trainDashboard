@@ -1,9 +1,6 @@
-import type {
-    Day,
-    DisplaySchedule,
-    Journey,
-    StationGroup,
-} from "../../../dto/dashboardConfig.dto";
+import type {Day, DisplaySchedule} from "../../../dto/displaySchedule.dto";
+import type {Journey} from "../../../dto/journey.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import {
     getJourneyLabelDetails,
     getJourneyLabelText,

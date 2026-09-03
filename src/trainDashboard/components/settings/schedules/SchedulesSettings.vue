@@ -56,11 +56,9 @@
 <script setup lang="ts">
 import {computed, nextTick, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {
-    DisplaySchedule,
-    StationGroup,
-    Journey,
-} from "../../../dto/dashboardConfig.dto";
+import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
+import type {Journey} from "../../../dto/journey.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import ScheduleDetails from "./ScheduleDetails.vue";
 import ScheduleSettingsCard from "./ScheduleSettingsCard.vue";
 import {createEmptyJourney, hasJourneyEndpoints} from "./scheduleSettings";
@@ -130,9 +128,7 @@ function removeSchedule(scheduleIndex: number): void {
     const deleteIncompleteJourney =
         journey !== undefined &&
         !hasJourneyEndpoints(journey, props.stationGroups) &&
-        !otherSchedules.some(
-            (candidate) => candidate.journeyId === journey.id
-        );
+        !otherSchedules.some((candidate) => candidate.journeyId === journey.id);
 
     if (!window.confirm(`Remove schedule “${schedule.name}”?`)) {
         return;

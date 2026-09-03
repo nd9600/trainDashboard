@@ -1,7 +1,8 @@
-import type {Journey, StationGroup} from "../dto/dashboardConfig.dto";
+import type {Journey} from "../dto/journey.dto";
+import type {StationGroup} from "../dto/stationGroup.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {getStationRoutes, type JourneyRoute} from "./planning/journeyRoutes";
-import {getDepartureBoards} from "./timetable/departureBoards";
+import {loadRouteTimetables} from "./timetable/loadRouteTimetables";
 import {planTimetabledJourneys} from "./timetable/planTimetabledJourneys";
 
 interface DashboardJourneys {
@@ -21,17 +22,13 @@ export async function getDashboardJourneys(
         return {routes, journeys: []};
     }
 
-    const departureBoards = await getDepartureBoards(
+    const routeTimetables = await loadRouteTimetables(
         consumerKey,
         routes,
         currentMinutes
     );
     return {
         routes,
-        journeys: planTimetabledJourneys(
-            routes,
-            departureBoards,
-            currentMinutes
-        ),
+        journeys: planTimetabledJourneys(routeTimetables, currentMinutes),
     };
 }

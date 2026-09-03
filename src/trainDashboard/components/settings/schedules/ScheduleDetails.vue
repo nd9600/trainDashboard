@@ -43,11 +43,9 @@
 
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
-import type {
-    DisplaySchedule,
-    Journey,
-    StationGroup,
-} from "../../../dto/dashboardConfig.dto";
+import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
+import type {Journey} from "../../../dto/journey.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import ScheduleJourney from "./ScheduleJourney.vue";
 import ScheduleTimingSettings from "./ScheduleTimingSettings.vue";
 import {getActiveDaysText} from "./scheduleSettings";

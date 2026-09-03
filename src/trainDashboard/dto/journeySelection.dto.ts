@@ -1,11 +1,11 @@
 import {z} from "zod";
 import {
-    CrsCodeSchema,
     JourneyFieldsSchema,
     JourneySchema,
     type Journey,
     type JourneyFields,
-} from "./dashboardConfig.dto";
+} from "./journey.dto";
+import {CrsCodeSchema} from "./station.dto";
 
 const StationLocationSchema = z.object({
     type: z.literal("station"),

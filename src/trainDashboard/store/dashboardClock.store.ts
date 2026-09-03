@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 import {computed, onScopeDispose, ref, type ComputedRef} from "vue";
-import type {Day} from "../dto/dashboardConfig.dto";
+import type {Day} from "../dto/displaySchedule.dto";
 import type {CurrentClock} from "../journeys/journeyPrediction";
 
 export const useDashboardClockStore = defineStore("dashboard-clock", () => {

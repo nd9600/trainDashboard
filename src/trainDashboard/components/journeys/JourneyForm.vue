@@ -37,8 +37,8 @@ import {
     JourneyFieldsSchema,
     type Journey,
     type JourneyFields,
-    type StationGroup,
-} from "../../dto/dashboardConfig.dto";
+} from "../../dto/journey.dto";
+import type {StationGroup} from "../../dto/stationGroup.dto";
 import JourneyMaker from "./JourneyMaker.vue";
 
 const props = withDefaults(

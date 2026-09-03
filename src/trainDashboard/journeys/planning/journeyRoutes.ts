@@ -1,8 +1,5 @@
-import type {
-    Journey,
-    LocationReference,
-    StationGroup,
-} from "../../dto/dashboardConfig.dto";
+import type {Journey, LocationReference} from "../../dto/journey.dto";
+import type {StationGroup} from "../../dto/stationGroup.dto";
 import {stationName} from "../../stations/stations";
 
 interface StationEndpoint {

@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import {nextTick} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {StationGroup} from "../../../dto/dashboardConfig.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import StationInput from "./StationInput.vue";
 
 const group = defineModel<StationGroup>("group", {required: true});

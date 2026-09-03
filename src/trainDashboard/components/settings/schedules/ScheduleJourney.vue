@@ -29,11 +29,7 @@
             type="button"
             @click="toggleJourneyPicker"
         >
-            {{
-                isChangingJourney
-                    ? "Hide journey choices"
-                    : "Change journey"
-            }}
+            {{ isChangingJourney ? "Hide journey choices" : "Change journey" }}
         </button>
 
         <div
@@ -106,11 +102,9 @@
 
 <script setup lang="ts">
 import {computed, nextTick, ref} from "vue";
-import type {
-    DisplaySchedule,
-    Journey,
-    StationGroup,
-} from "../../../dto/dashboardConfig.dto";
+import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
+import type {Journey} from "../../../dto/journey.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import {getJourneyLabelDetails} from "../../../journeys/journeyLabels";
 import JourneyLabel from "../../journeys/JourneyLabel.vue";
 import JourneySettingsFields from "../journeys/JourneySettingsFields.vue";
@@ -138,9 +132,7 @@ const emit = defineEmits<{
 }>();
 
 const selectedJourney = computed(() =>
-    journeys.value.find(
-        (journey) => journey.id === schedule.value.journeyId
-    )
+    journeys.value.find((journey) => journey.id === schedule.value.journeyId)
 );
 const selectedJourneyIsComplete = computed(
     () =>

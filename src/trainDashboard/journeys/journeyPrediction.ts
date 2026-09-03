@@ -1,5 +1,5 @@
-import type {Day, DisplaySchedule} from "../dto/dashboardConfig.dto";
-import {timeToMinutes} from "../dto/dashboardConfig.dto";
+import type {Day, DisplaySchedule} from "../dto/displaySchedule.dto";
+import {timeToMinutes} from "@/utilities/time.utility";
 
 export interface CurrentClock {
     day: Day;

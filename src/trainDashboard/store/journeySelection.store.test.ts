@@ -1,7 +1,8 @@
 import {createPinia, setActivePinia} from "pinia";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {MemoryStorage} from "../../testing/MemoryStorage";
-import type {DashboardConfig, JourneyFields} from "../dto/dashboardConfig.dto";
+import type {DashboardConfig} from "../dto/dashboardConfig.dto";
+import type {JourneyFields} from "../dto/journey.dto";
 import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
 import {useJourneySelectionStore as createJourneySelectionStore} from "./journeySelection.store";

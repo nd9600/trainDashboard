@@ -1,5 +1,6 @@
 import {describe, expect, it} from "vitest";
-import type {Journey, StationGroup} from "../dto/dashboardConfig.dto";
+import type {Journey} from "../dto/journey.dto";
+import type {StationGroup} from "../dto/stationGroup.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "./planning/journeyRoutes";
 import {

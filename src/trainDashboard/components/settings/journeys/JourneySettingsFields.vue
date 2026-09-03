@@ -31,7 +31,8 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {Journey, StationGroup} from "../../../dto/dashboardConfig.dto";
+import type {Journey} from "../../../dto/journey.dto";
+import type {StationGroup} from "../../../dto/stationGroup.dto";
 import JourneyMaker from "../../journeys/JourneyMaker.vue";
 
 withDefaults(

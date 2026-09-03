@@ -2,11 +2,10 @@ import {defineStore} from "pinia";
 import {ref} from "vue";
 import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
 import {
-    dashboardConfigErrorMessages,
     DashboardConfigSchema,
     type DashboardConfig,
-    type Journey,
 } from "../dto/dashboardConfig.dto";
+import type {Journey} from "../dto/journey.dto";
 
 const storage = useLocalStorageTyped(
     "train-dashboard-config-v3",
@@ -22,26 +21,12 @@ const storage = useLocalStorageTyped(
 export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     const config = ref<DashboardConfig>(storage.loadFromLocalStorage());
 
-    function saveConfig(candidate: unknown): {
-        success: boolean;
-        errors: string[];
-    } {
-        const result = DashboardConfigSchema.safeParse(candidate);
-
-        if (!result.success) {
-            return {
-                success: false,
-                errors: dashboardConfigErrorMessages(result.error),
-            };
-        }
-
-        config.value = result.data;
-        storage.saveToLocalStorage(result.data);
-
-        return {success: true, errors: []};
+    function saveConfig(candidate: DashboardConfig): void {
+        config.value = candidate;
+        storage.saveToLocalStorage(candidate);
     }
 
-    function saveJourney(candidate: Journey): Journey | undefined {
+    function saveJourney(candidate: Journey): Journey {
         const existingJourney = config.value.journeys.find(
             (journey) =>
                 journey.origin.type === "station" &&
@@ -62,12 +47,12 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
             ...candidate,
             id: getAvailableJourneyId(candidate.id),
         };
-        const result = saveConfig({
+        saveConfig({
             ...config.value,
             journeys: [...config.value.journeys, journey],
         });
 
-        return result.success ? journey : undefined;
+        return journey;
     }
 
     function updateJourney(candidate: Journey): void {
@@ -102,12 +87,14 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
             return false;
         }
 
-        return saveConfig({
+        saveConfig({
             ...config.value,
             journeys: config.value.journeys.filter(
                 (journey) => journey.id !== journeyId
             ),
-        }).success;
+        });
+
+        return true;
     }
 
     function getAvailableJourneyId(baseId: string): string {
