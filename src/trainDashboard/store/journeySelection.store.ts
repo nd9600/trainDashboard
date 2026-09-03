@@ -101,13 +101,13 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             const predictedJourney = this.predictedJourneyId
                 ? this.journeysById.get(this.predictedJourneyId)
                 : undefined;
-            const recentJourneys = state.recentJourneyIds
-                .filter((journeyId) => journeyId !== this.predictedJourneyId)
-                .flatMap((journeyId) => {
-                    const journey = this.journeysById.get(journeyId);
-                    return journey ? [journey] : [];
-                })
-                .slice(0, 3);
+            const recentChoiceJourneyIds = state.recentJourneyIds.filter(
+                (journeyId) => journeyId !== this.predictedJourneyId
+            );
+            const recentJourneys = getJourneysByIds(
+                recentChoiceJourneyIds,
+                this.journeysById
+            ).slice(0, 3);
             const recentJourneyIds = new Set(
                 recentJourneys.map((journey) => journey.id)
             );
@@ -354,3 +354,20 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
         },
     },
 });
+
+function getJourneysByIds(
+    journeyIds: string[],
+    journeysById: Map<string, Journey>
+): Journey[] {
+    const journeys: Journey[] = [];
+
+    for (const journeyId of journeyIds) {
+        const journey = journeysById.get(journeyId);
+
+        if (journey) {
+            journeys.push(journey);
+        }
+    }
+
+    return journeys;
+}

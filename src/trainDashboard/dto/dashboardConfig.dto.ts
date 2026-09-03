@@ -54,22 +54,7 @@ export const StationGroupSchema = z
             )
             .min(1, "Add at least one station."),
     })
-    .superRefine((group, context) => {
-        const stationCodes = new Set<string>();
-
-        group.stations.forEach((station, stationIndex) => {
-            if (stationCodes.has(station.crs)) {
-                context.addIssue({
-                    code: "custom",
-                    message:
-                        "Choose a different station. This station is already in the group.",
-                    path: ["stations", stationIndex, "crs"],
-                });
-            }
-
-            stationCodes.add(station.crs);
-        });
-    });
+    .superRefine(reportDuplicateStations);
 export type StationGroup = z.infer<typeof StationGroupSchema>;
 
 export const LocationReferenceSchema = z.discriminatedUnion("type", [
@@ -122,167 +107,207 @@ const DashboardConfigBaseSchema = z.object({
         .array(DisplayScheduleSchema)
         .min(1, "Add at least one schedule."),
 });
+type DashboardConfigBase = z.infer<typeof DashboardConfigBaseSchema>;
 
 export const DashboardConfigSchema = DashboardConfigBaseSchema.superRefine(
-    (config, context) => {
-        reportDuplicateIds(
-            config.stationGroups,
-            "stationGroups",
-            "Group IDs must be unique.",
-            context
-        );
-        reportDuplicateIds(
-            config.journeys,
-            "journeys",
-            "Journey IDs must be unique.",
-            context
-        );
-        reportDuplicateIds(
-            config.schedules,
-            "schedules",
-            "Schedule IDs must be unique.",
-            context
-        );
-
-        const stationGroupsById = new Map(
-            config.stationGroups.map((group) => [group.id, group])
-        );
-        const journeyIds = new Set(
-            config.journeys.map((journey) => journey.id)
-        );
-
-        config.journeys.forEach((journey, journeyIndex) => {
-            for (const [endpointName, endpoint] of [
-                ["origin", journey.origin],
-                ["destination", journey.destination],
-            ] as const) {
-                if (
-                    endpoint.type === "station" &&
-                    endpoint.groupId === undefined
-                ) {
-                    continue;
-                }
-
-                const groupId = endpoint.groupId;
-
-                if (!groupId) {
-                    continue;
-                }
-
-                const group = stationGroupsById.get(groupId);
-
-                if (!group) {
-                    context.addIssue({
-                        code: "custom",
-                        message: `Group "${groupId}" does not exist.`,
-                        path: ["journeys", journeyIndex, endpointName],
-                    });
-                    continue;
-                }
-
-                if (
-                    endpoint.type === "station" &&
-                    !group.stations.some(
-                        (station) => station.crs === endpoint.crs
-                    )
-                ) {
-                    context.addIssue({
-                        code: "custom",
-                        message: `Station "${endpoint.crs}" is not in group "${group.name}".`,
-                        path: ["journeys", journeyIndex, endpointName, "crs"],
-                    });
-                }
-            }
-        });
-
-        const journeyIndexesByStationPair = new Map<string, number>();
-
-        config.journeys.forEach((journey, journeyIndex) => {
-            if (
-                [journey.origin, journey.destination].some(
-                    (location) =>
-                        location.groupId !== undefined &&
-                        !stationGroupsById.has(location.groupId)
-                )
-            ) {
-                return;
-            }
-
-            const stationPair = getStationPairKey(journey, stationGroupsById);
-            const existingJourneyIndex =
-                journeyIndexesByStationPair.get(stationPair);
-
-            if (existingJourneyIndex !== undefined) {
-                context.addIssue({
-                    code: "custom",
-                    message: `This station pair is already used by Journey ${existingJourneyIndex + 1}.`,
-                    path: ["journeys", journeyIndex],
-                });
-                return;
-            }
-
-            journeyIndexesByStationPair.set(stationPair, journeyIndex);
-        });
-
-        config.schedules.forEach((schedule, scheduleIndex) => {
-            if (!journeyIds.has(schedule.journeyId)) {
-                context.addIssue({
-                    code: "custom",
-                    message: `Journey "${schedule.journeyId}" does not exist.`,
-                    path: ["schedules", scheduleIndex, "journeyId"],
-                });
-            }
-        });
-
-        config.schedules.forEach((firstSchedule, firstIndex) => {
-            config.schedules
-                .slice(firstIndex + 1)
-                .forEach((secondSchedule, offset) => {
-                    if (!schedulesOverlap(firstSchedule, secondSchedule)) {
-                        return;
-                    }
-
-                    context.addIssue({
-                        code: "custom",
-                        message: `Schedule overlaps "${firstSchedule.name}".`,
-                        path: ["schedules", firstIndex + offset + 1],
-                    });
-                });
-        });
-    }
+    validateDashboardConfig
 );
 export type DashboardConfig = z.infer<typeof DashboardConfigSchema>;
+
+function validateDashboardConfig(
+    config: DashboardConfigBase,
+    context: z.RefinementCtx
+): void {
+    reportDuplicateIds(
+        config.stationGroups,
+        "stationGroups",
+        "Group IDs must be unique.",
+        context
+    );
+    reportDuplicateIds(
+        config.journeys,
+        "journeys",
+        "Journey IDs must be unique.",
+        context
+    );
+    reportDuplicateIds(
+        config.schedules,
+        "schedules",
+        "Schedule IDs must be unique.",
+        context
+    );
+
+    const stationGroupsById = new Map(
+        config.stationGroups.map((group) => [group.id, group])
+    );
+
+    reportInvalidJourneyLocations(config.journeys, stationGroupsById, context);
+    reportDuplicateJourneyRoutes(config.journeys, stationGroupsById, context);
+    reportMissingScheduleJourneys(config, context);
+    reportOverlappingSchedules(config.schedules, context);
+}
+
+function reportInvalidJourneyLocations(
+    journeys: Journey[],
+    stationGroupsById: Map<string, StationGroup>,
+    context: z.RefinementCtx
+): void {
+    for (const [journeyIndex, journey] of journeys.entries()) {
+        for (const [endpointName, endpoint] of [
+            ["origin", journey.origin],
+            ["destination", journey.destination],
+        ] as const) {
+            if (endpoint.type === "station" && endpoint.groupId === undefined) {
+                continue;
+            }
+
+            const groupId = endpoint.groupId;
+
+            if (!groupId) {
+                continue;
+            }
+
+            const group = stationGroupsById.get(groupId);
+
+            if (!group) {
+                context.addIssue({
+                    code: "custom",
+                    message: `Group "${groupId}" does not exist.`,
+                    path: ["journeys", journeyIndex, endpointName],
+                });
+                continue;
+            }
+
+            if (
+                endpoint.type === "station" &&
+                !group.stations.some((station) => station.crs === endpoint.crs)
+            ) {
+                context.addIssue({
+                    code: "custom",
+                    message: `Station "${endpoint.crs}" is not in group "${group.name}".`,
+                    path: ["journeys", journeyIndex, endpointName, "crs"],
+                });
+            }
+        }
+    }
+}
+
+function reportDuplicateJourneyRoutes(
+    journeys: Journey[],
+    stationGroupsById: Map<string, StationGroup>,
+    context: z.RefinementCtx
+): void {
+    const journeyIndexesByStationPair = new Map<string, number>();
+
+    for (const [journeyIndex, journey] of journeys.entries()) {
+        if (
+            [journey.origin, journey.destination].some(
+                (location) =>
+                    location.groupId !== undefined &&
+                    !stationGroupsById.has(location.groupId)
+            )
+        ) {
+            continue;
+        }
+
+        const stationPair = getStationPairKey(journey, stationGroupsById);
+        const existingJourneyIndex =
+            journeyIndexesByStationPair.get(stationPair);
+
+        if (existingJourneyIndex !== undefined) {
+            context.addIssue({
+                code: "custom",
+                message: `This station pair is already used by Journey ${existingJourneyIndex + 1}.`,
+                path: ["journeys", journeyIndex],
+            });
+            continue;
+        }
+
+        journeyIndexesByStationPair.set(stationPair, journeyIndex);
+    }
+}
+
+function reportMissingScheduleJourneys(
+    config: DashboardConfigBase,
+    context: z.RefinementCtx
+): void {
+    const journeyIds = new Set(config.journeys.map((journey) => journey.id));
+
+    for (const [scheduleIndex, schedule] of config.schedules.entries()) {
+        if (!journeyIds.has(schedule.journeyId)) {
+            context.addIssue({
+                code: "custom",
+                message: `Journey "${schedule.journeyId}" does not exist.`,
+                path: ["schedules", scheduleIndex, "journeyId"],
+            });
+        }
+    }
+}
+
+function reportOverlappingSchedules(
+    schedules: DisplaySchedule[],
+    context: z.RefinementCtx
+): void {
+    for (const [firstIndex, firstSchedule] of schedules.entries()) {
+        for (
+            let secondIndex = firstIndex + 1;
+            secondIndex < schedules.length;
+            secondIndex++
+        ) {
+            const secondSchedule = schedules[secondIndex]!;
+
+            if (!schedulesOverlap(firstSchedule, secondSchedule)) {
+                continue;
+            }
+
+            context.addIssue({
+                code: "custom",
+                message: `Schedule overlaps "${firstSchedule.name}".`,
+                path: ["schedules", secondIndex],
+            });
+        }
+    }
+}
 
 function getStationPairKey(
     journey: Journey,
     stationGroupsById: Map<string, StationGroup>
 ): string {
     return [journey.origin, journey.destination]
-        .map((location) => {
-            if (location.type === "group") {
-                return `group:${location.groupId}`;
-            }
-
-            if (location.groupId === undefined) {
-                return `station:${location.crs}`;
-            }
-
-            if (
-                stationGroupsById.get(location.groupId)?.stations.length === 1
-            ) {
-                return `group:${location.groupId}`;
-            }
-
-            return `station:${location.groupId}:${location.crs}`;
-        })
+        .map((location) =>
+            getLocationStationPairKey(location, stationGroupsById)
+        )
         .join("->");
 }
 
+function getLocationStationPairKey(
+    location: LocationReference,
+    stationGroupsById: Map<string, StationGroup>
+): string {
+    if (location.type === "group") {
+        return `group:${location.groupId}`;
+    }
+
+    if (location.groupId === undefined) {
+        return `station:${location.crs}`;
+    }
+
+    if (stationGroupsById.get(location.groupId)?.stations.length === 1) {
+        return `group:${location.groupId}`;
+    }
+
+    return `station:${location.groupId}:${location.crs}`;
+}
+
 export function dashboardConfigErrorMessages(error: z.ZodError): string[] {
-    return error.issues.map((issue) => {
-        const location = getErrorLocation(issue.path);
-        return location ? `${location}: ${issue.message}` : issue.message;
-    });
+    return error.issues.map(getDashboardConfigErrorMessage);
+}
+
+function getDashboardConfigErrorMessage(
+    issue: z.ZodError["issues"][number]
+): string {
+    const location = getErrorLocation(issue.path);
+    return location ? `${location}: ${issue.message}` : issue.message;
 }
 
 function getErrorLocation(path: PropertyKey[]): string {
@@ -365,7 +390,7 @@ function reportDuplicateIds(
 ): void {
     const seenIds = new Set<string>();
 
-    items.forEach((item, index) => {
+    for (const [index, item] of items.entries()) {
         if (seenIds.has(item.id)) {
             context.addIssue({
                 code: "custom",
@@ -375,5 +400,25 @@ function reportDuplicateIds(
         }
 
         seenIds.add(item.id);
-    });
+    }
+}
+
+function reportDuplicateStations(
+    group: {stations: Array<{crs: string}>},
+    context: z.RefinementCtx
+): void {
+    const stationCodes = new Set<string>();
+
+    for (const [stationIndex, station] of group.stations.entries()) {
+        if (stationCodes.has(station.crs)) {
+            context.addIssue({
+                code: "custom",
+                message:
+                    "Choose a different station. This station is already in the group.",
+                path: ["stations", stationIndex, "crs"],
+            });
+        }
+
+        stationCodes.add(station.crs);
+    }
 }

@@ -134,24 +134,27 @@ const body = ref<HTMLDivElement | null>(null);
 const isBodyOverflowing = ref(false);
 let resizeObserver: ResizeObserver | undefined;
 
-watch(body, (element) => {
+watch(body, observeBody);
+
+function observeBody(element: HTMLDivElement | null): void {
     resizeObserver?.disconnect();
 
     if (!element) {
         return;
     }
 
-    resizeObserver = new ResizeObserver(([entry]) => {
-        if (!entry) {
-            return;
-        }
-
-        isBodyOverflowing.value =
-            entry.target.scrollHeight > entry.target.clientHeight;
-    });
-
+    resizeObserver = new ResizeObserver(updateBodyOverflow);
     resizeObserver.observe(element);
-});
+}
+
+function updateBodyOverflow([entry]: ResizeObserverEntry[]): void {
+    if (!entry) {
+        return;
+    }
+
+    isBodyOverflowing.value =
+        entry.target.scrollHeight > entry.target.clientHeight;
+}
 
 onBeforeUnmount(() => {
     resizeObserver?.disconnect();

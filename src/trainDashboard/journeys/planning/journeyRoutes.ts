@@ -27,24 +27,28 @@ export function getStationRoutes(
         stationGroups.map((group) => [group.id, group])
     );
 
-    return journeys.flatMap((journey) => {
-        const origins = getStationsForLocation(
-            journey.origin,
-            stationGroupsById
-        );
-        const destinations = getStationsForLocation(
-            journey.destination,
-            stationGroupsById
-        );
+    return journeys.flatMap((journey) =>
+        getRoutesForJourney(journey, stationGroupsById)
+    );
+}
 
-        return origins.flatMap((origin) =>
-            destinations
-                .filter((destination) => destination.crs !== origin.crs)
-                .flatMap((destination) =>
-                    getRouteOptions(journey, origin, destination)
-                )
-        );
-    });
+function getRoutesForJourney(
+    journey: Journey,
+    stationGroupsById: Map<string, StationGroup>
+): JourneyRoute[] {
+    const origins = getStationsForLocation(journey.origin, stationGroupsById);
+    const destinations = getStationsForLocation(
+        journey.destination,
+        stationGroupsById
+    );
+
+    return origins.flatMap((origin) =>
+        destinations
+            .filter((destination) => destination.crs !== origin.crs)
+            .flatMap((destination) =>
+                getRouteOptions(journey, origin, destination)
+            )
+    );
 }
 
 function getRouteOptions(

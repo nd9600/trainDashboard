@@ -12,15 +12,18 @@ export function getRoutesWithoutTimetabledJourneys(
     );
 
     const missingRouteKeys = new Set<string>();
+    const missingRoutes: JourneyRoute[] = [];
 
-    return routes.filter((route) => {
+    for (const route of routes) {
         const routeKey = `${route.origin.crs}-${route.destination.crs}`;
 
         if (timetabledRoutes.has(routeKey) || missingRouteKeys.has(routeKey)) {
-            return false;
+            continue;
         }
 
         missingRouteKeys.add(routeKey);
-        return true;
-    });
+        missingRoutes.push(route);
+    }
+
+    return missingRoutes;
 }

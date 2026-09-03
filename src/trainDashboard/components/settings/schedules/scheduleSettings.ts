@@ -32,9 +32,15 @@ export function getActiveDaysText(activeDays: Day[]): string {
         return "Every day";
     }
 
+    return getConsecutiveDayRanges(selectedDays).map(formatDayRange).join(", ");
+}
+
+function getConsecutiveDayRanges(
+    selectedDays: Array<(typeof scheduleDays)[number]>
+): Array<(typeof scheduleDays)[number][]> {
     const ranges: Array<(typeof scheduleDays)[number][]> = [];
 
-    selectedDays.forEach((day) => {
+    for (const day of selectedDays) {
         const currentRange = ranges.at(-1);
         const previousDay = currentRange?.at(-1);
         const daysAreConsecutive =
@@ -43,22 +49,22 @@ export function getActiveDaysText(activeDays: Day[]): string {
 
         if (currentRange && daysAreConsecutive) {
             currentRange.push(day);
-            return;
+            continue;
         }
 
         ranges.push([day]);
-    });
+    }
 
-    return ranges
-        .map((range) => {
-            const firstDay = range.at(0)!;
-            const lastDay = range.at(-1)!;
+    return ranges;
+}
 
-            return range.length === 1
-                ? firstDay.label
-                : `${firstDay.label}–${lastDay.label}`;
-        })
-        .join(", ");
+function formatDayRange(range: Array<(typeof scheduleDays)[number]>): string {
+    const firstDay = range.at(0)!;
+    const lastDay = range.at(-1)!;
+
+    return range.length === 1
+        ? firstDay.label
+        : `${firstDay.label}–${lastDay.label}`;
 }
 
 export function createEmptyJourney(): Journey {

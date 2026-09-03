@@ -12,18 +12,24 @@ export function getDirectTrainLegs(
     destinationCrs: string,
     currentMinutes: number
 ): TrainLeg[] {
-    return board.trainServices
-        .flatMap((service) => {
-            const leg = getTrainLeg(
-                service,
-                originCrs,
-                destinationCrs,
-                currentMinutes
-            );
+    const trainLegs: TrainLeg[] = [];
 
-            return leg ? [leg] : [];
-        })
-        .sort((first, second) => first.departure - second.departure);
+    for (const service of board.trainServices) {
+        const trainLeg = getTrainLeg(
+            service,
+            originCrs,
+            destinationCrs,
+            currentMinutes
+        );
+
+        if (trainLeg) {
+            trainLegs.push(trainLeg);
+        }
+    }
+
+    return trainLegs.sort(
+        (first, second) => first.departure - second.departure
+    );
 }
 
 function getTrainLeg(

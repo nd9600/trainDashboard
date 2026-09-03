@@ -16,6 +16,16 @@ interface DepartureBoardRequest {
     timeOffsetMinutes: number;
 }
 
+interface KeyedDepartureBoardRequest {
+    canonicalKey: string;
+    request: DepartureBoardRequest;
+}
+
+interface KeyedDepartureBoard {
+    canonicalKey: string;
+    board: DepartureBoard;
+}
+
 const maximumTimeOffsetMinutes = 119;
 const minimumFirstTrainCount = 6;
 
@@ -30,38 +40,16 @@ export async function getDepartureBoards(
         getFirstDepartureBoardRequests(stationRoutes),
         requestCache
     );
-    const laterFirstBoardRequests = stationRoutes.flatMap((route) => {
-        if (
-            !route.viaCrs ||
-            getCatchableFirstTrainLegs(route, departureBoards, currentMinutes)
-                .length >= minimumFirstTrainCount
-        ) {
-            return [];
-        }
-
-        const firstRequest = getFirstDepartureBoardRequest(route);
-
-        if (firstRequest.timeOffsetMinutes >= maximumTimeOffsetMinutes) {
-            return [];
-        }
-
-        return [
-            {
-                canonicalKey: getRequestKey(firstRequest),
-                request: {
-                    ...firstRequest,
-                    timeOffsetMinutes: maximumTimeOffsetMinutes,
-                },
-            },
-        ];
-    });
+    const laterFirstBoardRequests = stationRoutes.flatMap((route) =>
+        getLaterFirstBoardRequests(route, departureBoards, currentMinutes)
+    );
     const laterFirstBoards = await fetchDepartureBoards(
         consumerKey,
         laterFirstBoardRequests.map(({request}) => request),
         requestCache
     );
 
-    laterFirstBoardRequests.forEach(({canonicalKey, request}) => {
+    for (const {canonicalKey, request} of laterFirstBoardRequests) {
         departureBoards.set(
             canonicalKey,
             mergeDepartureBoards(
@@ -69,49 +57,23 @@ export async function getDepartureBoards(
                 laterFirstBoards.get(getRequestKey(request))!
             )
         );
-    });
+    }
 
     const onwardBoards = await Promise.all(
-        stationRoutes.map(async (route) => {
-            if (!route.viaCrs) {
-                return;
-            }
-
-            const canonicalRequest = {
-                originCrs: route.viaCrs,
-                destinationCrs: route.destination.crs,
-                timeOffsetMinutes: 0,
-            };
-            const canonicalKey = getRequestKey(canonicalRequest);
-            const firstTrainLegs = getCatchableFirstTrainLegs(
+        stationRoutes.map((route) =>
+            fetchOnwardBoardForRoute(
+                consumerKey,
                 route,
                 departureBoards,
-                currentMinutes
-            );
-            const transferReadyTimes = Array.from(
-                new Set(
-                    firstTrainLegs.map(
-                        (trainLeg) => trainLeg.arrival + minimumTransferMinutes
-                    )
-                )
-            ).sort((first, second) => first - second);
-
-            return {
-                canonicalKey,
-                board: await fetchOnwardDepartureBoards(
-                    consumerKey,
-                    canonicalRequest,
-                    transferReadyTimes,
-                    currentMinutes,
-                    requestCache
-                ),
-            };
-        })
+                currentMinutes,
+                requestCache
+            )
+        )
     );
 
-    onwardBoards.forEach((result) => {
+    for (const result of onwardBoards) {
         if (!result) {
-            return;
+            continue;
         }
 
         departureBoards.set(
@@ -124,9 +86,80 @@ export async function getDepartureBoards(
                 result.board
             )
         );
-    });
+    }
 
     return departureBoards;
+}
+
+function getLaterFirstBoardRequests(
+    route: JourneyRoute,
+    departureBoards: DepartureBoards,
+    currentMinutes: number
+): KeyedDepartureBoardRequest[] {
+    if (
+        !route.viaCrs ||
+        getCatchableFirstTrainLegs(route, departureBoards, currentMinutes)
+            .length >= minimumFirstTrainCount
+    ) {
+        return [];
+    }
+
+    const firstRequest = getFirstDepartureBoardRequest(route);
+
+    if (firstRequest.timeOffsetMinutes >= maximumTimeOffsetMinutes) {
+        return [];
+    }
+
+    return [
+        {
+            canonicalKey: getRequestKey(firstRequest),
+            request: {
+                ...firstRequest,
+                timeOffsetMinutes: maximumTimeOffsetMinutes,
+            },
+        },
+    ];
+}
+
+async function fetchOnwardBoardForRoute(
+    consumerKey: string,
+    route: JourneyRoute,
+    departureBoards: DepartureBoards,
+    currentMinutes: number,
+    requestCache: DepartureBoardRequestCache
+): Promise<KeyedDepartureBoard | undefined> {
+    if (!route.viaCrs) {
+        return;
+    }
+
+    const canonicalRequest = {
+        originCrs: route.viaCrs,
+        destinationCrs: route.destination.crs,
+        timeOffsetMinutes: 0,
+    };
+    const firstTrainLegs = getCatchableFirstTrainLegs(
+        route,
+        departureBoards,
+        currentMinutes
+    );
+    const transferReadyTimes = Array.from(
+        new Set(
+            firstTrainLegs.map(
+                (trainLeg) => trainLeg.arrival + minimumTransferMinutes
+            )
+        )
+    ).sort((first, second) => first - second);
+
+    return {
+        canonicalKey: getRequestKey(canonicalRequest),
+        board: await fetchOnwardDepartureBoards(
+            consumerKey,
+            canonicalRequest,
+            transferReadyTimes,
+            currentMinutes,
+            requestCache
+        ),
+    };
 }
 
 async function fetchOnwardDepartureBoards(
@@ -187,23 +220,37 @@ async function fetchDepartureBoards(
         requests.map((request) => [getRequestKey(request), request])
     );
     const boards = await Promise.all(
-        Array.from(uniqueRequests, async ([key, request]) => {
-            let boardRequest = requestCache.get(key);
-
-            if (!boardRequest) {
-                boardRequest = fetchDepartureBoard(consumerKey, {
-                    ...request,
-                    numberOfRows: 10,
-                    timeWindowMinutes: 120,
-                });
-                requestCache.set(key, boardRequest);
-            }
-
-            return [key, await boardRequest] as const;
-        })
+        Array.from(uniqueRequests, ([key, request]) =>
+            fetchRequestedDepartureBoard(
+                consumerKey,
+                key,
+                request,
+                requestCache
+            )
+        )
     );
 
     return new Map(boards);
+}
+
+async function fetchRequestedDepartureBoard(
+    consumerKey: string,
+    key: string,
+    request: DepartureBoardRequest,
+    requestCache: DepartureBoardRequestCache
+): Promise<readonly [string, DepartureBoard]> {
+    let boardRequest = requestCache.get(key);
+
+    if (!boardRequest) {
+        boardRequest = fetchDepartureBoard(consumerKey, {
+            ...request,
+            numberOfRows: 10,
+            timeWindowMinutes: 120,
+        });
+        requestCache.set(key, boardRequest);
+    }
+
+    return [key, await boardRequest];
 }
 
 export function getDepartureBoard(
@@ -267,11 +314,12 @@ function mergeDepartureBoards(
 ): DepartureBoard {
     const services = new Map<string, DepartureService>();
 
-    [...firstBoard.trainServices, ...secondBoard.trainServices].forEach(
-        (service) => {
-            services.set(`${service.serviceID}:${service.std}`, service);
-        }
-    );
+    for (const service of [
+        ...firstBoard.trainServices,
+        ...secondBoard.trainServices,
+    ]) {
+        services.set(`${service.serviceID}:${service.std}`, service);
+    }
 
     return {
         ...firstBoard,

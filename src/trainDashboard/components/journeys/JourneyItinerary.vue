@@ -117,34 +117,7 @@ const itinerarySteps = computed<ItineraryStep[]>(() => {
         });
     }
 
-    journey.trainLegs.forEach((leg, index) => {
-        steps.push({
-            id: `train-${index}`,
-            kind: "train",
-            time: leg.departure,
-            label: "Train from",
-            stationCrs: leg.origin,
-            trainLeg: leg,
-            alternativeTrainLegs: leg.alternativeTrainLegs,
-        });
-        steps.push({
-            id: `arrival-${index}`,
-            kind: "arrival",
-            time: leg.arrival,
-            label: "Arrive",
-            stationCrs: leg.destination,
-        });
-
-        const nextLeg = journey.trainLegs[index + 1];
-
-        if (nextLeg) {
-            steps.push({
-                id: `change-${index}`,
-                kind: "change",
-                label: `Change trains · ${formatDuration(leg.arrival, nextLeg.departure)}`,
-            });
-        }
-    });
+    steps.push(...getTrainItinerarySteps(journey.trainLegs));
 
     if (lastSegment.kind === "walk") {
         const destinationName = journey.arrivalLabel ?? "your destination";
@@ -164,6 +137,41 @@ const itinerarySteps = computed<ItineraryStep[]>(() => {
 
     return steps;
 });
+
+function getTrainItinerarySteps(trainLegs: TrainLeg[]): ItineraryStep[] {
+    const steps: ItineraryStep[] = [];
+
+    for (const [index, leg] of trainLegs.entries()) {
+        steps.push({
+            id: `train-${index}`,
+            kind: "train",
+            time: leg.departure,
+            label: "Train from",
+            stationCrs: leg.origin,
+            trainLeg: leg,
+            alternativeTrainLegs: leg.alternativeTrainLegs,
+        });
+        steps.push({
+            id: `arrival-${index}`,
+            kind: "arrival",
+            time: leg.arrival,
+            label: "Arrive",
+            stationCrs: leg.destination,
+        });
+
+        const nextLeg = trainLegs[index + 1];
+
+        if (nextLeg) {
+            steps.push({
+                id: `change-${index}`,
+                kind: "change",
+                label: `Change trains · ${formatDuration(leg.arrival, nextLeg.departure)}`,
+            });
+        }
+    }
+
+    return steps;
+}
 
 function formatDuration(start: number, end: number): string {
     const minutes = end - start;

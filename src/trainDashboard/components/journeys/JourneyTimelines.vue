@@ -18,7 +18,10 @@
 
 <script setup lang="ts">
 import {computed} from "vue";
-import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
+import type {
+    TimetabledJourney,
+    TrainLeg,
+} from "../../dto/timetabledJourney.dto";
 import {getJourneyTimelineRange} from "../../journeys/journeyTimes";
 import JourneyCards from "./JourneyCards.vue";
 import JourneyCharts from "./JourneyCharts.vue";
@@ -30,27 +33,26 @@ const props = defineProps<{
     flushOnMobile?: boolean;
 }>();
 
-const routesWithConsistentPlatforms = computed(() => {
+const routesWithConsistentPlatforms = computed(() =>
+    getRoutesWithConsistentPlatforms(props.journeys)
+);
+
+function getRoutesWithConsistentPlatforms(
+    journeys: TimetabledJourney[]
+): Set<string> {
     const servicesByRoute = new Map<string, Map<string, string>>();
 
-    props.journeys
-        .flatMap((journey) =>
-            journey.trainLegs.flatMap((leg) => [
-                leg,
-                ...(leg.alternativeTrainLegs ?? []),
-            ])
-        )
-        .forEach((leg) => {
-            if (!leg.platform) {
-                return;
-            }
+    for (const leg of getAllTrainLegs(journeys)) {
+        if (!leg.platform) {
+            continue;
+        }
 
-            const route = `${leg.origin}-${leg.destination}`;
-            const services =
-                servicesByRoute.get(route) ?? new Map<string, string>();
-            services.set(`${leg.serviceId}:${leg.departure}`, leg.platform);
-            servicesByRoute.set(route, services);
-        });
+        const route = `${leg.origin}-${leg.destination}`;
+        const services =
+            servicesByRoute.get(route) ?? new Map<string, string>();
+        services.set(`${leg.serviceId}:${leg.departure}`, leg.platform);
+        servicesByRoute.set(route, services);
+    }
 
     return new Set(
         Array.from(servicesByRoute)
@@ -60,24 +62,56 @@ const routesWithConsistentPlatforms = computed(() => {
             )
             .map(([route]) => route)
     );
-});
+}
+
+function getAllTrainLegs(journeys: TimetabledJourney[]): TrainLeg[] {
+    return journeys.flatMap((journey) =>
+        journey.trainLegs.flatMap((leg) => [
+            leg,
+            ...(leg.alternativeTrainLegs ?? []),
+        ])
+    );
+}
 
 // 7. Limit the sorted journeys only after the planning steps are complete.
 const firstSixJourneys = computed(() =>
-    props.journeys.slice(0, 6).map((journey) => ({
-        ...journey,
-        trainLegs: journey.trainLegs.map((leg) => ({
-            ...leg,
-            platform: !leg.platform
-                ? null
-                : routesWithConsistentPlatforms.value.has(
-                        `${leg.origin}-${leg.destination}`
-                    )
-                  ? undefined
-                  : leg.platform,
-        })),
-    }))
+    props.journeys
+        .slice(0, 6)
+        .map((journey) =>
+            hideConsistentPlatforms(
+                journey,
+                routesWithConsistentPlatforms.value
+            )
+        )
 );
+
+function hideConsistentPlatforms(
+    journey: TimetabledJourney,
+    routesWithConsistentPlatforms: Set<string>
+): TimetabledJourney {
+    return {
+        ...journey,
+        trainLegs: journey.trainLegs.map((leg) =>
+            hideConsistentPlatform(leg, routesWithConsistentPlatforms)
+        ),
+    };
+}
+
+function hideConsistentPlatform(
+    leg: TrainLeg,
+    routesWithConsistentPlatforms: Set<string>
+): TrainLeg {
+    return {
+        ...leg,
+        platform: !leg.platform
+            ? null
+            : routesWithConsistentPlatforms.has(
+                    `${leg.origin}-${leg.destination}`
+                )
+              ? undefined
+              : leg.platform,
+    };
+}
 const timelineRange = computed(() =>
     getJourneyTimelineRange(firstSixJourneys.value, props.currentMinutes)
 );

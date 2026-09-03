@@ -23,15 +23,7 @@ export function planTimetabledJourneys(
         )
         .map(makeTimetabledJourney)
         .filter((journey) => journey.segments.at(0)!.start >= currentMinutes)
-        .sort((first, second) => {
-            const arrivalDifference =
-                first.segments.at(-1)!.end - second.segments.at(-1)!.end;
-
-            return (
-                arrivalDifference ||
-                second.segments.at(0)!.start - first.segments.at(0)!.start
-            );
-        });
+        .sort(compareJourneysByFinishTime);
     const recommendedJourney = journeys.find(
         (journey) => journey.walkingTimesKnown
     );
@@ -86,45 +78,64 @@ function getConnectionPlans(
         currentMinutes
     );
 
-    const onwardTrainDepartureBoard = getDepartureBoard(departureBoards, viaCrs, route.destination.crs, 0);
+    const onwardTrainDepartureBoard = getDepartureBoard(
+        departureBoards,
+        viaCrs,
+        route.destination.crs,
+        0
+    );
     const onwardTrainLegs = getDirectTrainLegs(
         onwardTrainDepartureBoard,
         viaCrs,
         route.destination.crs,
         currentMinutes
     );
-    const connectionPlans = onwardTrainLegs.flatMap((onwardTrainLeg) => {
-        const catchableFirstTrainLegs = firstTrainLegs
-            .filter(
-                (firstTrainLeg) =>
-                    firstTrainLeg.arrival + minimumTransferMinutes <=
-                        onwardTrainLeg.departure &&
-                    firstTrainLeg.departure - (route.origin.walkMinutes ?? 0) >=
-                        currentMinutes &&
-                    firstTrainLeg.serviceId !== onwardTrainLeg.serviceId
-            )
-            .sort((first, second) => second.departure - first.departure);
-        const firstTrainLeg = catchableFirstTrainLegs.at(0);
-
-        if (!firstTrainLeg) {
-            return [];
-        }
-
-        return [
-            {
-                route,
-                trainLegs: [
-                    {
-                        ...firstTrainLeg,
-                        alternativeTrainLegs: catchableFirstTrainLegs.slice(1),
-                    },
-                    onwardTrainLeg,
-                ],
-            },
-        ];
-    });
+    const connectionPlans = onwardTrainLegs.flatMap((onwardTrainLeg) =>
+        getConnectionPlansForOnwardTrain(
+            route,
+            firstTrainLegs,
+            onwardTrainLeg,
+            currentMinutes
+        )
+    );
 
     return groupConnectionsByFirstTrain(connectionPlans);
+}
+
+function getConnectionPlansForOnwardTrain(
+    route: JourneyRoute,
+    firstTrainLegs: TrainLeg[],
+    onwardTrainLeg: TrainLeg,
+    currentMinutes: number
+): TrainPlan[] {
+    const catchableFirstTrainLegs = firstTrainLegs
+        .filter(
+            (firstTrainLeg) =>
+                firstTrainLeg.arrival + minimumTransferMinutes <=
+                    onwardTrainLeg.departure &&
+                firstTrainLeg.departure - (route.origin.walkMinutes ?? 0) >=
+                    currentMinutes &&
+                firstTrainLeg.serviceId !== onwardTrainLeg.serviceId
+        )
+        .sort((first, second) => second.departure - first.departure);
+    const firstTrainLeg = catchableFirstTrainLegs.at(0);
+
+    if (!firstTrainLeg) {
+        return [];
+    }
+
+    return [
+        {
+            route,
+            trainLegs: [
+                {
+                    ...firstTrainLeg,
+                    alternativeTrainLegs: catchableFirstTrainLegs.slice(1),
+                },
+                onwardTrainLeg,
+            ],
+        },
+    ];
 }
 
 function groupConnectionsByFirstTrain(
@@ -132,36 +143,37 @@ function groupConnectionsByFirstTrain(
 ): TrainPlan[] {
     const plansByFirstTrain = new Map<string, TrainPlan[]>();
 
-    connectionPlans.forEach((plan) => {
+    for (const plan of connectionPlans) {
         const firstTrain = plan.trainLegs[0]!;
         const key = `${firstTrain.serviceId}:${firstTrain.departure}`;
         const plans = plansByFirstTrain.get(key) ?? [];
         plans.push(plan);
         plansByFirstTrain.set(key, plans);
-    });
+    }
 
-    return Array.from(plansByFirstTrain.values(), (plans) => {
-        const orderedPlans = [...plans].sort(
-            (first, second) =>
-                first.trainLegs.at(-1)!.arrival -
-                second.trainLegs.at(-1)!.arrival
-        );
-        const mainPlan = orderedPlans[0]!;
-        const onwardTrainLeg = mainPlan.trainLegs.at(-1)!;
+    return Array.from(plansByFirstTrain.values(), makeGroupedConnectionPlan);
+}
 
-        return {
-            ...mainPlan,
-            trainLegs: [
-                mainPlan.trainLegs[0]!,
-                {
-                    ...onwardTrainLeg,
-                    alternativeTrainLegs: orderedPlans
-                        .slice(1)
-                        .map((plan) => plan.trainLegs.at(-1)!),
-                },
-            ],
-        };
-    });
+function makeGroupedConnectionPlan(plans: TrainPlan[]): TrainPlan {
+    const orderedPlans = [...plans].sort(
+        (first, second) =>
+            first.trainLegs.at(-1)!.arrival - second.trainLegs.at(-1)!.arrival
+    );
+    const mainPlan = orderedPlans[0]!;
+    const onwardTrainLeg = mainPlan.trainLegs.at(-1)!;
+
+    return {
+        ...mainPlan,
+        trainLegs: [
+            mainPlan.trainLegs[0]!,
+            {
+                ...onwardTrainLeg,
+                alternativeTrainLegs: orderedPlans
+                    .slice(1)
+                    .map((plan) => plan.trainLegs.at(-1)!),
+            },
+        ],
+    };
 }
 
 function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
@@ -188,23 +200,7 @@ function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
         });
     }
 
-    trainLegs.forEach((leg, index) => {
-        const previousLeg = trainLegs[index - 1];
-
-        if (previousLeg && leg.departure > previousLeg.arrival) {
-            segments.push({
-                kind: "wait",
-                start: previousLeg.arrival,
-                end: leg.departure,
-            });
-        }
-
-        segments.push({
-            kind: "train",
-            start: leg.departure,
-            end: leg.arrival,
-        });
-    });
+    addTrainSegments(segments, trainLegs);
 
     if (
         route.destination.walkMinutes !== undefined &&
@@ -240,4 +236,40 @@ function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
         segments,
         trainLegs,
     };
+}
+
+function addTrainSegments(
+    segments: TimetabledJourney["segments"],
+    trainLegs: TrainLeg[]
+): void {
+    for (const [index, leg] of trainLegs.entries()) {
+        const previousLeg = trainLegs[index - 1];
+
+        if (previousLeg && leg.departure > previousLeg.arrival) {
+            segments.push({
+                kind: "wait",
+                start: previousLeg.arrival,
+                end: leg.departure,
+            });
+        }
+
+        segments.push({
+            kind: "train",
+            start: leg.departure,
+            end: leg.arrival,
+        });
+    }
+}
+
+function compareJourneysByFinishTime(
+    first: TimetabledJourney,
+    second: TimetabledJourney
+): number {
+    const arrivalDifference =
+        first.segments.at(-1)!.end - second.segments.at(-1)!.end;
+
+    return (
+        arrivalDifference ||
+        second.segments.at(0)!.start - first.segments.at(0)!.start
+    );
 }
