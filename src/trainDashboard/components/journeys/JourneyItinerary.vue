@@ -1,17 +1,14 @@
 <template>
-    <ol class="mt-2">
+    <ol class="mt-2 grid grid-cols-[minmax(3.25rem,max-content)_minmax(0,1fr)] gap-x-2">
         <li
             v-for="step in itinerarySteps"
             :key="step.id"
-            class="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-2 items-start"
+            class="col-span-2 grid grid-cols-subgrid items-stretch"
         >
-            <NationalRailLink
+            <TrainDepartureLink
                 v-if="step.trainLeg && step.time"
-                class="py-3 text-right block! text-xs! font-semibold! text-ink!"
-                :originCrs="step.trainLeg.origin"
-                :destinationCrs="step.trainLeg.destination"
-                :departureMinutes="step.trainLeg.departure"
-                :label="formatTime(step.time)"
+                class="justify-end py-3 text-right text-xs! font-semibold! text-ink!"
+                :trainLeg="step.trainLeg"
             />
             <time v-else class="py-3 text-right text-xs font-semibold text-ink">
                 {{ step.time === undefined ? "" : formatTime(step.time) }}
@@ -81,7 +78,7 @@ import type {
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
 import AlternativeTrainLink from "./AlternativeTrainLink.vue";
-import NationalRailLink from "./NationalRailLink.vue";
+import TrainDepartureLink from "./TrainDepartureLink.vue";
 
 const props = defineProps<{
     journey: TimetabledJourney;

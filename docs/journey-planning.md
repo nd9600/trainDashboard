@@ -110,6 +110,7 @@ flowchart LR
     adjust[Hide consistent platform numbers]
     mobile[Mobile cards]
     desktop[Desktop charts]
+    departure[Scheduled departure and delay label]
 
     planned --> platforms
     planned --> firstSix
@@ -117,11 +118,15 @@ flowchart LR
     firstSix --> adjust
     adjust --> mobile
     adjust --> desktop
+    mobile --> departure
+    desktop --> departure
 ```
 
 The planner returns all sorted journeys. `JourneyTimelines` applies the six-journey display limit.
 
 Platform consistency uses all planned journeys. A platform is hidden when multiple services use the same known platform for one station pair.
+
+Departure labels show the scheduled time and an amber delay, such as `10:14 (+3m)`. Hover or keyboard focus shows the expected departure. National Rail links use the scheduled departure. Timeline positions, connections, filtering, and walking advice use expected times.
 
 ## Source map
 
@@ -140,3 +145,5 @@ Platform consistency uses all planned journeys. A platform is hidden when multip
 - `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits results and prepares platform display.
 - `src/trainDashboard/components/journeys/JourneyCards.vue` shows mobile journeys.
 - `src/trainDashboard/components/journeys/JourneyCharts.vue` shows desktop journeys.
+
+- `src/trainDashboard/components/journeys/TrainDepartureLink.vue` shows scheduled departures and delay details for main and alternative trains.

@@ -15,13 +15,9 @@
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
         >
             <p class="flex items-baseline gap-x-1 whitespace-nowrap">
-                <NationalRailLink
+                <TrainDepartureLink
                     class="shrink-0 text-sm! font-semibold! text-ink!"
-                    :originCrs="leg.origin"
-                    :destinationCrs="leg.destination"
-                    :departureMinutes="leg.departure"
-                    :label="formatTime(leg.departure)"
-                    :ariaLabel="`View the ${formatTime(leg.departure)} ${stationName(leg.origin)} to ${stationName(leg.destination)} journey on National Rail Enquiries`"
+                    :trainLeg="leg"
                 />
                 <strong
                     class="min-w-0 truncate"
@@ -77,7 +73,7 @@ import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
 import {stationColour} from "../../stations/stationColours";
 import {stationName} from "../../stations/stations";
 import AlternativeTrainLink from "./AlternativeTrainLink.vue";
-import NationalRailLink from "./NationalRailLink.vue";
+import TrainDepartureLink from "./TrainDepartureLink.vue";
 
 defineProps<{
     journey: TimetabledJourney;

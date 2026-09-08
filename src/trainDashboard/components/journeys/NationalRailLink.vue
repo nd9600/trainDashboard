@@ -12,7 +12,7 @@
         rel="noopener noreferrer"
         target="_blank"
     >
-        {{ label }}
+        <slot>{{ label }}</slot>
         <AppIcon v-if="shouldShowLinkIcon" class="size-3" name="external-link" />
     </a>
 </template>

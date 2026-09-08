@@ -80,6 +80,8 @@ function getTrainLeg(
         destination: destinationCrs,
         platform: service.platform,
         departure,
+        // Keep the scheduled date when a delay moves departure past midnight.
+        scheduledDeparture: getMinutesOnOrAfter(service.std, departure - 720),
         arrival,
     };
 }

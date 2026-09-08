@@ -11,6 +11,7 @@ export interface TrainLeg {
     origin: string;
     destination: string;
     departure: number;
+    scheduledDeparture?: number;
     arrival: number;
     platform?: string | null;
     alternativeTrainLegs?: TrainLeg[];
