@@ -1,10 +1,12 @@
 import {z} from "zod";
+import {CoordinatesSchema} from "./coordinates.dto";
 import {IdSchema} from "./id.dto";
 import {CrsCodeSchema} from "./station.dto";
 
 export const StationGroupSchema = z.object({
     id: IdSchema,
     name: z.string().trim().min(1, "Enter a group name."),
+    coordinates: CoordinatesSchema.optional(),
     stations: z
         .array(
             z.object({

@@ -13,7 +13,8 @@ export interface JourneyPrediction {
 
 export function getJourneyPrediction(
     schedules: DisplaySchedule[],
-    currentClock: CurrentClock
+    currentClock: CurrentClock,
+    currentCoordinates: GeolocationCoordinates | null
 ): JourneyPrediction {
     const activeSchedule = schedules.find(
         (schedule) =>

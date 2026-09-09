@@ -72,12 +72,24 @@
             <AppIcon class="size-4" name="plus" />
             Add station
         </button>
+
+        <label class="mt-3 block text-sm text-ink-muted">
+            Coordinates <span class="text-[10px]">(optional)</span>
+            <input
+                ref="coordinatesInput"
+                v-model="coordinatesText"
+                class="appInput mt-1"
+                placeholder="53.9605, -1.0963"
+                @input="updateCoordinates"
+            />
+        </label>
     </div>
 </template>
 
 <script setup lang="ts">
-import {nextTick} from "vue";
+import {nextTick, ref, watch} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
+import {CoordinatesInputSchema} from "../../../dto/coordinates.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import StationInput from "./StationInput.vue";
 
@@ -107,6 +119,32 @@ function updateWalkMinutes(stationIndex: number, event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     const station = group.value.stations[stationIndex]!;
     station.walkMinutes = value === "" ? undefined : Number(value);
+}
+
+const coordinatesInput = ref<HTMLInputElement | null>(null);
+const coordinatesText = ref("");
+
+watch(
+    group,
+    () => {
+        const coordinates = group.value.coordinates;
+        coordinatesText.value = coordinates
+            ? `${coordinates.latitude}, ${coordinates.longitude}`
+            : "";
+        coordinatesInput.value?.setCustomValidity("");
+    },
+    {immediate: true}
+);
+
+function updateCoordinates(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const result = CoordinatesInputSchema.safeParse(input.value);
+    input.setCustomValidity(
+        result.success ? "" : result.error.issues[0]!.message
+    );
+    if (result.success) {
+        group.value.coordinates = result.data;
+    }
 }
 
 function getOtherStationCodes(stationIndex: number): string[] {

@@ -1,5 +1,6 @@
 <template>
     <form
+        ref="form"
         class="space-y-6"
         @change="handleChange"
         @input="handleChange"
@@ -31,7 +32,7 @@
             class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
             role="alert"
         >
-            <p class="font-semibold">The configuration can't be saved.</p>
+            <p class="font-semibold">The configuration cannot be saved.</p>
             <ul class="mt-1 list-disc pl-5">
                 <li v-for="error in errors" :key="error">
                     {{ error }}
@@ -54,9 +55,8 @@ import SchedulesSettings from "./schedules/SchedulesSettings.vue";
 import StationGroupsSettings from "./stationGroups/StationGroupsSettings.vue";
 
 const dashboardConfigStore = useDashboardConfigStore();
-const draft = ref<DashboardConfigDraft>(
-    structuredClone(dashboardConfigStore.config)
-);
+const form = ref<HTMLFormElement | null>(null);
+const draft = ref<DashboardConfigDraft>(getConfigDraft());
 const errors = ref<string[]>([]);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
@@ -72,6 +72,11 @@ const editorSections = [
     {value: "stationGroups", label: "Stations", icon: "map-pin" as const},
     {value: "schedules", label: "Schedules", icon: "clock" as const},
 ];
+function getConfigDraft(): DashboardConfigDraft {
+    // The stored configuration is JSON data. Its reactive proxies cannot use structuredClone.
+    return JSON.parse(JSON.stringify(dashboardConfigStore.config));
+}
+
 function save(): void {
     const config = validateDraft();
 
@@ -79,13 +84,24 @@ function save(): void {
         return;
     }
 
+    for (const group of config.stationGroups) {
+        if (group.coordinates) {
+            group.coordinates.latitude = Number(
+                group.coordinates.latitude.toFixed(4)
+            );
+            group.coordinates.longitude = Number(
+                group.coordinates.longitude.toFixed(4)
+            );
+        }
+    }
+
     dashboardConfigStore.saveConfig(config);
-    draft.value = structuredClone(dashboardConfigStore.config);
+    draft.value = getConfigDraft();
     hasUnsavedChanges.value = false;
 }
 
 function cancel(): void {
-    draft.value = structuredClone(dashboardConfigStore.config);
+    draft.value = getConfigDraft();
     errors.value = [];
     hasUnsavedChanges.value = false;
     setValid(true);
@@ -101,9 +117,22 @@ function validateDraft(): DashboardConfigDraft | undefined {
     errors.value = result.success
         ? []
         : dashboardConfigErrorMessages(result.error);
-    setValid(result.success);
 
-    return result.success ? result.data : undefined;
+    // Incomplete numbers have an empty value, but are not optional blank fields.
+    for (const input of form.value?.querySelectorAll("input") ?? []) {
+        if (input.validity.customError) {
+            errors.value.push(input.validationMessage);
+        } else if (input.validity.badInput) {
+            const label = input.labels?.[0]?.textContent?.trim() ?? "Value";
+            errors.value.push(`${label}: Enter a number.`);
+        }
+    }
+
+    setValid(errors.value.length === 0);
+
+    return result.success && errors.value.length === 0
+        ? result.data
+        : undefined;
 }
 
 function setValid(value: boolean): void {

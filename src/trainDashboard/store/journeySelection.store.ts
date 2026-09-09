@@ -16,12 +16,13 @@ import {
 } from "../journeys/journeyPrediction";
 import {useDashboardClockStore} from "./dashboardClock.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
-
 const memoryStorage = useLocalStorageTyped(
     "train-dashboard-journey-memory-v2",
     JourneyMemorySchema,
     {recentJourneyIds: [], ephemeralJourneys: []}
 );
+import { useGeolocation} from "@vueuse/core";
+import { watch } from "vue";
 
 interface JourneySelectionState {
     isInitialised: boolean;
@@ -29,6 +30,7 @@ interface JourneySelectionState {
     ephemeralJourneys: EphemeralJourney[];
     currentEphemeralJourney: EphemeralJourney | undefined;
     activeJourney: ActiveJourney;
+    currentCoordinates: GeolocationCoordinates | null;
 }
 
 export const useJourneySelectionStore = defineStore("journey-selection", {
@@ -38,6 +40,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
         ephemeralJourneys: [],
         currentEphemeralJourney: undefined,
         activeJourney: {type: "predicted"},
+        currentCoordinates: null
     }),
 
     getters: {
@@ -45,7 +48,8 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             const config = useDashboardConfigStore().config;
             return getJourneyPrediction(
                 config.schedules,
-                useDashboardClockStore().currentClock
+                useDashboardClockStore().currentClock,
+                this.currentCoordinates
             );
         },
 
@@ -129,6 +133,16 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.recentJourneyIds = savedMemory.recentJourneyIds;
             this.ephemeralJourneys = savedMemory.ephemeralJourneys;
             this.isInitialised = true;
+            
+            const { coords, locatedAt: geolocationLocatedAt } = useGeolocation({maximumAge: 60 * 1000, enableHighAccuracy: false});
+            watch(
+                coords,
+                (coordinates) => {
+                    if (geolocationLocatedAt.value !== null) {
+                        this.currentCoordinates = coordinates;
+                    }
+                }
+            )
         },
 
         selectJourney(journeyId: string): void {

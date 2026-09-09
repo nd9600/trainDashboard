@@ -33,7 +33,7 @@ const scheduledDeparture = computed(
     () => props.trainLeg.scheduledDeparture ?? props.trainLeg.departure
 );
 const delayMinutes = computed(() =>
-    Math.max(3, props.trainLeg.departure - scheduledDeparture.value)
+    Math.max(0, props.trainLeg.departure - scheduledDeparture.value)
 );
 const delayDescription = computed(
     () =>
