@@ -17,27 +17,32 @@ export type JourneyPredictionReason =
     | {type: "nearby"};
 
 export interface JourneyPrediction {
-    activeSchedule: DisplaySchedule | undefined;
     predictedJourneyId: string | undefined;
     alternativeJourneyIds: string[];
     nearbyStationGroupId: string | undefined;
     reason: JourneyPredictionReason | undefined;
 }
 
+/**
+ * Returns the predicted journey (there might not be one):
+ *     - If there is a station group within 2km of the current location, we only look at journeys that start at that station group:
+ *         - if there's an active journey that starts at the station group, its first ranked journey
+ *         - if no active schedule, its soonest schedule's first ranked journey
+ *     - If there isn't a nearby station group:
+ *         - and at least 1 active schedule, it's the active schedule's first ranked journey
+ *         - and no active schedule, it's nothing
+ * All other currently-valid journeys are returned as alternative journeys.
+ */
 export function getJourneyPrediction(
     config: DashboardConfig,
     currentClock: CurrentClock,
     currentCoordinates: Coordinates | null
 ): JourneyPrediction {
-    const activeSchedule = config.schedules.find((schedule) =>
-        isScheduleActive(schedule, currentClock)
-    );
     const nearbyGroup = getNearbyStationGroup(
         config.stationGroups,
         currentCoordinates
     );
     const prediction: JourneyPrediction = {
-        activeSchedule,
         predictedJourneyId: undefined,
         alternativeJourneyIds: [],
         nearbyStationGroupId: nearbyGroup?.id,
@@ -45,6 +50,15 @@ export function getJourneyPrediction(
     };
 
     if (!nearbyGroup) {
+        // Without a nearby origin, only active schedules supply candidates.
+        // Configuration order expresses preference when schedules overlap.
+        const activeSchedules = config.schedules.filter((schedule) =>
+            isScheduleActive(schedule, currentClock)
+        );
+        const activeSchedule = activeSchedules[0];
+        prediction.alternativeJourneyIds = [
+            ...new Set(activeSchedules.map((schedule) => schedule.journeyId)),
+        ].slice(1);
         if (activeSchedule) {
             prediction.predictedJourneyId = activeSchedule.journeyId;
             prediction.reason = {
@@ -56,18 +70,23 @@ export function getJourneyPrediction(
         return prediction;
     }
 
+    // Location takes precedence over schedules for other origins. A journey can
+    // match by its explicit origin group or by a station-only origin in this group.
     const journeys = config.journeys.filter((journey) =>
         startsAtGroup(journey, nearbyGroup)
     );
     const journeyIds = new Set(journeys.map((journey) => journey.id));
+    // Active schedules rank first, then the next start across the weekly schedule.
+    // Equal ranks retain configuration order, including overlapping active schedules.
     const schedules = config.schedules
         .filter((schedule) => journeyIds.has(schedule.journeyId))
         .sort(
             (first, second) =>
-                getMinutesUntilSchedule(first, currentClock) -
-                getMinutesUntilSchedule(second, currentClock)
+                getMinutesUntilSchedule(first, currentClock) - getMinutesUntilSchedule(second, currentClock)
         );
     const schedule = schedules[0];
+    // Keep unscheduled journeys available after scheduled choices, in saved order.
+    // A journey can have several schedules, but must appear only once.
     const candidateIds = [
         ...new Set([
             ...schedules.map((candidate) => candidate.journeyId),
@@ -88,6 +107,7 @@ export function getJourneyPrediction(
     } else if (journeys.length > 0) {
         prediction.reason = {type: "saved", onlyJourney: journeys.length === 1};
     } else {
+        // Keep the location explanation even when no journey starts at this group.
         prediction.reason = {type: "nearby"};
     }
     return prediction;
@@ -119,7 +139,10 @@ function getMinutesUntilSchedule(
     schedule: DisplaySchedule,
     clock: CurrentClock
 ): number {
-    if (isScheduleActive(schedule, clock)) return 0;
+    if (isScheduleActive(schedule, clock)) {
+        return 0
+    }
+
     const weekMinutes = 7 * 1440;
     return Math.min(
         ...schedule.days.map((day) => {

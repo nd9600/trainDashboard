@@ -5,22 +5,18 @@
         @click="emit('edit')"
     >
         <span class="min-w-0">
-            <strong class="block truncate">
+            <strong class="font-display block truncate">
                 {{ schedule.name || "Unnamed schedule" }}
             </strong>
             <span class="block text-xs text-ink-subtle">
-                {{ getActiveDaysText(schedule.days) }} ·
-                {{ schedule.startsAt }}–{{ schedule.endsAt }}
+                {{ getActiveDaysText(schedule.days) }} · {{ schedule.startsAt }}–{{ schedule.endsAt }}
             </span>
             <span
                 v-if="selectedJourneyIsComplete"
                 class="mt-2 block truncate text-sm"
             >
-                <span class="text-ink-subtle">Journey: </span>
                 <JourneyLabel
-                    :details="
-                        getJourneyLabelDetails(selectedJourney!, stationGroups)
-                    "
+                    :details="getJourneyLabelDetails(selectedJourney!, stationGroups)"
                 />
             </span>
             <span v-else class="mt-2 block text-sm text-danger-dark">

@@ -3,7 +3,6 @@ import {useGeolocation} from "@vueuse/core";
 import type {Coordinates} from "../dto/coordinates.dto";
 import {defineStore} from "pinia";
 import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
-import type {DisplaySchedule} from "../dto/displaySchedule.dto";
 import type {Journey, JourneyFields} from "../dto/journey.dto";
 import {
     createEphemeralJourney,
@@ -52,10 +51,6 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 useDashboardClockStore().currentClock,
                 this.currentCoordinates
             );
-        },
-
-        activeSchedule(): DisplaySchedule | undefined {
-            return this.currentJourneyPrediction.activeSchedule;
         },
 
         predictedJourneyId(): string | undefined {

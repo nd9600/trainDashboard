@@ -28,7 +28,7 @@
         />
 
         <SavedJourneysSettings
-            v-else-if="activeEditorSection === 'journeys'"
+            v-else-if="activeEditorSection === 'savedJourneys'"
             v-model:journeys="draft.journeys"
             v-model:recentJourneyIds="recentJourneyIds"
             :stationGroups="draft.stationGroups"
@@ -52,13 +52,13 @@
 </template>
 
 <script setup lang="ts">
+import {
+    DashboardConfigSchema,
+    type DashboardConfig,
+} from "../../dto/dashboardConfig.dto";
 import {ref} from "vue";
 import AppTabs from "@/components/AppTabs.vue";
-import {
-    dashboardConfigErrorMessages,
-    DashboardConfigDraftSchema,
-    type DashboardConfigDraft,
-} from "../../dto/dashboardConfigDraft.dto";
+import {dashboardConfigErrorMessages} from "../../dto/dashboardConfigDraft.dto";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 import {useJourneySelectionStore} from "../../store/journeySelection.store";
 import SavedJourneysSettings from "./journeys/SavedJourneysSettings.vue";
@@ -69,7 +69,7 @@ const dashboardConfigStore = useDashboardConfigStore();
 const selection = useJourneySelectionStore();
 const recentJourneyIds = ref([...selection.recentJourneyIds]);
 const form = ref<HTMLFormElement | null>(null);
-const draft = ref<DashboardConfigDraft>(getConfigDraft());
+const draft = ref<DashboardConfig>(getConfigDraft());
 const errors = ref<string[]>([]);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
@@ -84,9 +84,9 @@ const activeEditorSection = ref("stationGroups");
 const editorSections = [
     {value: "stationGroups", label: "Stations", icon: "map-pin" as const},
     {value: "schedules", label: "Schedules", icon: "clock" as const},
-    {value: "journeys", label: "Journeys", icon: "train" as const},
+    {value: "savedJourneys", label: "Saved Journeys", icon: "train" as const},
 ];
-function getConfigDraft(): DashboardConfigDraft {
+function getConfigDraft(): DashboardConfig {
     // The stored configuration is JSON data. Its reactive proxies cannot use structuredClone.
     return JSON.parse(JSON.stringify(dashboardConfigStore.config));
 }
@@ -153,8 +153,8 @@ function handleChange(): void {
     hasUnsavedChanges.value = true;
 }
 
-function validateDraft(): DashboardConfigDraft | undefined {
-    const result = DashboardConfigDraftSchema.safeParse(draft.value);
+function validateDraft(): DashboardConfig | undefined {
+    const result = DashboardConfigSchema.safeParse(draft.value);
     errors.value = result.success
         ? []
         : dashboardConfigErrorMessages(result.error);

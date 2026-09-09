@@ -47,8 +47,8 @@
         </div>
 
         <JourneyPredictionExplanation
-            v-if="activeJourney.type === 'predicted'"
             :prediction="currentJourneyPrediction"
+            :isPredicted="activeJourney.type === 'predicted'"
         />
 
         <ListboxOptions

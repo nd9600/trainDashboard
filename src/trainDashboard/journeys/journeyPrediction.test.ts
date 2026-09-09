@@ -17,9 +17,11 @@ describe("getJourneyPrediction", () => {
                 null
             );
 
-            expect(prediction.activeSchedule?.id).toBe(scheduleId);
+            expect(prediction.reason).toMatchObject({scheduleId});
             expect(prediction.predictedJourneyId).toBe(
-                prediction.activeSchedule?.journeyId
+                manchesterDashboardConfig.schedules.find(
+                    (schedule) => schedule.id === scheduleId
+                )?.journeyId
             );
         }
     );
@@ -128,7 +130,6 @@ it("overrides a schedule from elsewhere with the next schedule from the nearby g
         workCoordinates
     );
     expect(prediction).toEqual({
-        activeSchedule: locationConfig.schedules[0],
         predictedJourneyId: "gym",
         alternativeJourneyIds: ["back"],
         nearbyStationGroupId: "work",
@@ -201,3 +202,73 @@ it("falls back to time when no group is near, without using recent history", () 
             .predictedJourneyId
     ).toBeUndefined();
 });
+
+it.each([
+    {
+        day: 2,
+        coordinates: {latitude: 55.89, longitude: -4.32},
+        expected: "out",
+        alternatives: [],
+    },
+    {
+        day: 2,
+        coordinates: {latitude: 55.95, longitude: -3.19},
+        expected: "edinburgh",
+        alternatives: [],
+    },
+    {day: 2, coordinates: null, expected: "out", alternatives: ["edinburgh"]},
+    {day: 1, coordinates: null, expected: "out", alternatives: []},
+] as const)(
+    "resolves overlapping commutes: $day $coordinates",
+    ({day, coordinates, expected, alternatives}) => {
+        const config: DashboardConfig = {
+            ...locationConfig,
+            stationGroups: [
+                ...locationConfig.stationGroups,
+                {
+                    id: "edinburgh",
+                    name: "Edinburgh",
+                    stations: [{crs: "EDB"}],
+                    coordinates: {latitude: 55.95, longitude: -3.19},
+                },
+            ],
+            journeys: [
+                ...locationConfig.journeys,
+                {
+                    id: "edinburgh",
+                    origin: {type: "station", crs: "EDB"},
+                    destination: {type: "station", crs: "CHC"},
+                },
+            ],
+            schedules: [
+                {...locationConfig.schedules[0]!, days: [1, 2, 3, 4, 5]},
+                {
+                    ...locationConfig.schedules[0]!,
+                    id: "edinburgh",
+                    days: [2],
+                    journeyId: "edinburgh",
+                },
+                {...locationConfig.schedules[0]!, id: "duplicate", days: [2]},
+            ],
+        };
+        const clock = {day, minutes: 9 * 60};
+        expect(getJourneyPrediction(config, clock, coordinates)).toMatchObject({
+            predictedJourneyId: expected,
+            alternativeJourneyIds: alternatives,
+        });
+
+        if (day === 2 && coordinates === null) {
+            const edinburghSchedule = config.schedules.splice(1, 1)[0]!;
+            config.schedules.unshift(edinburghSchedule);
+            expect(getJourneyPrediction(config, clock, null)).toMatchObject({
+                predictedJourneyId: "edinburgh",
+                alternativeJourneyIds: ["out"],
+                reason: {
+                    type: "schedule",
+                    scheduleId: "edinburgh",
+                    timing: "active",
+                },
+            });
+        }
+    }
+);

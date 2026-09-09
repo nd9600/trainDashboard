@@ -7,7 +7,7 @@
             <input
                 :id="`schedule-${schedule.id}-name`"
                 v-model="schedule.name"
-                class="appInput sentenceField__control w-fit"
+                class="appInput font-display sentenceField__control w-fit"
                 required
             />
             schedule should be active on

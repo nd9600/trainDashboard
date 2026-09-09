@@ -1,16 +1,14 @@
+import {DashboardConfigSchema} from "./dashboardConfig.dto";
 import {describe, expect, it} from "vitest";
 import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
-import {
-    dashboardConfigErrorMessages,
-    DashboardConfigDraftSchema,
-} from "./dashboardConfigDraft.dto";
+import {dashboardConfigErrorMessages} from "./dashboardConfigDraft.dto";
 
-describe("DashboardConfigDraftSchema", () => {
+describe("DashboardConfigSchema", () => {
     it("describes an invalid station without exposing its data path", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.stationGroups[0]!.stations[0]!.crs = "not-a-station";
 
-        const result = DashboardConfigDraftSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
         expect(result.success).toBe(false);
         expect(dashboardConfigErrorMessages(result.error!)).toContain(
@@ -18,7 +16,7 @@ describe("DashboardConfigDraftSchema", () => {
         );
     });
 
-    it("rejects overlapping schedules", () => {
+    it("accepts overlapping schedules", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.schedules.push({
             ...config.schedules[0]!,
@@ -28,22 +26,16 @@ describe("DashboardConfigDraftSchema", () => {
             endsAt: "13:00",
         });
 
-        const result = DashboardConfigDraftSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
-        expect(result.success).toBe(false);
-        expect(result.error?.issues).toContainEqual(
-            expect.objectContaining({
-                message: 'Schedule overlaps "Weekday morning".',
-                path: ["schedules", 3],
-            })
-        );
+        expect(result.success).toBe(true);
     });
 
     it("rejects a schedule without a journey", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.schedules[0]!.journeyId = "";
 
-        const result = DashboardConfigDraftSchema.safeParse(config);
+        const result = DashboardConfigSchema.safeParse(config);
 
         expect(result.success).toBe(false);
         expect(result.error?.issues).toContainEqual(

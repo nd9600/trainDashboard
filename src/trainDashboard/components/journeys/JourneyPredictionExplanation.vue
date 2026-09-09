@@ -13,27 +13,30 @@ import {computed} from "vue";
 import type {JourneyPrediction} from "../../journeys/journeyPrediction";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
 
-const props = defineProps<{ prediction: JourneyPrediction }>();
+const props = defineProps<{
+    prediction: JourneyPrediction;
+    isPredicted: boolean;
+}>();
 const configStore = useDashboardConfigStore();
 const explanation = computed(() => {
     const {reason, nearbyStationGroupId} = props.prediction;
-    if (!reason) {
-        return ""
-    }
-
     const group = configStore.config.stationGroups.find(
         (group) => group.id === nearbyStationGroupId
     );
 
-    const location = group
-        ? `We think you are near ${group.name}.`
-        : "";
+    const location = group ? `We think you are near ${group.name}.` : "";
+    if (!props.isPredicted || !reason) {
+        return location;
+    }
+
     if (reason.type === "nearby") {
-        return location
+        return `${location} Choose a journey below.`;
     }
 
     if (reason.type === "saved") {
-        return `${location} This is ${reason.onlyJourney ? "your only" : "the first"} saved journey from there.`;
+        return group
+            ? `${location} This is your ${reason.onlyJourney ? "only" : "first"} saved journey from ${group.name}.`
+            : location;
     }
 
     const schedule = configStore.config.schedules.find(
@@ -41,15 +44,15 @@ const explanation = computed(() => {
     );
 
     if (!schedule) {
-        return location
+        return location;
     }
 
     if (!group) {
-        return `Selected by your “${schedule.name}” schedule.`
+        return `Selected by your “${schedule.name}” schedule.`;
     }
 
     return reason.timing === "active"
         ? `${location} Your “${schedule.name}” schedule selects this journey.`
-        : `${location} “${schedule.name}” is your next schedule from there.`;
+        : `${location} “${schedule.name}” is your next schedule from ${group.name}.`;
 });
 </script>

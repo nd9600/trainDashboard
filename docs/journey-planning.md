@@ -2,7 +2,7 @@
 
 Journey planning starts with one resolved active journey. See [journey selection](journey-selection.md) for how the app selects that journey.
 
-Prediction alternatives include saved journeys from the nearby group, with scheduled journeys first. Alternatives do not load timetables until selected.
+Prediction alternatives include saved journeys from the nearby group, with scheduled journeys first. Without a nearby group, overlapping active schedules supply candidates in preference order. Alternatives do not load timetables until selected.
 
 ## Planning flow
 
@@ -41,7 +41,7 @@ Each route timetable contains its station route and parsed train legs. A direct 
 ```mermaid
 flowchart TD
     selection[currentJourneyPrediction getter]
-    prediction[getJourneyPrediction]
+    prediction[getJourneyPrediction: rank schedules and saved journeys]
     nearby[getNearbyStationGroup]
     dashboard[getDashboardJourneys]
     routes[getStationRoutes]
@@ -163,7 +163,7 @@ Location changes update prediction but do not replace a manual journey selection
 
 - `src/trainDashboard/components/journeys/TrainDepartureLink.vue` shows scheduled departures and delay details for main and alternative trains.
 
-- `src/trainDashboard/journeys/journeyPrediction.ts` selects the predicted journey using time and the nearby origin group.
+- `src/trainDashboard/journeys/journeyPrediction.ts` selects the predicted journey and alternatives using time, schedule preference order, and the nearby origin group.
 - `src/trainDashboard/journeys/nearbyStationGroup.ts` finds the nearest group within 2,000 metres.
 
 - `src/utilities/location.utility.ts` calculates spherical distances and finds the closest point.

@@ -9,18 +9,18 @@ import JourneyPredictionExplanation from "./JourneyPredictionExplanation.vue";
 afterEach(() => vi.unstubAllGlobals());
 
 it.each([
-    [{type: "nearby"}, "We think you are near Work."],
+    [{type: "nearby"}, "We think you are near Work. Choose a journey below."],
     [
         {type: "saved", onlyJourney: true},
-        "This is your only saved journey from there.",
+        "This is your only saved journey from Work.",
     ],
     [
         {type: "saved", onlyJourney: false},
-        "This is the first saved journey from there.",
+        "This is your first saved journey from Work.",
     ],
     [
         {type: "schedule", scheduleId: "evening", timing: "upcoming"},
-        "is your next schedule from there.",
+        "is your next schedule from Work.",
     ],
     [
         {type: "schedule", scheduleId: "evening", timing: "active"},
@@ -58,16 +58,25 @@ it.each([
                 },
             ],
         });
-        const app = createSSRApp(JourneyPredictionExplanation, {
+        const props = {
+            isPredicted: true,
             prediction: {
-                activeSchedule: undefined,
                 predictedJourneyId: undefined,
                 alternativeJourneyIds: [],
                 nearbyStationGroupId: "work",
                 reason,
             },
-        });
+        };
+        const app = createSSRApp(JourneyPredictionExplanation, props);
         app.use(pinia);
         expect(await renderToString(app)).toContain(text);
+
+        const manualApp = createSSRApp(JourneyPredictionExplanation, {
+            ...props,
+            isPredicted: false,
+        });
+        manualApp.use(pinia);
+        const manualHtml = await renderToString(manualApp);
+        expect(manualHtml).toContain(">We think you are near Work.</p>");
     }
 );

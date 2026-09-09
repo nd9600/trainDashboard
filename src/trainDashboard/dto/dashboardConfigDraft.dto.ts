@@ -1,37 +1,4 @@
 import {z} from "zod";
-import {timeToMinutes} from "@/utilities/time.utility";
-import {DashboardConfigSchema} from "./dashboardConfig.dto";
-import type {DisplaySchedule} from "./displaySchedule.dto";
-
-export const DashboardConfigDraftSchema = DashboardConfigSchema.superRefine(
-    (config, context) => reportOverlappingSchedules(config.schedules, context)
-);
-export type DashboardConfigDraft = z.infer<typeof DashboardConfigDraftSchema>;
-
-function reportOverlappingSchedules(
-    schedules: DisplaySchedule[],
-    context: z.RefinementCtx
-): void {
-    for (const [firstIndex, firstSchedule] of schedules.entries()) {
-        for (
-            let secondIndex = firstIndex + 1;
-            secondIndex < schedules.length;
-            secondIndex++
-        ) {
-            const secondSchedule = schedules[secondIndex]!;
-
-            if (!schedulesOverlap(firstSchedule, secondSchedule)) {
-                continue;
-            }
-
-            context.addIssue({
-                code: "custom",
-                message: `Schedule overlaps "${firstSchedule.name}".`,
-                path: ["schedules", secondIndex],
-            });
-        }
-    }
-}
 
 export function dashboardConfigErrorMessages(error: z.ZodError): string[] {
     return error.issues.map(getDashboardConfigErrorMessage);
@@ -90,22 +57,4 @@ function getErrorLocation(path: PropertyKey[]): string {
     }
 
     return "";
-}
-
-function schedulesOverlap(
-    first: DisplaySchedule,
-    second: DisplaySchedule
-): boolean {
-    const hasSharedDay = first.days.some((day) => second.days.includes(day));
-
-    if (!hasSharedDay) {
-        return false;
-    }
-
-    const firstStart = timeToMinutes(first.startsAt);
-    const firstEnd = timeToMinutes(first.endsAt);
-    const secondStart = timeToMinutes(second.startsAt);
-    const secondEnd = timeToMinutes(second.endsAt);
-
-    return firstStart < secondEnd && secondStart < firstEnd;
 }

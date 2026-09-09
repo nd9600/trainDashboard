@@ -1,67 +1,64 @@
 <template>
-    <section class="space-y-3 border-t border-line pt-5">
-        <h3 class="font-semibold text-primary">Journey</h3>
-
-        <div
-            class="flex items-center justify-between gap-3 rounded-lg bg-surface-muted p-3"
+    <div class="space-y-6">
+        <section
+            v-if="selectedJourneyIsComplete || isEditingJourney"
+            class="space-y-3 border-t border-line pt-5"
         >
-            <span class="min-w-0 grow truncate">
-                <JourneyLabel
-                    v-if="selectedJourneyIsComplete"
-                    :details="
-                        getJourneyLabelDetails(selectedJourney!, stationGroups)
-                    "
-                />
-                <template v-else>Choose a journey</template>
-            </span>
-            <button
-                v-if="selectedJourney"
-                class="appButton appButton--secondary shrink-0 py-1"
-                type="button"
-                @click="toggleJourneyEditor"
+            <h3 class="font-semibold text-primary">Change current journey</h3>
+
+            <div
+                v-if="selectedJourneyIsComplete"
+                class="flex items-center justify-between gap-3 rounded-lg bg-surface-muted p-3"
             >
-                {{ isEditingJourney ? "Done" : "Edit journey" }}
-            </button>
-        </div>
+                <span class="min-w-0 grow truncate">
+                    <JourneyLabel
+                        :details="
+                            getJourneyLabelDetails(
+                                selectedJourney!,
+                                stationGroups
+                            )
+                        "
+                    />
+                </span>
+                <button
+                    v-if="selectedJourney && selectedJourneyIsComplete"
+                    class="appButton appButton--secondary shrink-0 py-1"
+                    type="button"
+                    @click="toggleJourneyEditor"
+                >
+                    {{ isEditingJourney ? "Done" : "Edit journey" }}
+                </button>
+            </div>
 
-        <button
-            class="appButton appButton--quiet px-0 py-1 text-primary underline underline-offset-2"
-            type="button"
-            @click="toggleJourneyPicker"
-        >
-            {{ isChangingJourney ? "Hide journey choices" : "Change journey" }}
-        </button>
+            <div
+                v-if="isEditingJourney && selectedJourneyIndex !== -1"
+                class="space-y-3 border-l-2 border-primary pl-3"
+            >
+                <JourneySettingsFields
+                    v-model:journey="journeys[selectedJourneyIndex]!"
+                    :stationGroups="stationGroups"
+                    :journeys="journeys"
+                    :scheduleNames="
+                        getScheduleNamesUsingJourney(
+                            selectedJourney!.id,
+                            schedules
+                        )
+                    "
+                    :canRemove="false"
+                    @changed="emit('changed')"
+                />
+            </div>
+        </section>
 
-        <div
-            v-if="isEditingJourney && selectedJourneyIndex !== -1"
-            class="space-y-3 border-l-2 border-primary pl-3"
-        >
-            <h4 class="text-sm font-semibold">Edit journey</h4>
-            <JourneySettingsFields
-                v-model:journey="journeys[selectedJourneyIndex]!"
-                :stationGroups="stationGroups"
-                :journeys="journeys"
-                :scheduleNames="
-                    getScheduleNamesUsingJourney(selectedJourney!.id, schedules)
-                "
-                :canRemove="false"
-                @changed="emit('changed')"
-            />
-        </div>
-
-        <div
-            v-if="isChangingJourney"
-            class="space-y-3 border-l-2 border-primary pl-3"
-        >
+        <section class="space-y-3 border-t border-line pt-5">
+            <h3 class="font-semibold text-primary">
+                Choose a different journey
+            </h3>
             <label class="block">
                 <span class="mb-1 block text-xs text-ink-subtle">
                     Use an existing journey
                 </span>
-                <select
-                    ref="journeyPicker"
-                    v-model="selectedJourneyId"
-                    class="appInput"
-                >
+                <select v-model="selectedJourneyId" class="appInput">
                     <option value="">Choose a journey</option>
                     <option
                         v-for="journey in selectableJourneys"
@@ -88,20 +85,13 @@
                 >
                     Create a new journey
                 </button>
-                <button
-                    class="appButton appButton--quiet px-2 py-1.5"
-                    type="button"
-                    @click="isChangingJourney = false"
-                >
-                    Cancel
-                </button>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref} from "vue";
+import {computed, ref} from "vue";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {Journey} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
@@ -122,10 +112,8 @@ const props = defineProps<{
 
 const schedule = defineModel<DisplaySchedule>("schedule", {required: true});
 const journeys = defineModel<Journey[]>("journeys", {required: true});
-const isChangingJourney = ref(false);
 const isEditingJourney = ref(false);
 const selectedJourneyId = ref("");
-const journeyPicker = ref<HTMLSelectElement | null>(null);
 
 const emit = defineEmits<{
     changed: [];
@@ -159,7 +147,6 @@ function useSelectedJourney(): void {
 
     setJourney(selectedJourneyId.value);
     selectedJourneyId.value = "";
-    isChangingJourney.value = false;
     isEditingJourney.value = false;
 }
 
@@ -175,26 +162,11 @@ function createJourney(): void {
     const journey = createEmptyJourney();
     journeys.value = [...journeys.value, journey];
     setJourney(journey.id);
-    isChangingJourney.value = false;
     isEditingJourney.value = true;
-}
-
-async function toggleJourneyPicker(): Promise<void> {
-    isChangingJourney.value = !isChangingJourney.value;
-
-    if (isChangingJourney.value) {
-        isEditingJourney.value = false;
-        await nextTick();
-        journeyPicker.value?.focus();
-    }
 }
 
 function toggleJourneyEditor(): void {
     isEditingJourney.value = !isEditingJourney.value;
-
-    if (isEditingJourney.value) {
-        isChangingJourney.value = false;
-    }
 }
 
 function removeUnusedIncompleteJourney(journey: Journey | undefined): void {

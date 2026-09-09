@@ -8,7 +8,7 @@ Journey selection resolves one journey for the dashboard. It does not choose tra
 flowchart TD
     location[Current coordinates] --> nearby{Nearest group within 2 km?}
     groups[Station groups] --> nearby
-    nearby -->|No| time[Use the schedule active now]
+    nearby -->|No| time[Order active schedules by preference]
     nearby -->|Yes| matches[Find saved journeys starting at that group]
     matches --> schedules{Matching schedules?}
     schedules -->|Yes| ordered[Active now, then next upcoming schedule]
@@ -23,13 +23,15 @@ Location can override the time-based prediction. The nearest group must have coo
 
 A journey with an explicit origin group matches that group. A station-only origin matches when its station belongs to the nearby group.
 
-Matching schedules take precedence over unscheduled journeys. An active schedule comes first, followed by the next start across the weekly schedule. Equal start times use configuration order. Repeated schedules for one journey produce one candidate.
+Matching schedules take precedence over unscheduled journeys. An active schedule comes first, followed by the next start across the weekly schedule. Overlapping active schedules and equal upcoming start times use configuration order. Repeated schedules for one journey produce one candidate.
 
 Unscheduled saved journeys from the nearby group follow the scheduled candidates in configuration order.
 
 If no schedules match the group, saved journeys use configuration order. The first candidate becomes the prediction; the others become alternatives. If no journeys match, the result contains only the nearby group and its explanation.
 
-Without a nearby group, the current schedule supplies the prediction. Recent history does not affect prediction. `activeSchedule` always means the schedule active now, even when location selects another journey.
+Without a nearby group, active schedules use configuration order. The first journey becomes the prediction; other distinct journeys become alternatives. Recent history does not affect prediction. The prediction reason identifies the selected schedule.
+
+Schedules can overlap. Use Move up and Move down in settings to put preferred schedules first. Save configuration applies the order; Cancel discards the change.
 
 ```mermaid
 sequenceDiagram
@@ -39,14 +41,15 @@ sequenceDiagram
     participant UI as Journey switcher
     Browser->>Store: Updated coordinates, or location error
     Store->>Prediction: Configuration, clock, coordinates
+    Prediction->>Prediction: Rank matching schedules and remove duplicate journeys
     Prediction-->>Store: Journey ID, alternatives, nearby group, reason
     Store-->>UI: Active journey and deduplicated choices
     Note over Store,UI: Manual selections remain active when prediction changes
 ```
 
-The store keeps latitude and longitude from geolocation updates. A location error clears the position so prediction returns to the current schedule.
+The store keeps latitude and longitude from geolocation updates. A location error clears the position so prediction returns to active schedules in preference order.
 
-The switcher shows a reason below the predicted journey, or a nearby-group message when no journey matches. It hides the reason during a manual selection. Choices appear as Predicted, Alternatives, Recent, and Saved, with each journey shown once.
+The switcher shows the nearby-group message for predicted and manually selected journeys. Only predicted journeys show the selection reason. Explanations use the group name, such as “from Home”. When no journey matches the nearby group, the message asks the user to choose a journey below. Choices appear as Predicted, Alternatives, Recent, and Saved, with each journey shown once.
 
 ## Active selection
 
