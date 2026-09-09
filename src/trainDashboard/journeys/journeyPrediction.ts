@@ -12,9 +12,9 @@ export interface CurrentClock {
 }
 
 export type JourneyPredictionReason =
-    | {type: "schedule"; scheduleId: string; timing: "active" | "upcoming"}
-    | {type: "saved"; onlyJourney: boolean}
-    | {type: "nearby"};
+    | { type: "schedule"; scheduleId: string; timing: "active" | "upcoming" }
+    | { type: "saved"; onlyJourney: boolean }
+    | { type: "nearby" };
 
 export interface JourneyPrediction {
     predictedJourneyId: string | undefined;
@@ -26,12 +26,13 @@ export interface JourneyPrediction {
 /**
  * Returns the predicted journey (there might not be one):
  *     - If there is a station group within 2km of the current location, we only look at journeys that start at that station group:
- *         - if there's an active journey that starts at the station group, its first ranked journey
- *         - if no active schedule, its soonest schedule's first ranked journey
+ *         - if there's an active schedule for one of those journeys, it's the journey from the highest-priority active schedule
+ *         - if there isn't an active schedule, it's the journey from the soonest upcoming schedule
+ *         - if none of those journeys have a schedule, it's the first saved journey
  *     - If there isn't a nearby station group:
- *         - and at least 1 active schedule, it's the active schedule's first ranked journey
- *         - and no active schedule, it's nothing
- * All other currently-valid journeys are returned as alternative journeys.
+ *         - if there's at least 1 active schedule, it's the journey from the highest-priority active schedule
+ *         - if there isn't an active schedule, it's nothing
+ * All other candidate journeys are returned as alternative journeys.
  */
 export function getJourneyPrediction(
     config: DashboardConfig,
@@ -50,15 +51,17 @@ export function getJourneyPrediction(
     };
 
     if (!nearbyGroup) {
-        // Without a nearby origin, only active schedules supply candidates.
-        // Configuration order expresses preference when schedules overlap.
+        // if there isn't a nearby station group, we only look at active schedules
+        // if several schedules are active, the predicted journey comes from highest-priority schedule
         const activeSchedules = config.schedules.filter((schedule) =>
             isScheduleActive(schedule, currentClock)
         );
         const activeSchedule = activeSchedules[0];
+
         prediction.alternativeJourneyIds = [
             ...new Set(activeSchedules.map((schedule) => schedule.journeyId)),
         ].slice(1);
+
         if (activeSchedule) {
             prediction.predictedJourneyId = activeSchedule.journeyId;
             prediction.reason = {
@@ -67,17 +70,26 @@ export function getJourneyPrediction(
                 timing: "active",
             };
         }
+
         return prediction;
     }
 
-    // Location takes precedence over schedules for other origins. A journey can
-    // match by its explicit origin group or by a station-only origin in this group.
+    // if there's a nearby station group, we only look at journeys that start there - it can start at the group itself,
+    // or at a station within the group.
     const journeys = config.journeys.filter((journey) =>
         startsAtGroup(journey, nearbyGroup)
     );
+
+    // if no journey starts at the nearby station group, we still return the nearby group.
+    if (journeys.length === 0) {
+        prediction.reason = {type: "nearby"};
+        return prediction;
+    }
+
     const journeyIds = new Set(journeys.map((journey) => journey.id));
-    // Active schedules rank first, then the next start across the weekly schedule.
-    // Equal ranks retain configuration order, including overlapping active schedules.
+
+    // active schedules come first, followed by upcoming schedules in start-time order.
+    // schedules active at the same timing use their priority rankings for ordering
     const schedules = config.schedules
         .filter((schedule) => journeyIds.has(schedule.journeyId))
         .sort(
@@ -85,8 +97,9 @@ export function getJourneyPrediction(
                 getMinutesUntilSchedule(first, currentClock) - getMinutesUntilSchedule(second, currentClock)
         );
     const schedule = schedules[0];
-    // Keep unscheduled journeys available after scheduled choices, in saved order.
-    // A journey can have several schedules, but must appear only once.
+
+    // scheduled journeys come first, then unscheduled saved journeys
+    // a journey that is in several schedules is only included once
     const candidateIds = [
         ...new Set([
             ...schedules.map((candidate) => candidate.journeyId),
@@ -96,6 +109,7 @@ export function getJourneyPrediction(
 
     prediction.predictedJourneyId = candidateIds[0];
     prediction.alternativeJourneyIds = candidateIds.slice(1);
+
     if (schedule) {
         prediction.reason = {
             type: "schedule",
@@ -104,12 +118,13 @@ export function getJourneyPrediction(
                 ? "active"
                 : "upcoming",
         };
-    } else if (journeys.length > 0) {
-        prediction.reason = {type: "saved", onlyJourney: journeys.length === 1};
     } else {
-        // Keep the location explanation even when no journey starts at this group.
-        prediction.reason = {type: "nearby"};
+        prediction.reason = {
+            type: "saved",
+            onlyJourney: journeys.length === 1,
+        };
     }
+
     return prediction;
 }
 
