@@ -27,6 +27,15 @@
             @changed="handleChange"
         />
 
+        <SavedJourneysSettings
+            v-else-if="activeEditorSection === 'journeys'"
+            v-model:journeys="draft.journeys"
+            v-model:recentJourneyIds="recentJourneyIds"
+            :stationGroups="draft.stationGroups"
+            :schedules="draft.schedules"
+            @changed="handleChange"
+        />
+
         <div
             v-if="errors.length"
             class="rounded border border-danger bg-danger-surface p-3 text-sm text-danger-dark"
@@ -51,10 +60,14 @@ import {
     type DashboardConfigDraft,
 } from "../../dto/dashboardConfigDraft.dto";
 import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
+import {useJourneySelectionStore} from "../../store/journeySelection.store";
+import SavedJourneysSettings from "./journeys/SavedJourneysSettings.vue";
 import SchedulesSettings from "./schedules/SchedulesSettings.vue";
 import StationGroupsSettings from "./stationGroups/StationGroupsSettings.vue";
 
 const dashboardConfigStore = useDashboardConfigStore();
+const selection = useJourneySelectionStore();
+const recentJourneyIds = ref([...selection.recentJourneyIds]);
 const form = ref<HTMLFormElement | null>(null);
 const draft = ref<DashboardConfigDraft>(getConfigDraft());
 const errors = ref<string[]>([]);
@@ -71,6 +84,7 @@ const activeEditorSection = ref("stationGroups");
 const editorSections = [
     {value: "stationGroups", label: "Stations", icon: "map-pin" as const},
     {value: "schedules", label: "Schedules", icon: "clock" as const},
+    {value: "journeys", label: "Journeys", icon: "train" as const},
 ];
 function getConfigDraft(): DashboardConfigDraft {
     // The stored configuration is JSON data. Its reactive proxies cannot use structuredClone.
@@ -95,12 +109,39 @@ function save(): void {
         }
     }
 
+    const removedJourneyIds = dashboardConfigStore.config.journeys
+        .filter(
+            (journey) =>
+                !config.journeys.some(
+                    (candidate) => candidate.id === journey.id
+                )
+        )
+        .map((journey) => journey.id);
+    const activeJourneyId = selection.activeJourneyId;
     dashboardConfigStore.saveConfig(config);
+    for (const journeyId of [...selection.recentJourneyIds]) {
+        if (
+            !recentJourneyIds.value.includes(journeyId) ||
+            removedJourneyIds.includes(journeyId)
+        ) {
+            selection.removeRecentJourney(journeyId);
+        }
+    }
+    if (activeJourneyId && removedJourneyIds.includes(activeJourneyId)) {
+        selection.clearActiveJourney();
+    } else if (
+        selection.activeJourney.type === "ephemeral" &&
+        config.journeys.some((journey) => journey.id === activeJourneyId)
+    ) {
+        selection.selectJourney(activeJourneyId!);
+    }
+    recentJourneyIds.value = [...selection.recentJourneyIds];
     draft.value = getConfigDraft();
     hasUnsavedChanges.value = false;
 }
 
 function cancel(): void {
+    recentJourneyIds.value = [...selection.recentJourneyIds];
     draft.value = getConfigDraft();
     errors.value = [];
     hasUnsavedChanges.value = false;

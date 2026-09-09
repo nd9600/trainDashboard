@@ -81,7 +81,11 @@ Recent history contains journey IDs. Ephemeral definitions remain in journey mem
 
 Saving an ephemeral journey adds it to the configuration. The active selection then becomes saved.
 
-Only unscheduled saved journeys can be edited or removed from configuration. Removing a recent entry does not remove its saved journey.
+The switcher can edit or remove only unscheduled saved journeys. Removing a recent entry does not remove its saved journey.
+
+The Journeys tab in settings lists all saved and recent journeys. Saved journeys can be edited, including journeys used by schedules. Each saved journey lists its schedules. Remove is disabled while a schedule uses the journey. Recent entries can be forgotten or added to saved journeys.
+
+These settings actions update a draft. Save configuration applies the changes; Cancel discards them. Removing the active saved journey restores prediction. Saving the active temporary journey changes its selection to saved.
 
 ## Source map
 
@@ -92,3 +96,5 @@ Only unscheduled saved journeys can be edited or removed from configuration. Rem
 - `src/trainDashboard/store/dashboardConfig.store.ts` supplies schedules and saved journeys.
 - `src/trainDashboard/components/journeys/JourneySwitcher.vue` presents journey choices and actions.
 - `src/trainDashboard/components/journeys/JourneyForm.vue` creates and edits journey fields.
+
+- `src/trainDashboard/components/settings/journeys/SavedJourneysSettings.vue` edits saved journeys and manages recent entries in the settings draft.
