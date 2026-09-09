@@ -49,6 +49,6 @@ it("lists every recent journey and protects a scheduled saved journey", async ()
 
     expect(html.match(/data-test="recent-journey"/g)).toHaveLength(4);
     expect(html).toContain("Morning commute");
-    expect(html).toMatch(/<button[^>]*disabled[^>]*>\s*Remove\s*<\/button>/);
-    expect(html.match(/Save journey/g)).toHaveLength(3);
+    expect(html).toMatch(/<button(?=[^>]*aria-label="Remove journey")(?=[^>]*disabled)[^>]*>/);
+    expect(html.match(/aria-label="Save journey"/g)).toHaveLength(3);
 });

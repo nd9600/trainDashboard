@@ -24,9 +24,19 @@
                         "
                     />
                     <span v-else>Choose journey stations</span>
-                    <div class="flex gap-2">
+                    <div class="flex shrink-0 gap-2">
                         <button
-                            class="appButton appButton--secondary text-xs py-1"
+                            class="appButton appButton--icon text-ink hover:text-paper hover:bg-ink"
+                            :title="
+                                editingJourneyId === journey.id
+                                    ? 'Done editing'
+                                    : 'Edit journey'
+                            "
+                            :aria-label="
+                                editingJourneyId === journey.id
+                                    ? 'Done editing'
+                                    : 'Edit journey'
+                            "
                             type="button"
                             @click="
                                 editingJourneyId =
@@ -35,10 +45,17 @@
                                         : journey.id
                             "
                         >
-                            {{ editingJourneyId === journey.id ? "Done" : "Edit" }}
+                            <AppIcon
+                                class="size-4"
+                                :name="
+                                    editingJourneyId === journey.id
+                                        ? 'close'
+                                        : 'pencil'
+                                "
+                            />
                         </button>
                         <button
-                            class="appButton appButton--danger text-xs px-0 py-1"
+                            class="appButton appButton--icon text-danger hover:text-paper hover:bg-danger"
                             type="button"
                             :disabled="
                                 getScheduleNamesUsingJourney(
@@ -46,18 +63,28 @@
                                     schedules
                                 ).length > 0
                             "
+                            title="Remove journey"
+                            aria-label="Remove journey"
                             @click="removeJourney(journey.id)"
                         >
-                            Remove
+                            <AppIcon class="size-4" name="trash" />
                         </button>
                     </div>
                 </div>
                 <p
-                    v-if="getScheduleNamesUsingJourney(journey.id, schedules).length"
+                    v-if="
+                        getScheduleNamesUsingJourney(journey.id, schedules)
+                            .length
+                    "
                     class="mt-2 text-xs text-ink-subtle"
                 >
                     Used by:
-                    {{ getScheduleNamesUsingJourney(journey.id, schedules).join(", ") }}. Change these schedules before removing this journey.
+                    {{
+                        getScheduleNamesUsingJourney(
+                            journey.id,
+                            schedules
+                        ).join(", ")
+                    }}. Change these schedules before removing this journey.
                 </p>
                 <JourneySettingsFields
                     v-if="editingJourneyId === journey.id"
@@ -90,26 +117,33 @@
                     :details="getJourneyLabelDetails(journey, stationGroups)"
                 />
                 <span v-else>Choose journey stations</span>
-                <div class="flex items-center gap-2">
+                <div class="flex shrink-0 items-center gap-2">
                     <span
                         v-if="isSaved(journey)"
-                        class="text-xs text-ink-subtle"
-                        >Saved</span
+                        class="flex size-8 items-center justify-center text-ink-subtle"
+                        title="Saved journey"
                     >
+                        <AppIcon class="size-4 fill-current" name="bookmark" />
+                        <span class="sr-only">Saved journey</span>
+                    </span>
                     <button
                         v-else
-                        class="appButton appButton--secondary text-xs px-0 py-1"
+                        class="appButton appButton--icon size-8 text-ink hover:text-paper hover:bg-ink"
+                        title="Save journey"
+                        aria-label="Save journey"
                         type="button"
                         @click="saveRecentJourney(journey)"
                     >
-                        Save
+                        <AppIcon class="size-4" name="bookmark" />
                     </button>
                     <button
-                        class="appButton appButton--danger text-xs px-0 py-1"
+                        class="appButton appButton--icon size-8 text-danger hover:text-paper hover:bg-danger"
                         type="button"
+                        title="Forget journey"
+                        aria-label="Forget journey"
                         @click="forgetJourney(journey.id)"
                     >
-                        Remove
+                        <AppIcon class="size-4" name="close" />
                     </button>
                 </div>
             </div>
@@ -118,6 +152,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from "@/components/AppIcon.vue";
 import {computed, ref} from "vue";
 import {hasSameJourneyFields} from "../../../dto/journeySelection.dto";
 import type {Journey} from "../../../dto/journey.dto";
