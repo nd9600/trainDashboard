@@ -5,16 +5,6 @@
         class="relative mr-4 flex w-fit max-w-full flex-col items-start gap-2"
         @update:model-value="selectJourney"
     >
-        <p
-            v-if="activeSchedule || activeJourney.type !== 'predicted'"
-            class="text-xs text-ink-subtle"
-        >
-            {{
-                activeJourney.type === "predicted"
-                    ? activeSchedule?.name
-                    : "&nbsp;"
-            }}
-        </p>
         <div class="flex max-w-full items-center gap-1">
             <ListboxButton
                 class="appButton appButton--secondary min-w-0 max-w-full justify-start whitespace-normal border-none p-1 text-left"
@@ -55,6 +45,11 @@
                 <AppIcon class="size-3.5" name="close" />
             </button>
         </div>
+
+        <JourneyPredictionExplanation
+            v-if="activeJourney.type === 'predicted'"
+            :prediction="currentJourneyPrediction"
+        />
 
         <ListboxOptions
             :static="
@@ -211,6 +206,7 @@ import {
     getJourneyLabelDetails,
     getJourneyLabelText,
 } from "../../journeys/journeyLabels";
+import JourneyPredictionExplanation from "./JourneyPredictionExplanation.vue";
 import JourneyForm from "./JourneyForm.vue";
 import JourneyLabel from "./JourneyLabel.vue";
 
@@ -222,7 +218,7 @@ const {
     activeJourneyId,
     activeJourney,
     activeJourneyDetails,
-    activeSchedule,
+    currentJourneyPrediction,
     journeyChoices,
 } = storeToRefs(journeySelectionStore);
 const {config} = storeToRefs(dashboardConfigStore);

@@ -6,6 +6,8 @@ Journey planning starts with one resolved active journey. See [journey selection
 
 ```mermaid
 flowchart LR
+    prediction[Time and nearby group prediction]
+    override[Manual selection]
     journey[Active journey]
     routes[Station routes]
     timetables[Route timetables]
@@ -13,6 +15,8 @@ flowchart LR
     journeys[Catchable journeys sorted by finish time]
     display[First six journeys]
 
+    prediction --> journey
+    override --> journey
     journey --> routes
     routes --> timetables
     timetables --> planner
@@ -34,6 +38,9 @@ Each route timetable contains its station route and parsed train legs. A direct 
 
 ```mermaid
 flowchart TD
+    selection[currentJourneyPrediction getter]
+    prediction[getJourneyPrediction]
+    nearby[getNearbyStationGroup]
     dashboard[getDashboardJourneys]
     routes[getStationRoutes]
     load[loadRouteTimetables]
@@ -44,6 +51,10 @@ flowchart TD
     trainPlans[getTrainPlans]
     make[makeTimetabledJourney]
 
+    selection --> prediction
+    prediction --> nearby
+    nearby --> closest[findClosestPoint]
+    nearby --> distance[distanceBetweenCoordinatesKm]
     dashboard --> routes
     dashboard --> load
     load --> requests
@@ -128,6 +139,8 @@ Platform consistency uses all planned journeys. A platform is hidden when multip
 
 Departure labels show the scheduled time and an amber delay, such as `10:14 (+3m)`. Hover or keyboard focus shows the expected departure. National Rail links use the scheduled departure. Timeline positions, connections, filtering, and walking advice use expected times.
 
+Location changes update prediction but do not replace a manual journey selection. The active journey supplies the station routes for timetable planning.
+
 ## Source map
 
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` expands the active journey, loads route timetables, and calls the planner.
@@ -147,3 +160,8 @@ Departure labels show the scheduled time and an amber delay, such as `10:14 (+3m
 - `src/trainDashboard/components/journeys/JourneyCharts.vue` shows desktop journeys.
 
 - `src/trainDashboard/components/journeys/TrainDepartureLink.vue` shows scheduled departures and delay details for main and alternative trains.
+
+- `src/trainDashboard/journeys/journeyPrediction.ts` selects the predicted journey using time and the nearby origin group.
+- `src/trainDashboard/journeys/nearbyStationGroup.ts` finds the nearest group within 2,000 metres.
+
+- `src/utilities/location.utility.ts` calculates spherical distances and finds the closest point.

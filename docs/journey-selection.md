@@ -5,22 +5,45 @@ Journey selection resolves one journey for the dashboard. It does not choose tra
 ## Prediction
 
 ```mermaid
-flowchart LR
-    schedules[Configured schedules]
-    clock[Current day and time]
-    match[First matching schedule]
-    prediction{Schedule found?}
-    journey[Predicted journey ID]
-    none[No prediction]
-
-    schedules --> match
-    clock --> match
-    match --> prediction
-    prediction -->|Yes| journey
-    prediction -->|No| none
+flowchart TD
+    location[Current coordinates] --> nearby{Nearest group within 2 km?}
+    groups[Station groups] --> nearby
+    nearby -->|No| time[Use the schedule active now]
+    nearby -->|Yes| matches[Find saved journeys starting at that group]
+    matches --> schedules{Matching schedules?}
+    schedules -->|Yes| ordered[Active now, then next upcoming schedule]
+    schedules -->|No| saved[Use saved journey order]
+    ordered --> result[Prediction, alternatives, and reason]
+    saved --> result
+    time --> result
 ```
 
-Only the current schedule supplies a prediction. Recent history does not affect prediction.
+Location can override the time-based prediction. The nearest group must have coordinates and be within 2,000 metres. Equal distances use group order.
+
+A journey with an explicit origin group matches that group. A station-only origin matches when its station belongs to the nearby group.
+
+Matching schedules take precedence over unscheduled journeys. An active schedule comes first, followed by the next start across the weekly schedule. Equal start times use configuration order. Repeated schedules for one journey produce one candidate.
+
+If no schedules match the group, saved journeys use configuration order. The first candidate becomes the prediction; the others become alternatives. If no journeys match, the result contains only the nearby group and its explanation.
+
+Without a nearby group, the current schedule supplies the prediction. Recent history does not affect prediction. `activeSchedule` always means the schedule active now, even when location selects another journey.
+
+```mermaid
+sequenceDiagram
+    participant Browser as Browser geolocation
+    participant Store as Journey selection store
+    participant Prediction as getJourneyPrediction
+    participant UI as Journey switcher
+    Browser->>Store: Updated coordinates, or location error
+    Store->>Prediction: Configuration, clock, coordinates
+    Prediction-->>Store: Journey ID, alternatives, nearby group, reason
+    Store-->>UI: Active journey and deduplicated choices
+    Note over Store,UI: Manual selections remain active when prediction changes
+```
+
+The store keeps latitude and longitude from geolocation updates. A location error clears the position so prediction returns to the current schedule.
+
+The switcher shows a reason below the predicted journey, or a nearby-group message when no journey matches. It hides the reason during a manual selection. Choices appear as Predicted, Alternatives, Recent, and Saved, with each journey shown once.
 
 ## Active selection
 
@@ -50,7 +73,7 @@ The active override stays only in the current page session. Page refresh and Cle
 ```mermaid
 flowchart TD
     switcher[Journey switcher]
-    existing[Select predicted, recent, or saved]
+    existing[Select predicted, alternative, recent, or saved]
     create[Create station-to-station journey]
     edit[Edit active unscheduled journey]
     save[Save active ephemeral journey]
@@ -89,7 +112,7 @@ These settings actions update a draft. Save configuration applies the changes; C
 
 ## Source map
 
-- `src/trainDashboard/journeys/journeyPrediction.ts` finds the current schedule and predicted journey ID.
+- `src/trainDashboard/journeys/journeyPrediction.ts` combines time and location into a prediction, alternatives, and structured reason.
 - `src/trainDashboard/store/journeySelection.store.ts` owns active selection, recent history, ephemeral journeys, and switcher actions.
 - `src/trainDashboard/dto/journeySelection.dto.ts` defines selection and journey-memory shapes.
 - `src/trainDashboard/store/dashboardClock.store.ts` supplies the current day and time.
@@ -98,3 +121,8 @@ These settings actions update a draft. Save configuration applies the changes; C
 - `src/trainDashboard/components/journeys/JourneyForm.vue` creates and edits journey fields.
 
 - `src/trainDashboard/components/settings/journeys/SavedJourneysSettings.vue` edits saved journeys and manages recent entries in the settings draft.
+
+- `src/trainDashboard/journeys/nearbyStationGroup.ts` uses the shared location utility and applies the nearby distance limit.
+- `src/trainDashboard/components/journeys/JourneyPredictionExplanation.vue` explains the rule that selected the journey.
+
+- `src/utilities/location.utility.ts` calculates spherical distances and finds the closest point.

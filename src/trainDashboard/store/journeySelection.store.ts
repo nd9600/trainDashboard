@@ -1,3 +1,6 @@
+import {watch} from "vue";
+import {useGeolocation} from "@vueuse/core";
+import type {Coordinates} from "../dto/coordinates.dto";
 import {defineStore} from "pinia";
 import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
 import type {DisplaySchedule} from "../dto/displaySchedule.dto";
@@ -21,8 +24,6 @@ const memoryStorage = useLocalStorageTyped(
     JourneyMemorySchema,
     {recentJourneyIds: [], ephemeralJourneys: []}
 );
-import { useGeolocation} from "@vueuse/core";
-import { watch } from "vue";
 
 interface JourneySelectionState {
     isInitialised: boolean;
@@ -30,7 +31,7 @@ interface JourneySelectionState {
     ephemeralJourneys: EphemeralJourney[];
     currentEphemeralJourney: EphemeralJourney | undefined;
     activeJourney: ActiveJourney;
-    currentCoordinates: GeolocationCoordinates | null;
+    currentCoordinates: Coordinates | null;
 }
 
 export const useJourneySelectionStore = defineStore("journey-selection", {
@@ -40,14 +41,14 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
         ephemeralJourneys: [],
         currentEphemeralJourney: undefined,
         activeJourney: {type: "predicted"},
-        currentCoordinates: null
+        currentCoordinates: null,
     }),
 
     getters: {
         currentJourneyPrediction(): JourneyPrediction {
             const config = useDashboardConfigStore().config;
             return getJourneyPrediction(
-                config.schedules,
+                config,
                 useDashboardClockStore().currentClock,
                 this.currentCoordinates
             );
@@ -94,8 +95,16 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             const predictedJourney = this.predictedJourneyId
                 ? this.journeysById.get(this.predictedJourneyId)
                 : undefined;
+            const alternativeJourneys =
+                this.currentJourneyPrediction.alternativeJourneyIds
+                    .map((id) => this.journeysById.get(id))
+                    .filter((journey) => journey !== undefined);
+            const predictionIds = new Set([
+                this.predictedJourneyId,
+                ...this.currentJourneyPrediction.alternativeJourneyIds,
+            ]);
             const recentChoiceJourneyIds = state.recentJourneyIds.filter(
-                (journeyId) => journeyId !== this.predictedJourneyId
+                (journeyId) => !predictionIds.has(journeyId)
             );
             const recentJourneys = recentChoiceJourneyIds
                 .map((journeyId) => this.journeysById.get(journeyId))
@@ -107,7 +116,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             const otherSavedJourneys =
                 useDashboardConfigStore().config.journeys.filter(
                     (journey) =>
-                        journey.id !== this.predictedJourneyId &&
+                        !predictionIds.has(journey.id) &&
                         !recentJourneyIds.has(journey.id)
                 );
             const groups: JourneyChoices[] = [
@@ -115,6 +124,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                     name: "Predicted",
                     journeys: predictedJourney ? [predictedJourney] : [],
                 },
+                {name: "Alternatives", journeys: alternativeJourneys},
                 {name: "Recent", journeys: recentJourneys},
                 {name: "Saved", journeys: otherSavedJourneys},
             ];
@@ -133,16 +143,20 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.recentJourneyIds = savedMemory.recentJourneyIds;
             this.ephemeralJourneys = savedMemory.ephemeralJourneys;
             this.isInitialised = true;
-            
-            const { coords, locatedAt: geolocationLocatedAt } = useGeolocation({maximumAge: 60 * 1000, enableHighAccuracy: false});
-            watch(
-                coords,
-                (coordinates) => {
-                    if (geolocationLocatedAt.value !== null) {
-                        this.currentCoordinates = coordinates;
-                    }
-                }
-            )
+
+            const {coords, locatedAt, error} = useGeolocation({
+                maximumAge: 60 * 1000,
+                enableHighAccuracy: false,
+            });
+            watch([coords, error], ([coordinates, geolocationError]) => {
+                this.currentCoordinates =
+                    !geolocationError && locatedAt.value !== null
+                        ? {
+                              latitude: coordinates.latitude,
+                              longitude: coordinates.longitude,
+                          }
+                        : null;
+            });
         },
 
         selectJourney(journeyId: string): void {

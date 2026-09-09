@@ -40,6 +40,7 @@ describe("useJourneySelectionStore", () => {
 
         expect(store.$state).toEqual({
             isInitialised: false,
+            currentCoordinates: null,
             recentJourneyIds: [],
             ephemeralJourneys: [],
             currentEphemeralJourney: undefined,
@@ -95,6 +96,43 @@ describe("useJourneySelectionStore", () => {
                 ),
             },
         ]);
+    });
+
+    it("updates location predictions without replacing a manual selection", () => {
+        const config = structuredClone(manchesterDashboardConfig);
+        config.stationGroups[0]!.coordinates = {
+            latitude: 53.4,
+            longitude: -2.1,
+        };
+        config.stationGroups[1]!.coordinates = {
+            latitude: 53.5,
+            longitude: -2.2,
+        };
+        useDashboardConfigStore().saveConfig(config);
+        const store = getJourneySelectionStore();
+        store.currentCoordinates = {latitude: 53.4, longitude: -2.1};
+        store.recentJourneyIds = [savedJourney.id];
+        expect(store.journeyChoices.slice(0, 2)).toEqual([
+            {name: "Predicted", journeys: [predictedJourney]},
+            {name: "Alternatives", journeys: [savedJourney]},
+        ]);
+        const choiceIds = store.journeyChoices.flatMap((group) =>
+            group.journeys.map((journey) => journey.id)
+        );
+        expect(new Set(choiceIds).size).toBe(choiceIds.length);
+
+        store.selectJourney(savedJourney.id);
+        store.currentCoordinates = {latitude: 53.5, longitude: -2.2};
+        expect(store.predictedJourneyId).toBe(
+            "manchester-piccadilly-to-heaton-chapel"
+        );
+        expect(store.activeJourneyId).toBe(savedJourney.id);
+        store.clearActiveJourney();
+        expect(store.activeJourneyId).toBe(
+            "manchester-piccadilly-to-heaton-chapel"
+        );
+        store.currentCoordinates = null;
+        expect(store.activeJourneyId).toBe(predictedJourney.id);
     });
 
     it("restores prediction after the store is recreated", () => {

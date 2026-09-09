@@ -33,7 +33,7 @@ export type ActiveJourney =
     {type: "predicted"} | {type: "saved"; id: string} | {type: "ephemeral"};
 
 export interface JourneyChoices {
-    name: "Predicted" | "Recent" | "Saved";
+    name: "Predicted" | "Alternatives" | "Recent" | "Saved";
     journeys: Journey[];
 }
 
