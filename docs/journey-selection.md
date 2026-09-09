@@ -13,7 +13,8 @@ flowchart TD
     matches --> schedules{Matching schedules?}
     schedules -->|Yes| ordered[Active now, then next upcoming schedule]
     schedules -->|No| saved[Use saved journey order]
-    ordered --> result[Prediction, alternatives, and reason]
+    ordered --> remaining[Append unscheduled matching journeys in saved order]
+    remaining --> result[Prediction, alternatives, and reason]
     saved --> result
     time --> result
 ```
@@ -23,6 +24,8 @@ Location can override the time-based prediction. The nearest group must have coo
 A journey with an explicit origin group matches that group. A station-only origin matches when its station belongs to the nearby group.
 
 Matching schedules take precedence over unscheduled journeys. An active schedule comes first, followed by the next start across the weekly schedule. Equal start times use configuration order. Repeated schedules for one journey produce one candidate.
+
+Unscheduled saved journeys from the nearby group follow the scheduled candidates in configuration order.
 
 If no schedules match the group, saved journeys use configuration order. The first candidate becomes the prediction; the others become alternatives. If no journeys match, the result contains only the nearby group and its explanation.
 

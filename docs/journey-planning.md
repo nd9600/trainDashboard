@@ -2,6 +2,8 @@
 
 Journey planning starts with one resolved active journey. See [journey selection](journey-selection.md) for how the app selects that journey.
 
+Prediction alternatives include saved journeys from the nearby group, with scheduled journeys first. Alternatives do not load timetables until selected.
+
 ## Planning flow
 
 ```mermaid

@@ -68,9 +68,12 @@ export function getJourneyPrediction(
                 getMinutesUntilSchedule(second, currentClock)
         );
     const schedule = schedules[0];
-    const candidateIds = schedule
-        ? [...new Set(schedules.map((candidate) => candidate.journeyId))]
-        : journeys.map((journey) => journey.id);
+    const candidateIds = [
+        ...new Set([
+            ...schedules.map((candidate) => candidate.journeyId),
+            ...journeyIds,
+        ]),
+    ];
 
     prediction.predictedJourneyId = candidateIds[0];
     prediction.alternativeJourneyIds = candidateIds.slice(1);

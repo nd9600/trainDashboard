@@ -95,6 +95,32 @@ const locationConfig: DashboardConfig = {
 };
 const workCoordinates = {latitude: 55.86, longitude: -4.27};
 
+it("includes an unscheduled saved journey from home after the morning commute", () => {
+    const config: DashboardConfig = {
+        ...locationConfig,
+        journeys: [
+            ...locationConfig.journeys,
+            {
+                id: "edinburgh",
+                origin: {type: "group", groupId: "home"},
+                destination: {type: "station", crs: "EDB"},
+            },
+        ],
+    };
+
+    const prediction = getJourneyPrediction(
+        config,
+        {day: 1, minutes: 9 * 60},
+        {latitude: 55.89, longitude: -4.32}
+    );
+
+    expect(prediction).toMatchObject({
+        predictedJourneyId: "out",
+        alternativeJourneyIds: ["edinburgh"],
+        reason: {type: "schedule", scheduleId: "morning", timing: "active"},
+    });
+});
+
 it("overrides a schedule from elsewhere with the next schedule from the nearby group", () => {
     const prediction = getJourneyPrediction(
         locationConfig,
