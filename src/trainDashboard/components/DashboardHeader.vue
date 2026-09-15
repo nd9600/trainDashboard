@@ -56,7 +56,7 @@ import {stationName} from "../stations/stations";
 import {useDashboardClockStore} from "../store/dashboardClock.store";
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useJourneySelectionStore} from "../store/journeySelection.store";
-import JourneySwitcher from "./journeys/JourneySwitcher.vue";
+import JourneySwitcher from "./journeys/switcher/JourneySwitcher.vue";
 
 const trainServicesStore = useTrainServicesStore();
 const dashboardClockStore = useDashboardClockStore();

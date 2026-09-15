@@ -18,10 +18,10 @@ import {computed} from "vue";
 import type {
     TimetabledJourney,
     TrainLeg,
-} from "../../dto/timetabledJourney.dto";
-import {getJourneyTimelineRange} from "../../journeys/journeyTimes";
-import JourneyCards from "./JourneyCards.vue";
-import JourneyCharts from "./JourneyCharts.vue";
+} from "../../../dto/timetabledJourney.dto";
+import {getJourneyTimelineRange} from "../../../journeys/journeyTimes";
+import JourneyCards from "./mobile/JourneyCards.vue";
+import JourneyCharts from "./desktop/JourneyCharts.vue";
 
 const props = defineProps<{
     journeys: TimetabledJourney[];

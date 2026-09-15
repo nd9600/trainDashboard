@@ -2,8 +2,8 @@ import {createPinia, setActivePinia} from "pinia";
 import {createSSRApp} from "vue";
 import {renderToString} from "vue/server-renderer";
 import {afterEach, expect, it, vi} from "vitest";
-import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
-import type {JourneyPredictionReason} from "../../journeys/journeyPrediction";
+import {useDashboardConfigStore} from "../../../store/dashboardConfig.store";
+import type {JourneyPredictionReason} from "../../../journeys/journeyPrediction";
 import JourneyPredictionExplanation from "./JourneyPredictionExplanation.vue";
 
 afterEach(() => vi.unstubAllGlobals());

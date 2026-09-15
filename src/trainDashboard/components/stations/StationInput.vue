@@ -68,8 +68,8 @@ import {
     findStationOptions,
     stationCodeFromInput,
     stationDisplayName,
-} from "../../../stations/stations";
-import {stationNames} from "../../../stations/stationNames";
+} from "../../stations/stations";
+import {stationNames} from "../../stations/stationNames";
 
 defineOptions({
     inheritAttrs: false,

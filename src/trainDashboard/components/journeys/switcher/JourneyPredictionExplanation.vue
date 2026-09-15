@@ -10,8 +10,8 @@
 
 <script setup lang="ts">
 import {computed} from "vue";
-import type {JourneyPrediction} from "../../journeys/journeyPrediction";
-import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
+import type {JourneyPrediction} from "../../../journeys/journeyPrediction";
+import {useDashboardConfigStore} from "../../../store/dashboardConfig.store";
 
 const props = defineProps<{
     prediction: JourneyPrediction;

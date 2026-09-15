@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
+import type {TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
 import JourneyChartSummary from "./JourneyChartSummary.vue";
 import JourneyChartSvg from "./JourneyChartSvg.vue";
 

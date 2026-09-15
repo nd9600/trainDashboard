@@ -123,12 +123,12 @@ These settings actions update a draft. Save configuration applies the changes; C
 - `src/trainDashboard/dto/journeySelection.dto.ts` defines selection and journey-memory shapes.
 - `src/trainDashboard/store/dashboardClock.store.ts` supplies the current day and time.
 - `src/trainDashboard/store/dashboardConfig.store.ts` supplies schedules and saved journeys.
-- `src/trainDashboard/components/journeys/JourneySwitcher.vue` presents journey choices and actions.
-- `src/trainDashboard/components/journeys/JourneyForm.vue` creates and edits journey fields.
+- `src/trainDashboard/components/journeys/switcher/JourneySwitcher.vue` presents journey choices and actions.
+- `src/trainDashboard/components/journeys/switcher/JourneyForm.vue` creates and edits journey fields.
 
 - `src/trainDashboard/components/settings/journeys/SavedJourneysSettings.vue` edits saved journeys and manages recent entries in the settings draft.
 
 - `src/trainDashboard/journeys/nearbyStationGroup.ts` uses the shared location utility and applies the nearby distance limit.
-- `src/trainDashboard/components/journeys/JourneyPredictionExplanation.vue` explains the rule that selected the journey.
+- `src/trainDashboard/components/journeys/switcher/JourneyPredictionExplanation.vue` explains the rule that selected the journey.
 
 - `src/utilities/location.utility.ts` calculates spherical distances and finds the closest point.

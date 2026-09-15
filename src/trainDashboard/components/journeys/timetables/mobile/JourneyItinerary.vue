@@ -74,11 +74,11 @@ import {formatTime} from "@/utilities/time.utility.ts";
 import type {
     TimetabledJourney,
     TrainLeg,
-} from "../../dto/timetabledJourney.dto";
-import {stationColour} from "../../stations/stationColours";
-import {stationName} from "../../stations/stations";
-import AlternativeTrainLink from "./AlternativeTrainLink.vue";
-import TrainDepartureLink from "./TrainDepartureLink.vue";
+} from "../../../../dto/timetabledJourney.dto";
+import {stationColour} from "../../../../stations/stationColours";
+import {stationName} from "../../../../stations/stations";
+import AlternativeTrainLink from "../AlternativeTrainLink.vue";
+import TrainDepartureLink from "../TrainDepartureLink.vue";
 
 const props = defineProps<{
     journey: TimetabledJourney;

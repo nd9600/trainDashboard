@@ -86,6 +86,7 @@
                     :departureMinutes="currentMinutes"
                 />
             </div>
+            <DiagnosticModal class="mx-2 mt-8 sm:mx-0" />
         </div>
     </main>
 </template>
@@ -94,16 +95,17 @@
 import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import NoJourneysFound from "./journeys/NoJourneysFound.vue";
-import JourneyTimelines from "./journeys/JourneyTimelines.vue";
+import NoJourneysFound from "./journeys/timetables/NoJourneysFound.vue";
+import JourneyTimelines from "./journeys/timetables/JourneyTimelines.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useDashboardConfigStore} from "../store/dashboardConfig.store";
 import {useDashboardClockStore} from "../store/dashboardClock.store";
 import {useJourneySelectionStore} from "../store/journeySelection.store";
 import DashboardHeader from "./DashboardHeader.vue";
+import DiagnosticModal from "./DiagnosticModal.vue";
 import {getRoutesWithoutTimetabledJourneys} from "@/trainDashboard/journeys/missingTimetables/getRoutesWithoutTimetabledJourneys";
-import JourneySwitcher from "./journeys/JourneySwitcher.vue";
+import JourneySwitcher from "./journeys/switcher/JourneySwitcher.vue";
 
 const trainServicesStore = useTrainServicesStore();
 const dashboardClockStore = useDashboardClockStore();

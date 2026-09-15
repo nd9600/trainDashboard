@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import type {TrainLeg} from "../../dto/timetabledJourney.dto";
+import type {TrainLeg} from "../../../dto/timetabledJourney.dto";
 import TrainDepartureLink from "./TrainDepartureLink.vue";
 
 defineProps<{trainLeg: TrainLeg}>();

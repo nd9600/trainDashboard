@@ -24,8 +24,8 @@
 <script setup lang="ts">
 import {computed} from "vue";
 import {formatTime} from "@/utilities/time.utility";
-import type {TrainLeg} from "../../dto/timetabledJourney.dto";
-import {stationName} from "../../stations/stations";
+import type {TrainLeg} from "../../../dto/timetabledJourney.dto";
+import {stationName} from "../../../stations/stations";
 import NationalRailLink from "./NationalRailLink.vue";
 
 const props = defineProps<{trainLeg: TrainLeg}>();

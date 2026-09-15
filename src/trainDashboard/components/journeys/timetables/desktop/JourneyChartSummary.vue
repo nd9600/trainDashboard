@@ -18,8 +18,8 @@
 
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
-import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
-import {getMustLeaveMessage} from "../../journeys/journeyTimes";
+import type {TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
+import {getMustLeaveMessage} from "../../../../journeys/journeyTimes";
 import JourneyDesktopItinerary from "./JourneyDesktopItinerary.vue";
 
 defineProps<{

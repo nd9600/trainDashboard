@@ -37,13 +37,13 @@
 
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
-import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
+import type {TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
 import {
     getJourneyLabelText,
     getTimetabledJourneyLabelDetails,
-} from "../../journeys/journeyLabels";
-import {getMustLeaveMessage} from "../../journeys/journeyTimes";
-import {stationColour} from "../../stations/stationColours";
+} from "../../../../journeys/journeyLabels";
+import {getMustLeaveMessage} from "../../../../journeys/journeyTimes";
+import {stationColour} from "../../../../stations/stationColours";
 import JourneyItinerary from "./JourneyItinerary.vue";
 
 defineProps<{

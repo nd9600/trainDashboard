@@ -198,17 +198,17 @@ import {
 import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
-import type {JourneyFields} from "../../dto/journey.dto";
-import type {JourneyChoices} from "../../dto/journeySelection.dto";
-import {useDashboardConfigStore} from "../../store/dashboardConfig.store";
-import {useJourneySelectionStore} from "../../store/journeySelection.store";
+import type {JourneyFields} from "../../../dto/journey.dto";
+import type {JourneyChoices} from "../../../dto/journeySelection.dto";
+import {useDashboardConfigStore} from "../../../store/dashboardConfig.store";
+import {useJourneySelectionStore} from "../../../store/journeySelection.store";
 import {
     getJourneyLabelDetails,
     getJourneyLabelText,
-} from "../../journeys/journeyLabels";
+} from "../../../journeys/journeyLabels";
 import JourneyPredictionExplanation from "./JourneyPredictionExplanation.vue";
 import JourneyForm from "./JourneyForm.vue";
-import JourneyLabel from "./JourneyLabel.vue";
+import JourneyLabel from "../JourneyLabel.vue";
 
 const newJourneyOptionId = "__new-journey__";
 

@@ -182,11 +182,11 @@ sequenceDiagram
 - `src/trainDashboard/journeys/timetable/trainLegs.ts` converts departure services into timed train legs.
 - `src/trainDashboard/journeys/timetable/planTimetabledJourneys.test.ts` contains a worked connected-journey example.
 - `src/trainDashboard/dto/timetabledJourney.dto.ts` defines the planned journey and section shapes.
-- `src/trainDashboard/components/journeys/JourneyTimelines.vue` limits results and prepares platform display.
-- `src/trainDashboard/components/journeys/JourneyCards.vue` shows mobile journeys.
-- `src/trainDashboard/components/journeys/JourneyCharts.vue` shows desktop journeys.
+- `src/trainDashboard/components/journeys/timetables/JourneyTimelines.vue` limits results and prepares platform display.
+- `src/trainDashboard/components/journeys/timetables/mobile/JourneyCards.vue` shows mobile journeys.
+- `src/trainDashboard/components/journeys/timetables/desktop/JourneyCharts.vue` shows desktop journeys.
 
-- `src/trainDashboard/components/journeys/TrainDepartureLink.vue` shows scheduled departures and delay details for main and alternative trains.
+- `src/trainDashboard/components/journeys/timetables/TrainDepartureLink.vue` shows scheduled departures and delay details for main and alternative trains.
 
 - `src/trainDashboard/journeys/journeyPrediction.ts` selects the predicted journey and alternatives using time, schedule preference order, and the nearby origin group.
 - `src/trainDashboard/journeys/nearbyStationGroup.ts` finds the nearest group within 2,000 metres.

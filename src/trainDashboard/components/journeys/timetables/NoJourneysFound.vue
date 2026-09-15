@@ -28,12 +28,12 @@
 </template>
 
 <script setup lang="ts">
-import type {JourneyRoute} from "../../journeys/planning/journeyRoutes";
+import type {JourneyRoute} from "../../../journeys/planning/journeyRoutes";
 import {
     getJourneyLabelText,
     getStationRouteLabelDetails,
-} from "../../journeys/journeyLabels";
-import JourneyLabel from "./JourneyLabel.vue";
+} from "../../../journeys/journeyLabels";
+import JourneyLabel from "../JourneyLabel.vue";
 import NationalRailLink from "./NationalRailLink.vue";
 
 defineProps<{

@@ -165,9 +165,9 @@ import {formatTime} from "@/utilities/time.utility.ts";
 import type {
     SegmentKind,
     TimetabledJourney,
-} from "../../dto/timetabledJourney.dto";
-import {stationColour} from "../../stations/stationColours";
-import {stationName} from "../../stations/stations";
+} from "../../../../dto/timetabledJourney.dto";
+import {stationColour} from "../../../../stations/stationColours";
+import {stationName} from "../../../../stations/stations";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 const props = defineProps<{

@@ -33,7 +33,7 @@ import {onMounted, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {Journey} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
-import JourneyMaker from "../../journeys/JourneyMaker.vue";
+import JourneyMaker from "../../journeys/editing/JourneyMaker.vue";
 
 withDefaults(
     defineProps<{

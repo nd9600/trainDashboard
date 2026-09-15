@@ -91,7 +91,7 @@ import {nextTick, ref, watch} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {CoordinatesInputSchema} from "../../../dto/coordinates.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
-import StationInput from "./StationInput.vue";
+import StationInput from "../../stations/StationInput.vue";
 
 const group = defineModel<StationGroup>("group", {required: true});
 

@@ -24,9 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import type {TimetabledJourney} from "../../dto/timetabledJourney.dto";
-import {stationColour} from "../../stations/stationColours";
-import {stationName} from "../../stations/stations";
+import type {TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
+import {stationColour} from "../../../../stations/stationColours";
+import {stationName} from "../../../../stations/stations";
 import {formatTime} from "@/utilities/time.utility.ts";
 
 defineProps<{

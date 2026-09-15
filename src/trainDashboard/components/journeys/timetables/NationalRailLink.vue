@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import AppIcon from "@/components/AppIcon.vue";
-import {getNationalRailJourneyUrl} from "../../journeys/nationalRailUrls";
+import {getNationalRailJourneyUrl} from "../../../journeys/nationalRailUrls";
 
 withDefaults(
     defineProps<{
