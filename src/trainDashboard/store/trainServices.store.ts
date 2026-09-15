@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {computed, ref, watch} from "vue";
+import {computed, onWatcherCleanup, ref, watch} from "vue";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import {getDashboardJourneys} from "../journeys/getDashboardJourneys";
 import type {JourneyRoute} from "../journeys/planning/journeyRoutes";
@@ -25,6 +25,11 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     );
 
     async function refreshJourneys(): Promise<void> {
+        let isCurrentRequest = true;
+        // Location or selection changes can start a request before this one finishes.
+        onWatcherCleanup(() => {
+            isCurrentRequest = false;
+        });
         isLoadingJourneys.value = true;
         journeyLoadError.value = undefined;
 
@@ -38,6 +43,10 @@ export const useTrainServicesStore = defineStore("train-services", () => {
                 consumerKey
             );
 
+            if (!isCurrentRequest) {
+                return;
+            }
+
             routes.value = dashboardJourneys.routes;
             journeys.value = dashboardJourneys.journeys;
 
@@ -46,11 +55,16 @@ export const useTrainServicesStore = defineStore("train-services", () => {
                     "Add your Consumer key in Settings → API.";
             }
         } catch {
+            if (!isCurrentRequest) {
+                return;
+            }
             journeys.value = [];
             journeyLoadError.value =
                 "Train data could not be loaded. Try again later.";
         } finally {
-            isLoadingJourneys.value = false;
+            if (isCurrentRequest) {
+                isLoadingJourneys.value = false;
+            }
         }
     }
 
@@ -61,7 +75,16 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             () => dashboardClockStore.currentMinutes,
             () => apiStore.settings.consumerKey,
         ],
-        refreshJourneys,
+        (values, previousValues) => {
+            if (
+                values[0] !== previousValues[0] ||
+                values[1] !== previousValues[1]
+            ) {
+                routes.value = [];
+                journeys.value = [];
+            }
+            return refreshJourneys();
+        },
         {immediate: true}
     );
 

@@ -43,6 +43,7 @@ flowchart TD
     selection[currentJourneyPrediction getter]
     prediction[getJourneyPrediction: rank schedules and saved journeys]
     nearby[getNearbyStationGroup]
+    refresh[trainServices store: refreshJourneys]
     dashboard[getDashboardJourneys]
     routes[getStationRoutes]
     load[loadRouteTimetables]
@@ -57,6 +58,8 @@ flowchart TD
     prediction --> nearby
     nearby --> closest[findClosestPoint]
     nearby --> distance[distanceBetweenCoordinatesKm]
+    selection -->|Active journey changes| refresh
+    refresh --> dashboard
     dashboard --> routes
     dashboard --> load
     load --> requests
@@ -143,8 +146,30 @@ Departure labels show the scheduled time and an amber delay, such as `10:14 (+3m
 
 Location changes update prediction but do not replace a manual journey selection. The active journey supplies the station routes for timetable planning.
 
+The train services store clears displayed routes and trains when the active journey or station groups change.
+Each refresh invalidates the previous request. Only the current request can update routes, trains, errors, or loading status.
+Minute-based refreshes keep the current trains visible while updated trains load.
+
+```mermaid
+sequenceDiagram
+    participant Selection as Journey selection
+    participant Store as Train services store
+    participant Planner as getDashboardJourneys
+    Selection->>Store: Initial scheduled journey
+    Store->>Planner: Load scheduled journey
+    Selection->>Store: Location selects another journey
+    Store->>Store: Invalidate old request and clear displayed data
+    Store->>Planner: Load location-based journey
+    Planner-->>Store: Old request finishes
+    Store->>Store: Ignore old result or error
+    Planner-->>Store: Current request finishes
+    Store->>Store: Display current results and finish loading
+```
+
 ## Source map
 
+- `src/trainDashboard/store/trainServices.store.ts` refreshes trains, clears data after journey changes, and ignores outdated requests.
+- `src/trainDashboard/store/trainServices.store.test.ts` checks location changes and requests that finish out of order.
 - `src/trainDashboard/journeys/getDashboardJourneys.ts` expands the active journey, loads route timetables, and calls the planner.
 - `src/trainDashboard/journeys/planning/journeyRoutes.ts` expands a journey into concrete station routes.
 - `src/trainDashboard/journeys/timetable/loadRouteTimetables.ts` loads the train legs for each station route.
