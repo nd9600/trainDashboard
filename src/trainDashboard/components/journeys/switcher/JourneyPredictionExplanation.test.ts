@@ -33,6 +33,7 @@ it.each([
             getItem: () =>
                 JSON.stringify({
                     version: 3,
+                    shouldUseLocation: true,
                     stationGroups: [],
                     journeys: [],
                     schedules: [],
@@ -43,6 +44,7 @@ it.each([
         setActivePinia(pinia);
         useDashboardConfigStore().saveConfig({
             version: 3,
+            shouldUseLocation: true,
             stationGroups: [
                 {id: "work", name: "Work", stations: [{crs: "CHC"}]},
             ],
@@ -69,7 +71,11 @@ it.each([
         };
         const app = createSSRApp(JourneyPredictionExplanation, props);
         app.use(pinia);
-        expect(await renderToString(app)).toContain(text);
+        expect(
+            (await renderToString(app))
+                .replace(/<[^>]*>/g, " ")
+                .replace(/\s+/g, " ")
+        ).toContain(text);
 
         const manualApp = createSSRApp(JourneyPredictionExplanation, {
             ...props,
@@ -77,6 +83,6 @@ it.each([
         });
         manualApp.use(pinia);
         const manualHtml = await renderToString(manualApp);
-        expect(manualHtml).toContain(">We think you are near Work.</p>");
+        expect(manualHtml).toContain("We think you are near Work.");
     }
 );

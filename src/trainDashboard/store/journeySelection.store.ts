@@ -49,7 +49,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             return getJourneyPrediction(
                 config,
                 useDashboardClockStore().currentClock,
-                this.currentCoordinates
+                config.shouldUseLocation ? this.currentCoordinates : null
             );
         },
 
@@ -138,14 +138,30 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.recentJourneyIds = savedMemory.recentJourneyIds;
             this.ephemeralJourneys = savedMemory.ephemeralJourneys;
             this.isInitialised = true;
+            const configStore = useDashboardConfigStore();
 
-            const {coords, locatedAt, error} = useGeolocation({
+            const {coords, locatedAt, error, pause, resume} = useGeolocation({
+                immediate: false,
                 maximumAge: 60 * 1000,
                 enableHighAccuracy: false,
             });
+            watch(
+                () => configStore.config.shouldUseLocation,
+                (shouldUseLocation) => {
+                    if (shouldUseLocation) {
+                        resume();
+                    } else {
+                        pause();
+                        this.currentCoordinates = null;
+                    }
+                },
+                {immediate: true, flush: "sync"}
+            );
             watch([coords, error], ([coordinates, geolocationError]) => {
                 this.currentCoordinates =
-                    !geolocationError && locatedAt.value !== null
+                    configStore.config.shouldUseLocation &&
+                    !geolocationError &&
+                    locatedAt.value !== null
                         ? {
                               latitude: coordinates.latitude,
                               longitude: coordinates.longitude,

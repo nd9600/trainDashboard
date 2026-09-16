@@ -6,6 +6,17 @@
         @input="handleChange"
         @submit.prevent="save"
     >
+        <label class="flex items-center gap-2 text-sm">
+            <input
+                v-model="draft.shouldUseLocation"
+                type="checkbox"
+                role="switch"
+                class="size-4 accent-primary"
+                data-test="location-predictions-toggle"
+            />
+            Use location for predictions
+        </label>
+
         <AppTabs
             idPrefix="journey-settings"
             v-model="activeEditorSection"

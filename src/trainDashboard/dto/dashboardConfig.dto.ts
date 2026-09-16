@@ -5,6 +5,7 @@ import {StationGroupSchema} from "./stationGroup.dto";
 
 export const DashboardConfigSchema = z.object({
     version: z.literal(3),
+    shouldUseLocation: z.boolean().default(true),
     stationGroups: z.array(StationGroupSchema),
     journeys: z.array(JourneySchema),
     schedules: z.array(DisplayScheduleSchema),

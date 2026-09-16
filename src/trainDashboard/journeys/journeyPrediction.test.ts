@@ -29,6 +29,7 @@ describe("getJourneyPrediction", () => {
 
 const locationConfig: DashboardConfig = {
     version: 3,
+    shouldUseLocation: true,
     stationGroups: [
         {
             id: "home",

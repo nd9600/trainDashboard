@@ -20,4 +20,6 @@ it("opens the settings editor with reactive stored configuration", async () => {
     app.use(createPinia());
     const html = await renderToString(app);
     expect(html).toContain("Add station group");
+    expect(html).toContain("Use location for predictions");
+    expect(html).toMatch(/<input(?=[^>]*role="switch")(?=[^>]*checked)[^>]*>/);
 });

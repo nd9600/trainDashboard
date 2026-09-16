@@ -6,7 +6,9 @@ Journey selection resolves one journey for the dashboard. It does not choose tra
 
 ```mermaid
 flowchart TD
-    location[Current coordinates] --> nearby{Nearest group within 2 km?}
+    enabled{Use location for predictions?} -->|Yes| location[Current coordinates]
+    enabled -->|No| time[Order active schedules by preference]
+    location --> nearby{Nearest group within 2 km?}
     groups[Station groups] --> nearby
     nearby -->|No| time[Order active schedules by preference]
     nearby -->|Yes| matches[Find saved journeys starting at that group]
@@ -39,6 +41,8 @@ sequenceDiagram
     participant Store as Journey selection store
     participant Prediction as getJourneyPrediction
     participant UI as Journey switcher
+    UI->>Store: Change configuration location preference
+    Store->>Browser: Start or stop location updates
     Browser->>Store: Updated coordinates, or location error
     Store->>Prediction: Configuration, clock, coordinates
     Prediction->>Prediction: Rank matching schedules and remove duplicate journeys
@@ -47,7 +51,12 @@ sequenceDiagram
     Note over Store,UI: Manual selections remain active when prediction changes
 ```
 
-The store keeps latitude and longitude from geolocation updates. A location error clears the position so prediction returns to active schedules in preference order.
+The configuration stores `shouldUseLocation`, which defaults to true for existing configurations.
+The Location modal applies its toggle immediately. The Settings toggle uses the existing Save configuration and Cancel controls.
+Disabling location stops geolocation updates and clears the current position. Predictions then use active schedules.
+The preference persists across reloads. Manual journey selections remain active. The Location control remains available while location is off.
+
+The store keeps latitude and longitude from geolocation updates when location is enabled. A location error clears the position so prediction returns to active schedules in preference order.
 
 The switcher shows the nearby-group message for predicted and manually selected journeys. Only predicted journeys show the selection reason. Explanations use the group name, such as “from Home”. When no journey matches the nearby group, the message asks the user to choose a journey below. Choices appear as Predicted, Alternatives, Recent, and Saved, with each journey shown once.
 

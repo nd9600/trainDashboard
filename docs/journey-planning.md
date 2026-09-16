@@ -8,7 +8,8 @@ Prediction alternatives include saved journeys from the nearby group, with sched
 
 ```mermaid
 flowchart LR
-    prediction[Time and nearby group prediction]
+    preference[Configuration location preference]
+    prediction[Time and enabled nearby group prediction]
     override[Manual selection]
     journey[Active journey]
     routes[Station routes]
@@ -17,6 +18,7 @@ flowchart LR
     journeys[Catchable journeys sorted by finish time]
     display[First six journeys]
 
+    preference --> prediction
     prediction --> journey
     override --> journey
     journey --> routes
@@ -54,6 +56,7 @@ flowchart TD
     trainPlans[getTrainPlans]
     make[makeTimetabledJourney]
 
+    config[Configuration location preference] --> selection
     selection --> prediction
     prediction --> nearby
     nearby --> closest[findClosestPoint]
@@ -144,7 +147,7 @@ Platform consistency uses all planned journeys. A platform is hidden when multip
 
 Departure labels show the scheduled time and an amber delay, such as `10:14 (+3m)`. Hover or keyboard focus shows the expected departure. National Rail links use the scheduled departure. Timeline positions, connections, filtering, and walking advice use expected times.
 
-Location changes update prediction but do not replace a manual journey selection. The active journey supplies the station routes for timetable planning.
+Location changes update prediction but do not replace a manual journey selection. Disabling location clears the position and returns prediction to active schedules. The active journey supplies the station routes for timetable planning.
 
 The train services store clears displayed routes and trains when the active journey or station groups change.
 Each refresh invalidates the previous request. Only the current request can update routes, trains, errors, or loading status.
@@ -157,9 +160,9 @@ sequenceDiagram
     participant Planner as getDashboardJourneys
     Selection->>Store: Initial scheduled journey
     Store->>Planner: Load scheduled journey
-    Selection->>Store: Location selects another journey
+    Selection->>Store: Location or its preference selects another journey
     Store->>Store: Invalidate old request and clear displayed data
-    Store->>Planner: Load location-based journey
+    Store->>Planner: Load newly selected journey
     Planner-->>Store: Old request finishes
     Store->>Store: Ignore old result or error
     Planner-->>Store: Current request finishes
@@ -167,6 +170,9 @@ sequenceDiagram
 ```
 
 ## Source map
+
+- `src/trainDashboard/store/dashboardConfig.store.ts` stores the location preference.
+- `src/trainDashboard/store/journeySelection.store.ts` starts or stops geolocation and applies the preference to predictions.
 
 - `src/trainDashboard/store/trainServices.store.ts` refreshes trains, clears data after journey changes, and ignores outdated requests.
 - `src/trainDashboard/store/trainServices.store.test.ts` checks location changes and requests that finish out of order.

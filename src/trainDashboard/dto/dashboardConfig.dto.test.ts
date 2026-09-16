@@ -2,14 +2,14 @@ import {describe, expect, it} from "vitest";
 import {DashboardConfigSchema} from "./dashboardConfig.dto";
 
 describe("DashboardConfigSchema", () => {
-    it("accepts an empty configuration", () => {
+    it("enables location by default for an existing configuration", () => {
         expect(
-            DashboardConfigSchema.safeParse({
+            DashboardConfigSchema.parse({
                 version: 3,
                 stationGroups: [],
                 journeys: [],
                 schedules: [],
-            }).success
+            }).shouldUseLocation
         ).toBe(true);
     });
 });

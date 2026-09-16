@@ -1,4 +1,6 @@
 import {createPinia, setActivePinia} from "pinia";
+import {nextTick, ref} from "vue";
+import {useGeolocation} from "@vueuse/core";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import {MemoryStorage} from "../../testing/MemoryStorage";
 import type {DashboardConfig} from "../dto/dashboardConfig.dto";
@@ -6,6 +8,19 @@ import type {JourneyFields} from "../dto/journey.dto";
 import {manchesterDashboardConfig} from "../testing/manchesterDashboardConfig.fixture";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
 import {useJourneySelectionStore as createJourneySelectionStore} from "./journeySelection.store";
+
+vi.mock("@vueuse/core", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@vueuse/core")>()),
+    useGeolocation: vi.fn(),
+}));
+
+const geolocation = {
+    coords: ref({latitude: 53.5, longitude: -2.2}),
+    locatedAt: ref<number | null>(null),
+    error: ref(null),
+    pause: vi.fn(),
+    resume: vi.fn(),
+};
 
 const predictedJourney = manchesterDashboardConfig.journeys[0]!;
 const savedJourney = manchesterDashboardConfig.journeys[2]!;
@@ -16,6 +31,12 @@ const manchesterToLiverpool: JourneyFields = {
 
 describe("useJourneySelectionStore", () => {
     beforeEach(() => {
+        vi.mocked(useGeolocation).mockReturnValue(
+            geolocation as unknown as ReturnType<typeof useGeolocation>
+        );
+        geolocation.locatedAt.value = null;
+        geolocation.pause.mockClear();
+        geolocation.resume.mockClear();
         vi.useFakeTimers();
         vi.setSystemTime(new Date("2026-08-24T07:00:00.000Z"));
         vi.stubGlobal("localStorage", new MemoryStorage());
@@ -133,6 +154,53 @@ describe("useJourneySelectionStore", () => {
         );
         store.currentCoordinates = null;
         expect(store.activeJourneyId).toBe(predictedJourney.id);
+    });
+
+    it("disables location prediction and ignores further location updates", async () => {
+        const config = structuredClone(manchesterDashboardConfig);
+        config.stationGroups[1]!.coordinates = {
+            latitude: 53.5,
+            longitude: -2.2,
+        };
+        useDashboardConfigStore().saveConfig(config);
+        const store = getJourneySelectionStore();
+        store.currentCoordinates = {latitude: 53.5, longitude: -2.2};
+        expect(store.predictedJourneyId).toBe(
+            "manchester-piccadilly-to-heaton-chapel"
+        );
+
+        useDashboardConfigStore().setShouldUseLocation(false);
+        expect(store.currentCoordinates).toBeNull();
+        expect(store.predictedJourneyId).toBe(predictedJourney.id);
+        expect(geolocation.pause).toHaveBeenCalledOnce();
+
+        geolocation.locatedAt.value = Date.now();
+        geolocation.coords.value = {latitude: 53.5, longitude: -2.2};
+        await nextTick();
+        expect(store.currentCoordinates).toBeNull();
+
+        useDashboardConfigStore().setShouldUseLocation(true);
+        expect(geolocation.resume).toHaveBeenCalledTimes(2);
+        geolocation.coords.value = {latitude: 53.5, longitude: -2.2};
+        await nextTick();
+        expect(store.predictedJourneyId).toBe(
+            "manchester-piccadilly-to-heaton-chapel"
+        );
+    });
+
+    it("remembers disabled location without starting geolocation after reload", () => {
+        const store = getJourneySelectionStore();
+        store.selectJourney(savedJourney.id);
+        useDashboardConfigStore().setShouldUseLocation(false);
+        expect(store.activeJourneyId).toBe(savedJourney.id);
+        store.$dispose();
+        recreateStores();
+        geolocation.resume.mockClear();
+
+        const restoredStore = getJourneySelectionStore();
+        expect(useDashboardConfigStore().config.shouldUseLocation).toBe(false);
+        expect(restoredStore.predictedJourneyId).toBe(predictedJourney.id);
+        expect(geolocation.resume).not.toHaveBeenCalled();
     });
 
     it("restores prediction after the store is recreated", () => {

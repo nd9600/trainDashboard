@@ -12,6 +12,7 @@ const storage = useLocalStorageTyped(
     DashboardConfigSchema,
     {
         version: 3,
+        shouldUseLocation: true,
         stationGroups: [],
         journeys: [],
         schedules: [],
@@ -24,6 +25,10 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     function saveConfig(candidate: DashboardConfig): void {
         config.value = candidate;
         storage.saveToLocalStorage(candidate);
+    }
+
+    function setShouldUseLocation(shouldUseLocation: boolean): void {
+        saveConfig({...config.value, shouldUseLocation});
     }
 
     function saveJourney(candidate: Journey): Journey {
@@ -115,6 +120,7 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     return {
         config,
         saveConfig,
+        setShouldUseLocation,
         saveJourney,
         updateJourney,
         removeJourney,
