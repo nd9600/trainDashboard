@@ -11,10 +11,7 @@ describe("useLocalStorageTyped", () => {
     });
 
     it("loads valid stored data", () => {
-        localStorage.setItem(
-            "settings",
-            JSON.stringify({name: "Heaton Chapel"})
-        );
+        localStorage.setItem("settings", JSON.stringify({name: "Heaton Chapel"}));
         const storage = useLocalStorageTyped("settings", schema, {
             name: "Default",
         });

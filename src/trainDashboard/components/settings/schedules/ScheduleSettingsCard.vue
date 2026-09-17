@@ -9,19 +9,14 @@
                 {{ schedule.name || "Unnamed schedule" }}
             </strong>
             <span class="block text-xs text-ink-subtle">
-                {{ getActiveDaysText(schedule.days) }} · {{ schedule.startsAt }}–{{ schedule.endsAt }}
+                {{ getActiveDaysText(schedule.days) }} · {{ schedule.startsAt }}–{{
+                    schedule.endsAt
+                }}
             </span>
-            <span
-                v-if="selectedJourneyIsComplete"
-                class="mt-2 block truncate text-sm"
-            >
-                <JourneyLabel
-                    :details="getJourneyLabelDetails(selectedJourney!, stationGroups)"
-                />
+            <span v-if="selectedJourneyIsComplete" class="mt-2 block truncate text-sm">
+                <JourneyLabel :details="getJourneyLabelDetails(selectedJourney!, stationGroups)" />
             </span>
-            <span v-else class="mt-2 block text-sm text-danger-dark">
-                Choose a journey.
-            </span>
+            <span v-else class="mt-2 block text-sm text-danger-dark"> Choose a journey. </span>
         </span>
 
         <AppIcon class="size-4" name="chevron" />

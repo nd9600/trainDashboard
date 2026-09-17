@@ -12,25 +12,19 @@
                 aria-labelledby="empty-dashboard-title"
             >
                 <div class="flex items-start gap-3">
-                    <AppIcon
-                        class="mt-0.5 size-5 text-primary"
-                        name="map-pin"
-                    />
+                    <AppIcon class="mt-0.5 size-5 text-primary" name="map-pin" />
                     <div>
-                        <h2
-                            id="empty-dashboard-title"
-                            class="font-semibold text-ink"
-                        >
+                        <h2 id="empty-dashboard-title" class="font-semibold text-ink">
                             Set up your regular journeys
                         </h2>
                         <p class="mt-1 text-sm text-ink-muted">
-                            First, add at least two station groups. Then add a
-                            schedule that selects a journey.
+                            First, add at least two station groups. Then add a schedule that selects
+                            a journey.
                         </p>
-                        <p
-                            class="mt-3 border-l-2 border-japonica pl-3 text-sm text-ink-muted"
-                        >
-                            For example: add “Home” with Manchester Piccadilly, add “Work” with Euston and Kings Cross, then schedule Home → Work on weekday mornings (RIP HS2 Phase 2b).
+                        <p class="mt-3 border-l-2 border-japonica pl-3 text-sm text-ink-muted">
+                            For example: add “Home” with Manchester Piccadilly, add “Work” with
+                            Euston and Kings Cross, then schedule Home → Work on weekday mornings
+                            (RIP HS2 Phase 2b).
                         </p>
                         <button
                             class="appButton appButton--primary mt-4"
@@ -115,8 +109,7 @@ const settingsModal = ref<{
     open: () => void;
     openApiSettings: () => void;
 } | null>(null);
-const {isLoadingJourneys, journeyLoadError, journeys, routes} =
-    storeToRefs(trainServicesStore);
+const {isLoadingJourneys, journeyLoadError, journeys, routes} = storeToRefs(trainServicesStore);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
 const {activeJourneyDetails} = storeToRefs(journeySelectionStore);
@@ -127,9 +120,7 @@ const hasNoJourneyConfiguration = computed(
         dashboardConfig.value.stationGroups.length === 0 &&
         dashboardConfig.value.schedules.length === 0
 );
-const apiKeyConfigured = computed(
-    () => !journeyLoadError.value?.includes("Consumer key")
-);
+const apiKeyConfigured = computed(() => !journeyLoadError.value?.includes("Consumer key"));
 
 const routesWithoutTimetabledJourneys = computed(() =>
     getRoutesWithoutTimetabledJourneys(routes.value, journeys.value)

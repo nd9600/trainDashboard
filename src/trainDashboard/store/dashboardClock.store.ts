@@ -8,8 +8,7 @@ export const useDashboardClockStore = defineStore("dashboard-clock", () => {
 
     const currentClock: ComputedRef<CurrentClock> = computed(() => ({
         day: currentDate.value.getDay() as Day,
-        minutes:
-            currentDate.value.getHours() * 60 + currentDate.value.getMinutes(),
+        minutes: currentDate.value.getHours() * 60 + currentDate.value.getMinutes(),
     }));
     const currentMinutes = computed(() => currentClock.value.minutes);
 

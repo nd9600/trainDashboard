@@ -1,3 +1,4 @@
+import {service, formatApiTime} from "../../testing/departureService.fixture";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {DepartureBoardRequest} from "../../api/railDataMarketplace.api";
 import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
@@ -12,43 +13,31 @@ describe("route timetable requests", () => {
 
     it("loads a later sparse first-train board before requesting onward trains", async () => {
         const requests: DepartureBoardRequest[] = [];
-        vi.spyOn(
-            railDataMarketplaceApi,
-            "fetchDepartureBoard"
-        ).mockImplementation(async (_consumerKey, request) => {
-            requests.push(request);
+        vi.spyOn(railDataMarketplaceApi, "fetchDepartureBoard").mockImplementation(
+            async (_consumerKey, request) => {
+                requests.push(request);
 
-            if (request.originCrs === "HTC") {
+                if (request.originCrs === "HTC") {
+                    return {
+                        crs: "HTC",
+                        trainServices:
+                            request.timeOffsetMinutes === 119
+                                ? [service("later-first", "13:05", "MAN", "13:10")]
+                                : [service("initial-first", "11:05", "MAN", "11:10")],
+                    };
+                }
+
                 return {
-                    crs: "HTC",
+                    crs: "MAN",
                     trainServices:
                         request.timeOffsetMinutes === 119
-                            ? [service("later-first", "13:05", "MAN", "13:10")]
-                            : [
-                                  service(
-                                      "initial-first",
-                                      "11:05",
-                                      "MAN",
-                                      "11:10"
-                                  ),
-                              ],
+                            ? [service("later-onward", "13:20", "LIV", "14:00")]
+                            : [service("initial-onward", "11:30", "LIV", "12:10")],
                 };
             }
-
-            return {
-                crs: "MAN",
-                trainServices:
-                    request.timeOffsetMinutes === 119
-                        ? [service("later-onward", "13:20", "LIV", "14:00")]
-                        : [service("initial-onward", "11:30", "LIV", "12:10")],
-            };
-        });
-
-        const [routeTimetable] = await loadRouteTimetables(
-            "test-key",
-            [connectedRoute],
-            11 * 60
         );
+
+        const [routeTimetable] = await loadRouteTimetables("test-key", [connectedRoute], 11 * 60);
 
         expect(
             requests.map(
@@ -56,9 +45,10 @@ describe("route timetable requests", () => {
                     `${request.originCrs}-${request.destinationCrs}:${request.timeOffsetMinutes}`
             )
         ).toEqual(["HTC-MAN:0", "HTC-MAN:119", "MAN-LIV:13", "MAN-LIV:119"]);
-        expect(
-            routeTimetable!.firstTrainLegs.map((trainLeg) => trainLeg.serviceId)
-        ).toEqual(["initial-first", "later-first"]);
+        expect(routeTimetable!.firstTrainLegs.map((trainLeg) => trainLeg.serviceId)).toEqual([
+            "initial-first",
+            "later-first",
+        ]);
     });
 
     it("does not extend a first-train board that has six catchable trains", async () => {
@@ -73,20 +63,19 @@ describe("route timetable requests", () => {
                 formatApiTime(departureMinutes + 5)
             );
         });
-        vi.spyOn(
-            railDataMarketplaceApi,
-            "fetchDepartureBoard"
-        ).mockImplementation(async (_consumerKey, request) => {
-            requests.push(request);
+        vi.spyOn(railDataMarketplaceApi, "fetchDepartureBoard").mockImplementation(
+            async (_consumerKey, request) => {
+                requests.push(request);
 
-            return {
-                crs: request.originCrs,
-                trainServices:
-                    request.originCrs === "HTC"
-                        ? sixFirstTrains
-                        : [service("onward", "12:50", "LIV", "13:30")],
-            };
-        });
+                return {
+                    crs: request.originCrs,
+                    trainServices:
+                        request.originCrs === "HTC"
+                            ? sixFirstTrains
+                            : [service("onward", "12:50", "LIV", "13:30")],
+                };
+            }
+        );
 
         await loadRouteTimetables("test-key", [connectedRoute], 11 * 60);
 
@@ -105,11 +94,7 @@ describe("route timetable requests", () => {
             93: [service("onward-three", "12:50", "LIV", "13:30")],
         });
 
-        const [routeTimetable] = await loadRouteTimetables(
-            "test-key",
-            [connectedRoute],
-            11 * 60
-        );
+        const [routeTimetable] = await loadRouteTimetables("test-key", [connectedRoute], 11 * 60);
 
         expect(
             requests
@@ -127,28 +112,19 @@ describe("route timetable requests", () => {
             53: [duplicateService, service("later", "12:10", "LIV", "12:50")],
         });
 
-        const [routeTimetable] = await loadRouteTimetables(
-            "test-key",
-            [connectedRoute],
-            11 * 60
-        );
+        const [routeTimetable] = await loadRouteTimetables("test-key", [connectedRoute], 11 * 60);
 
-        expect(
-            routeTimetable!.onwardTrainLegs!.map(
-                (trainLeg) => trainLeg.serviceId
-            )
-        ).toEqual(["duplicate", "later"]);
+        expect(routeTimetable!.onwardTrainLegs!.map((trainLeg) => trainLeg.serviceId)).toEqual([
+            "duplicate",
+            "later",
+        ]);
     });
 
     it("stops after trying each uncovered transfer time when no onward trains exist", async () => {
         const requests: DepartureBoardRequest[] = [];
         mockDepartureBoards(requests, {});
 
-        const [routeTimetable] = await loadRouteTimetables(
-            "test-key",
-            [connectedRoute],
-            11 * 60
-        );
+        const [routeTimetable] = await loadRouteTimetables("test-key", [connectedRoute], 11 * 60);
 
         expect(
             requests
@@ -194,44 +170,8 @@ function mockDepartureBoards(
                 trainServices:
                     request.originCrs === "HTC"
                         ? firstTrainServices
-                        : (onwardServicesByOffset[
-                              request.timeOffsetMinutes ?? 0
-                          ] ?? []),
+                        : (onwardServicesByOffset[request.timeOffsetMinutes ?? 0] ?? []),
             };
         }
     );
-}
-
-function service(
-    serviceID: string,
-    departure: string,
-    destinationCrs: string,
-    arrival: string
-): DepartureService {
-    return {
-        serviceID,
-        std: departure,
-        etd: "On time",
-        isCancelled: false,
-        subsequentCallingPoints: [
-            {
-                callingPoint: [
-                    {
-                        crs: destinationCrs,
-                        st: arrival,
-                        et: "On time",
-                    },
-                ],
-            },
-        ],
-    };
-}
-
-function formatApiTime(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-
-    return `${hours.toString().padStart(2, "0")}:${remainingMinutes
-        .toString()
-        .padStart(2, "0")}`;
 }

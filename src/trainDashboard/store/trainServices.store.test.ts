@@ -10,28 +10,21 @@ import {useJourneySelectionStore} from "./journeySelection.store";
 import {useRailDataApiStore} from "./railDataApi.store";
 import {useTrainServicesStore} from "./trainServices.store";
 
-type DashboardJourneys = Awaited<
-    ReturnType<typeof dashboardJourneys.getDashboardJourneys>
->;
+type DashboardJourneys = Awaited<ReturnType<typeof dashboardJourneys.getDashboardJourneys>>;
 
 function createPendingRequest() {
     let resolve!: (result: DashboardJourneys) => void;
     let reject!: (error: Error) => void;
-    const promise = new Promise<DashboardJourneys>(
-        (resolvePromise, rejectPromise) => {
-            resolve = resolvePromise;
-            reject = rejectPromise;
-        }
-    );
+    const promise = new Promise<DashboardJourneys>((resolvePromise, rejectPromise) => {
+        resolve = resolvePromise;
+        reject = rejectPromise;
+    });
     return {promise, resolve, reject};
 }
 
 function getResult(journeyIndex: number): DashboardJourneys {
     const journey = manchesterDashboardConfig.journeys[journeyIndex]!;
-    const routes = getStationRoutes(
-        journey,
-        manchesterDashboardConfig.stationGroups
-    );
+    const routes = getStationRoutes(journey, manchesterDashboardConfig.stationGroups);
     const route = routes[0]!;
     return {
         routes,
@@ -98,9 +91,7 @@ describe("useTrainServicesStore", () => {
                 longitude: -3,
             };
             await nextTick();
-            expect(useJourneySelectionStore().activeJourneyId).toBe(
-                "liverpool-to-heaton-chapel"
-            );
+            expect(useJourneySelectionStore().activeJourneyId).toBe("liverpool-to-heaton-chapel");
 
             if (outcome === "success") first.resolve(getResult(0));
             else first.reject(new Error("Old request failed"));

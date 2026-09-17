@@ -12,12 +12,7 @@
             >
                 <span class="min-w-0 grow truncate">
                     <JourneyLabel
-                        :details="
-                            getJourneyLabelDetails(
-                                selectedJourney!,
-                                stationGroups
-                            )
-                        "
+                        :details="getJourneyLabelDetails(selectedJourney!, stationGroups)"
                     />
                 </span>
                 <button
@@ -38,26 +33,16 @@
                     v-model:journey="journeys[selectedJourneyIndex]!"
                     :stationGroups="stationGroups"
                     :journeys="journeys"
-                    :scheduleNames="
-                        getScheduleNamesUsingJourney(
-                            selectedJourney!.id,
-                            schedules
-                        )
-                    "
-                    :canRemove="false"
+                    :scheduleNames="getScheduleNamesUsingJourney(selectedJourney!.id, schedules)"
                     @changed="emit('changed')"
                 />
             </div>
         </section>
 
         <section class="space-y-3 border-t border-line pt-5">
-            <h3 class="font-semibold text-primary">
-                Choose a different journey
-            </h3>
+            <h3 class="font-semibold text-primary">Choose a different journey</h3>
             <label class="block">
-                <span class="mb-1 block text-xs text-ink-subtle">
-                    Use an existing journey
-                </span>
+                <span class="mb-1 block text-xs text-ink-subtle"> Use an existing journey </span>
                 <select v-model="selectedJourneyId" class="appInput">
                     <option value="">Choose a journey</option>
                     <option
@@ -128,9 +113,7 @@ const selectedJourneyIsComplete = computed(
         hasJourneyEndpoints(selectedJourney.value, props.stationGroups)
 );
 const selectedJourneyIndex = computed(() =>
-    journeys.value.findIndex(
-        (journey) => journey.id === schedule.value.journeyId
-    )
+    journeys.value.findIndex((journey) => journey.id === schedule.value.journeyId)
 );
 const selectableJourneys = computed(() =>
     journeys.value.filter(
@@ -174,16 +157,12 @@ function removeUnusedIncompleteJourney(journey: Journey | undefined): void {
         !journey ||
         hasJourneyEndpoints(journey, props.stationGroups) ||
         props.schedules.some(
-            (candidate) =>
-                candidate.id !== schedule.value.id &&
-                candidate.journeyId === journey.id
+            (candidate) => candidate.id !== schedule.value.id && candidate.journeyId === journey.id
         )
     ) {
         return;
     }
 
-    journeys.value = journeys.value.filter(
-        (candidate) => candidate.id !== journey.id
-    );
+    journeys.value = journeys.value.filter((candidate) => candidate.id !== journey.id);
 }
 </script>

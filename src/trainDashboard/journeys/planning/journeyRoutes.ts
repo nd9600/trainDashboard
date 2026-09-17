@@ -24,21 +24,14 @@ export function getStationRoutes(
         return [];
     }
 
-    const stationGroupsById = new Map(
-        stationGroups.map((group) => [group.id, group])
-    );
+    const stationGroupsById = new Map(stationGroups.map((group) => [group.id, group]));
     const origins = getStationsForLocation(journey.origin, stationGroupsById);
-    const destinations = getStationsForLocation(
-        journey.destination,
-        stationGroupsById
-    );
+    const destinations = getStationsForLocation(journey.destination, stationGroupsById);
 
     return origins.flatMap((origin) =>
         destinations
             .filter((destination) => destination.crs !== origin.crs)
-            .flatMap((destination) =>
-                getRouteOptions(journey, origin, destination)
-            )
+            .flatMap((destination) => getRouteOptions(journey, origin, destination))
     );
 }
 
@@ -76,35 +69,11 @@ function getStationsForLocation(
     location: LocationReference,
     stationGroupsById: Map<string, StationGroup>
 ): StationEndpoint[] {
-    if (location.type === "station") {
-        if (location.groupId === undefined) {
-            return [
-                {crs: location.crs, locationName: stationName(location.crs)},
-            ];
-        }
-
-        const group = stationGroupsById.get(location.groupId);
-
-        return group
-            ? group.stations
-                  .filter((station) => station.crs === location.crs)
-                  .map((station) => ({
-                      crs: station.crs,
-                      walkMinutes: station.walkMinutes,
-                      locationName: group.name,
-                  }))
-            : [];
+    if (location.type === "station" && location.groupId === undefined) {
+        return [{crs: location.crs, locationName: stationName(location.crs)}];
     }
-
-    const group = stationGroupsById.get(location.groupId);
-
-    if (!group) {
-        return [];
-    }
-
-    return group.stations.map((station) => ({
-        crs: station.crs,
-        walkMinutes: station.walkMinutes,
-        locationName: group.name,
-    }));
+    const group = stationGroupsById.get(location.groupId!);
+    return (group?.stations ?? [])
+        .filter((station) => location.type === "group" || station.crs === location.crs)
+        .map((station) => ({...station, locationName: group!.name}));
 }

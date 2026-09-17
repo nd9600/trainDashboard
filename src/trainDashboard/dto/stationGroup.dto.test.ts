@@ -16,13 +16,9 @@ it.each([
     });
 });
 
-it.each([
-    {latitude: -90.1},
-    {latitude: 90.1},
-    {longitude: -180.1},
-    {longitude: 180.1},
-])("rejects coordinates outside their ranges: %j", (coordinates) => {
-    expect(StationGroupSchema.safeParse({...group, coordinates}).success).toBe(
-        false
-    );
-});
+it.each([{latitude: -90.1}, {latitude: 90.1}, {longitude: -180.1}, {longitude: 180.1}])(
+    "rejects coordinates outside their ranges: %j",
+    (coordinates) => {
+        expect(StationGroupSchema.safeParse({...group, coordinates}).success).toBe(false);
+    }
+);

@@ -1,8 +1,5 @@
 import {fetchDepartureBoard} from "../../api/railDataMarketplace.api";
-import type {
-    DepartureBoard,
-    DepartureService,
-} from "../../dto/liveDepartureBoard.dto";
+import type {DepartureBoard, DepartureService} from "../../dto/liveDepartureBoard.dto";
 
 export interface DepartureBoardRequest {
     originCrs: string;
@@ -10,15 +7,11 @@ export interface DepartureBoardRequest {
     timeOffsetMinutes: number;
 }
 
-export type LoadDepartureBoard = (
-    request: DepartureBoardRequest
-) => Promise<DepartureBoard>;
+export type LoadDepartureBoard = (request: DepartureBoardRequest) => Promise<DepartureBoard>;
 
 export const maximumTimeOffsetMinutes = 119;
 
-export function createDepartureBoardLoader(
-    consumerKey: string
-): LoadDepartureBoard {
+export function createDepartureBoardLoader(consumerKey: string): LoadDepartureBoard {
     const requestCache = new Map<string, Promise<DepartureBoard>>();
 
     return (request) => {
@@ -44,10 +37,7 @@ export function mergeDepartureBoards(
 ): DepartureBoard {
     const services = new Map<string, DepartureService>();
 
-    for (const service of [
-        ...firstBoard.trainServices,
-        ...secondBoard.trainServices,
-    ]) {
+    for (const service of [...firstBoard.trainServices, ...secondBoard.trainServices]) {
         services.set(`${service.serviceID}:${service.std}`, service);
     }
 

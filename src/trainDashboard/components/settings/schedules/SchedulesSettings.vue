@@ -19,8 +19,8 @@
             <div>
                 <h2 class="font-semibold">Priority schedules</h2>
                 <p class="mt-1 text-sm text-ink-subtle">
-                    Schedules can overlap, you can order them to prioritise which is picked. Location selects journeys from a
-                    nearby group.
+                    Schedules can overlap, you can order them to prioritise which is picked.
+                    Location selects journeys from a nearby group.
                 </p>
             </div>
 
@@ -84,6 +84,8 @@
 </template>
 
 <script setup lang="ts">
+import {newId} from "../../../dto/id.dto";
+
 import {computed, nextTick, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
@@ -108,13 +110,9 @@ const emit = defineEmits<{
 }>();
 
 const selectedScheduleEntry = computed(() => {
-    const index = schedules.value.findIndex(
-        (schedule) => schedule.id === selectedScheduleId.value
-    );
+    const index = schedules.value.findIndex((schedule) => schedule.id === selectedScheduleId.value);
 
-    return index === -1
-        ? undefined
-        : {schedule: schedules.value[index]!, index};
+    return index === -1 ? undefined : {schedule: schedules.value[index]!, index};
 });
 
 async function addSchedule(): Promise<void> {
@@ -140,8 +138,7 @@ async function addSchedule(): Promise<void> {
 function moveSchedule(index: number, direction: -1 | 1): void {
     const nextIndex = index + direction;
     const schedule = schedules.value[index];
-    if (!schedule || nextIndex < 0 || nextIndex >= schedules.value.length)
-        return;
+    if (!schedule || nextIndex < 0 || nextIndex >= schedules.value.length) return;
 
     const reordered = [...schedules.value];
     reordered.splice(index, 1);
@@ -162,12 +159,8 @@ function closeSchedule(): void {
 
 function removeSchedule(scheduleIndex: number): void {
     const schedule = schedules.value[scheduleIndex]!;
-    const otherSchedules = schedules.value.filter(
-        (_, index) => index !== scheduleIndex
-    );
-    const journey = journeys.value.find(
-        (candidate) => candidate.id === schedule.journeyId
-    );
+    const otherSchedules = schedules.value.filter((_, index) => index !== scheduleIndex);
+    const journey = journeys.value.find((candidate) => candidate.id === schedule.journeyId);
     const deleteIncompleteJourney =
         journey !== undefined &&
         !hasJourneyEndpoints(journey, props.stationGroups) &&
@@ -177,20 +170,11 @@ function removeSchedule(scheduleIndex: number): void {
         return;
     }
 
-    schedules.value = schedules.value.filter(
-        (_, index) => index !== scheduleIndex
-    );
+    schedules.value = schedules.value.filter((_, index) => index !== scheduleIndex);
     if (deleteIncompleteJourney) {
-        journeys.value = journeys.value.filter(
-            (candidate) => candidate.id !== journey!.id
-        );
+        journeys.value = journeys.value.filter((candidate) => candidate.id !== journey!.id);
     }
     closeSchedule();
     emit("changed");
-}
-
-function newId(prefix: string): string {
-    const suffix = Math.random().toString(36).slice(2, 10);
-    return `${prefix}-${suffix}`;
 }
 </script>

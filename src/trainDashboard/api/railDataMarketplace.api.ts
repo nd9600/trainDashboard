@@ -1,7 +1,4 @@
-import {
-    DepartureBoardSchema,
-    type DepartureBoard,
-} from "../dto/liveDepartureBoard.dto";
+import {DepartureBoardSchema, type DepartureBoard} from "../dto/liveDepartureBoard.dto";
 
 export interface DepartureBoardRequest {
     originCrs: string;
@@ -38,9 +35,7 @@ export async function fetchDepartureBoard(
     });
 
     if (!response.ok) {
-        throw new Error(
-            `The Rail Data Marketplace request failed with status ${response.status}.`
-        );
+        throw new Error(`The Rail Data Marketplace request failed with status ${response.status}.`);
     }
 
     return DepartureBoardSchema.parse(await response.json());

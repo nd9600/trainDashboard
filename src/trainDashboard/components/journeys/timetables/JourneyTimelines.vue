@@ -1,9 +1,5 @@
 <template>
-    <JourneyCards
-        class="sm:hidden"
-        :journeys="firstSixJourneys"
-        :currentMinutes="currentMinutes"
-    />
+    <JourneyCards class="sm:hidden" :journeys="firstSixJourneys" :currentMinutes="currentMinutes" />
     <JourneyCharts
         class="hidden sm:grid"
         :journeys="firstSixJourneys"
@@ -15,10 +11,7 @@
 
 <script setup lang="ts">
 import {computed} from "vue";
-import type {
-    TimetabledJourney,
-    TrainLeg,
-} from "../../../dto/timetabledJourney.dto";
+import type {TimetabledJourney, TrainLeg} from "../../../dto/timetabledJourney.dto";
 import {getJourneyTimelineRange} from "../../../journeys/journeyTimes";
 import JourneyCards from "./mobile/JourneyCards.vue";
 import JourneyCharts from "./desktop/JourneyCharts.vue";
@@ -32,9 +25,7 @@ const routesWithConsistentPlatforms = computed(() =>
     getRoutesWithConsistentPlatforms(props.journeys)
 );
 
-function getRoutesWithConsistentPlatforms(
-    journeys: TimetabledJourney[]
-): Set<string> {
+function getRoutesWithConsistentPlatforms(journeys: TimetabledJourney[]): Set<string> {
     const servicesByRoute = new Map<string, Map<string, string>>();
 
     for (const leg of getAllTrainLegs(journeys)) {
@@ -43,40 +34,28 @@ function getRoutesWithConsistentPlatforms(
         }
 
         const route = `${leg.origin}-${leg.destination}`;
-        const services =
-            servicesByRoute.get(route) ?? new Map<string, string>();
+        const services = servicesByRoute.get(route) ?? new Map<string, string>();
         services.set(`${leg.serviceId}:${leg.departure}`, leg.platform);
         servicesByRoute.set(route, services);
     }
 
     return new Set(
         Array.from(servicesByRoute)
-            .filter(
-                ([, services]) =>
-                    services.size > 1 && new Set(services.values()).size === 1
-            )
+            .filter(([, services]) => services.size > 1 && new Set(services.values()).size === 1)
             .map(([route]) => route)
     );
 }
 
 function getAllTrainLegs(journeys: TimetabledJourney[]): TrainLeg[] {
     return journeys.flatMap((journey) =>
-        journey.trainLegs.flatMap((leg) => [
-            leg,
-            ...(leg.alternativeTrainLegs ?? []),
-        ])
+        journey.trainLegs.flatMap((leg) => [leg, ...(leg.alternativeTrainLegs ?? [])])
     );
 }
 
 const firstSixJourneys = computed(() =>
     props.journeys
         .slice(0, 6)
-        .map((journey) =>
-            hideConsistentPlatforms(
-                journey,
-                routesWithConsistentPlatforms.value
-            )
-        )
+        .map((journey) => hideConsistentPlatforms(journey, routesWithConsistentPlatforms.value))
 );
 
 function hideConsistentPlatforms(
@@ -99,9 +78,7 @@ function hideConsistentPlatform(
         ...leg,
         platform: !leg.platform
             ? null
-            : routesWithConsistentPlatforms.has(
-                    `${leg.origin}-${leg.destination}`
-                )
+            : routesWithConsistentPlatforms.has(`${leg.origin}-${leg.destination}`)
               ? undefined
               : leg.platform,
     };

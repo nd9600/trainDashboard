@@ -10,79 +10,66 @@ afterEach(() => vi.unstubAllGlobals());
 
 it.each([
     [{type: "nearby"}, "We think you are near Work. Choose a journey below."],
-    [
-        {type: "saved", onlyJourney: true},
-        "This is your only saved journey from Work.",
-    ],
-    [
-        {type: "saved", onlyJourney: false},
-        "This is your first saved journey from Work.",
-    ],
+    [{type: "saved", onlyJourney: true}, "This is your only saved journey from Work."],
+    [{type: "saved", onlyJourney: false}, "This is your first saved journey from Work."],
     [
         {type: "schedule", scheduleId: "evening", timing: "upcoming"},
         "is your next schedule from Work.",
     ],
     [
         {type: "schedule", scheduleId: "evening", timing: "active"},
-        "schedule selects this journey.",
+        "This journey was chosen because of your “Evening” schedule.",
     ],
-] satisfies [JourneyPredictionReason, string][])(
-    "explains %j",
-    async (reason, text) => {
-        vi.stubGlobal("localStorage", {
-            getItem: () =>
-                JSON.stringify({
-                    version: 3,
-                    shouldUseLocation: true,
-                    stationGroups: [],
-                    journeys: [],
-                    schedules: [],
-                }),
-            setItem: vi.fn(),
-        });
-        const pinia = createPinia();
-        setActivePinia(pinia);
-        useDashboardConfigStore().saveConfig({
-            version: 3,
-            shouldUseLocation: true,
-            stationGroups: [
-                {id: "work", name: "Work", stations: [{crs: "CHC"}]},
-            ],
-            journeys: [],
-            schedules: [
-                {
-                    id: "evening",
-                    name: "Evening",
-                    days: [1],
-                    startsAt: "17:00",
-                    endsAt: "18:00",
-                    journeyId: "back",
-                },
-            ],
-        });
-        const props = {
-            isPredicted: true,
-            prediction: {
-                predictedJourneyId: undefined,
-                alternativeJourneyIds: [],
-                nearbyStationGroupId: "work",
-                reason,
+] satisfies [JourneyPredictionReason, string][])("explains %j", async (reason, text) => {
+    vi.stubGlobal("localStorage", {
+        getItem: () =>
+            JSON.stringify({
+                version: 3,
+                shouldUseLocation: true,
+                stationGroups: [],
+                journeys: [],
+                schedules: [],
+            }),
+        setItem: vi.fn(),
+    });
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    useDashboardConfigStore().saveConfig({
+        version: 3,
+        shouldUseLocation: true,
+        stationGroups: [{id: "work", name: "Work", stations: [{crs: "CHC"}]}],
+        journeys: [],
+        schedules: [
+            {
+                id: "evening",
+                name: "Evening",
+                days: [1],
+                startsAt: "17:00",
+                endsAt: "18:00",
+                journeyId: "back",
             },
-        };
-        const app = createSSRApp(JourneyPredictionExplanation, props);
-        app.use(pinia);
-        expect(
-            (await renderToString(app))
-                .replace(/<[^>]*>/g, " ")
-                .replace(/\s+/g, " ")
-        ).toContain(text);
+        ],
+    });
+    const props = {
+        isPredicted: true,
+        prediction: {
+            predictedJourneyId: undefined,
+            alternativeJourneyIds: [],
+            nearbyStationGroupId: "work",
+            reason,
+        },
+    };
+    const app = createSSRApp(JourneyPredictionExplanation, props);
+    app.use(pinia);
+    expect((await renderToString(app)).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")).toContain(
+        text
+    );
 
-        const manualApp = createSSRApp(JourneyPredictionExplanation, {
-            ...props,
-            isPredicted: false,
-        });
-        manualApp.use(pinia);
-        const manualHtml = await renderToString(manualApp);
-        expect(manualHtml).toContain("We think you are near Work.");
-    }
-);
+    const manualApp = createSSRApp(JourneyPredictionExplanation, {
+        ...props,
+        isPredicted: false,
+    });
+    manualApp.use(pinia);
+    const manualHtml = await renderToString(manualApp);
+    expect(manualHtml).toContain("We think you are near Work.");
+});

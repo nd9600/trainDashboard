@@ -13,7 +13,9 @@
                 {{ schedule.name || "Unnamed schedule" }}
             </h2>
             <p class="text-sm text-ink-subtle">
-                {{ getActiveDaysText(schedule.days) }} · {{ schedule.startsAt }}–{{ schedule.endsAt }}
+                {{ getActiveDaysText(schedule.days) }} · {{ schedule.startsAt }}–{{
+                    schedule.endsAt
+                }}
             </p>
         </header>
 

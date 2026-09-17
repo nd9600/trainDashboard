@@ -20,11 +20,7 @@
             >
                 {{ submitLabel }}
             </button>
-            <button
-                class="appButton appButton--quiet py-1.5"
-                type="button"
-                @click="emit('cancel')"
-            >
+            <button class="appButton appButton--quiet py-1.5" type="button" @click="emit('cancel')">
                 Cancel
             </button>
         </div>
@@ -33,11 +29,7 @@
 
 <script setup lang="ts">
 import {computed, onMounted, ref, toRaw} from "vue";
-import {
-    JourneyFieldsSchema,
-    type Journey,
-    type JourneyFields,
-} from "../../../dto/journey.dto";
+import {JourneyFieldsSchema, type Journey, type JourneyFields} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import JourneyMaker from "../editing/JourneyMaker.vue";
 
@@ -73,9 +65,7 @@ const journey = ref<Journey>(
               destination: {type: "station", crs: ""},
           }
 );
-const validJourney = computed(
-    () => JourneyFieldsSchema.safeParse(journey.value).success
-);
+const validJourney = computed(() => JourneyFieldsSchema.safeParse(journey.value).success);
 
 onMounted(() => {
     journeyMaker.value?.focusOrigin();

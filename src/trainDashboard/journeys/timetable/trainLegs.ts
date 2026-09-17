@@ -1,7 +1,4 @@
-import type {
-    DepartureBoard,
-    DepartureService,
-} from "../../dto/liveDepartureBoard.dto";
+import type {DepartureBoard, DepartureService} from "../../dto/liveDepartureBoard.dto";
 import type {TrainLeg} from "../../dto/timetabledJourney.dto";
 
 export const minimumTransferMinutes = 3;
@@ -12,24 +9,10 @@ export function getDirectTrainLegs(
     destinationCrs: string,
     currentMinutes: number
 ): TrainLeg[] {
-    const trainLegs: TrainLeg[] = [];
-
-    for (const service of board.trainServices) {
-        const trainLeg = getTrainLeg(
-            service,
-            originCrs,
-            destinationCrs,
-            currentMinutes
-        );
-
-        if (trainLeg) {
-            trainLegs.push(trainLeg);
-        }
-    }
-
-    return trainLegs.sort(
-        (first, second) => first.departure - second.departure
-    );
+    return board.trainServices
+        .map((service) => getTrainLeg(service, originCrs, destinationCrs, currentMinutes))
+        .filter((leg) => leg !== undefined)
+        .sort((first, second) => first.departure - second.departure);
 }
 
 function getTrainLeg(
@@ -44,10 +27,7 @@ function getTrainLeg(
 
     const destinationCallingPoint = service.subsequentCallingPoints
         .flatMap((callingPoints) => callingPoints.callingPoint)
-        .find(
-            (callingPoint) =>
-                callingPoint.crs.toUpperCase() === destinationCrs.toUpperCase()
-        );
+        .find((callingPoint) => callingPoint.crs.toUpperCase() === destinationCrs.toUpperCase());
 
     if (!destinationCallingPoint || destinationCallingPoint.isCancelled) {
         return undefined;
@@ -63,10 +43,7 @@ function getTrainLeg(
     }
 
     const arrival = getMinutesOnOrAfter(
-        getLiveOrScheduledTime(
-            destinationCallingPoint.et,
-            destinationCallingPoint.st
-        ),
+        getLiveOrScheduledTime(destinationCallingPoint.et, destinationCallingPoint.st),
         departure
     );
 
@@ -86,17 +63,13 @@ function getTrainLeg(
     };
 }
 
-function getMinutesOnOrAfter(
-    time: string,
-    referenceMinutes: number
-): number | undefined {
+function getMinutesOnOrAfter(time: string, referenceMinutes: number): number | undefined {
     if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) {
         return undefined;
     }
 
     const [hours, minutes] = time.split(":").map(Number);
-    let result =
-        hours! * 60 + minutes! + Math.floor(referenceMinutes / 1440) * 1440;
+    let result = hours! * 60 + minutes! + Math.floor(referenceMinutes / 1440) * 1440;
 
     while (result < referenceMinutes) {
         result += 1440;
@@ -109,7 +82,5 @@ function getLiveOrScheduledTime(
     liveTime: string | null | undefined,
     scheduledTime: string
 ): string {
-    return liveTime && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(liveTime)
-        ? liveTime
-        : scheduledTime;
+    return liveTime && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(liveTime) ? liveTime : scheduledTime;
 }

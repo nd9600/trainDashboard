@@ -10,9 +10,7 @@ describe("getStationRoutes", () => {
             manchesterDashboardConfig.stationGroups
         );
 
-        expect(
-            routes.map(({origin, destination}) => ({origin, destination}))
-        ).toEqual([
+        expect(routes.map(({origin, destination}) => ({origin, destination}))).toEqual([
             {
                 origin: {
                     crs: "HTC",
@@ -48,8 +46,7 @@ describe("getStationRoutes", () => {
 
         expect(
             routes.map(
-                ({origin, destination}) =>
-                    `${origin.locationName}:${origin.crs}-${destination.crs}`
+                ({origin, destination}) => `${origin.locationName}:${origin.crs}-${destination.crs}`
             )
         ).toEqual(["Heaton Chapel:HTC-EDY", "Heaton Chapel:HTC-MAN"]);
     });
@@ -61,10 +58,7 @@ describe("getStationRoutes", () => {
             destination: {type: "station", crs: "LIV"},
         };
 
-        const [route] = getStationRoutes(
-            journey,
-            manchesterDashboardConfig.stationGroups
-        );
+        const [route] = getStationRoutes(journey, manchesterDashboardConfig.stationGroups);
 
         expect(route).toMatchObject({
             origin: {crs: "MAN", locationName: "Manchester Piccadilly"},
@@ -82,16 +76,10 @@ describe("getStationRoutes", () => {
             viaCrs: "HTC",
         };
 
-        const routes = getStationRoutes(
-            journey,
-            manchesterDashboardConfig.stationGroups
-        );
+        const routes = getStationRoutes(journey, manchesterDashboardConfig.stationGroups);
 
         expect(
-            routes.map((route) => [
-                `${route.origin.crs}-${route.destination.crs}`,
-                route.viaCrs,
-            ])
+            routes.map((route) => [`${route.origin.crs}-${route.destination.crs}`, route.viaCrs])
         ).toEqual([
             ["EDY-HTC", undefined],
             ["EDY-BNA", undefined],

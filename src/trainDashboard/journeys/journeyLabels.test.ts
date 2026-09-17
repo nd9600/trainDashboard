@@ -183,9 +183,7 @@ describe("getJourneyLabelText", () => {
     });
 });
 
-function getTimetabledJourney(
-    trainLegs: TimetabledJourney["trainLegs"]
-): TimetabledJourney {
+function getTimetabledJourney(trainLegs: TimetabledJourney["trainLegs"]): TimetabledJourney {
     return {
         id: "heaton-chapel-to-liverpool:BNA-LIV:600",
         journeyId: "heaton-chapel-to-liverpool",

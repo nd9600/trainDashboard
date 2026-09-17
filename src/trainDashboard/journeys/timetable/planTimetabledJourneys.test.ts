@@ -37,15 +37,11 @@ describe("planTimetabledJourneys", () => {
             trainLegs: [
                 {
                     serviceId: "B",
-                    alternativeTrainLegs: [
-                        expect.objectContaining({serviceId: "A"}),
-                    ],
+                    alternativeTrainLegs: [expect.objectContaining({serviceId: "A"})],
                 },
                 {
                     serviceId: "D",
-                    alternativeTrainLegs: [
-                        expect.objectContaining({serviceId: "C"}),
-                    ],
+                    alternativeTrainLegs: [expect.objectContaining({serviceId: "C"})],
                 },
             ],
         });

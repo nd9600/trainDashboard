@@ -1,15 +1,13 @@
 <template>
     <section
-        id="journey-settings-panel-journeys"
-        aria-labelledby="journey-settings-tab-journeys"
+        id="journey-settings-panel-savedJourneys"
+        aria-labelledby="journey-settings-tab-savedJourneys"
         role="tabpanel"
         class="space-y-6"
     >
         <section class="space-y-3">
             <h2 class="font-semibold">Saved journeys</h2>
-            <p v-if="journeys.length === 0" class="text-sm text-ink-subtle">
-                No saved journeys.
-            </p>
+            <p v-if="journeys.length === 0" class="text-sm text-ink-subtle">No saved journeys.</p>
             <div
                 v-for="(journey, index) in journeys"
                 :key="journey.id"
@@ -19,49 +17,26 @@
                 <div class="flex items-start justify-between gap-2">
                     <JourneyLabel
                         v-if="hasJourneyEndpoints(journey, stationGroups)"
-                        :details="
-                            getJourneyLabelDetails(journey, stationGroups)
-                        "
+                        :details="getJourneyLabelDetails(journey, stationGroups)"
                     />
                     <span v-else>Choose journey stations</span>
                     <div class="flex shrink-0 gap-2">
-                        <button
+                        <AppIconButton
                             class="appButton appButton--icon text-ink hover:text-paper hover:bg-ink"
-                            :title="
-                                editingJourneyId === journey.id
-                                    ? 'Done editing'
-                                    : 'Edit journey'
-                            "
-                            :aria-label="
-                                editingJourneyId === journey.id
-                                    ? 'Done editing'
-                                    : 'Edit journey'
-                            "
-                            type="button"
                             @click="
                                 editingJourneyId =
-                                    editingJourneyId === journey.id
-                                        ? undefined
-                                        : journey.id
+                                    editingJourneyId === journey.id ? undefined : journey.id
                             "
-                        >
-                            <AppIcon
-                                class="size-4"
-                                :name="
-                                    editingJourneyId === journey.id
-                                        ? 'close'
-                                        : 'pencil'
-                                "
-                            />
-                        </button>
+                            :label="
+                                editingJourneyId === journey.id ? 'Done editing' : 'Edit journey'
+                            "
+                            :icon="editingJourneyId === journey.id ? 'close' : 'pencil'"
+                        />
                         <button
                             class="appButton appButton--icon text-danger hover:text-paper hover:bg-danger"
                             type="button"
                             :disabled="
-                                getScheduleNamesUsingJourney(
-                                    journey.id,
-                                    schedules
-                                ).length > 0
+                                getScheduleNamesUsingJourney(journey.id, schedules).length > 0
                             "
                             title="Remove journey"
                             aria-label="Remove journey"
@@ -72,19 +47,12 @@
                     </div>
                 </div>
                 <p
-                    v-if="
-                        getScheduleNamesUsingJourney(journey.id, schedules)
-                            .length
-                    "
+                    v-if="getScheduleNamesUsingJourney(journey.id, schedules).length"
                     class="mt-2 text-xs text-ink-subtle"
                 >
                     Used by:
-                    {{
-                        getScheduleNamesUsingJourney(
-                            journey.id,
-                            schedules
-                        ).join(", ")
-                    }}. Change these schedules before removing this journey.
+                    {{ getScheduleNamesUsingJourney(journey.id, schedules).join(", ") }}. Change
+                    these schedules before removing this journey.
                 </p>
                 <JourneySettingsFields
                     v-if="editingJourneyId === journey.id"
@@ -93,17 +61,13 @@
                     :stationGroups="stationGroups"
                     :journeys="journeys"
                     :scheduleNames="[]"
-                    :canRemove="false"
                     @changed="emit('changed')"
                 />
             </div>
         </section>
         <section class="space-y-3">
             <h2 class="font-semibold">Recent journeys</h2>
-            <p
-                v-if="recentJourneys.length === 0"
-                class="text-sm text-ink-subtle"
-            >
+            <p v-if="recentJourneys.length === 0" class="text-sm text-ink-subtle">
                 No recent journeys.
             </p>
             <div
@@ -126,25 +90,19 @@
                         <AppIcon class="size-4 fill-current" name="bookmark" />
                         <span class="sr-only">Saved journey</span>
                     </span>
-                    <button
+                    <AppIconButton
                         v-else
                         class="appButton appButton--icon size-8 text-ink hover:text-paper hover:bg-ink"
-                        title="Save journey"
-                        aria-label="Save journey"
-                        type="button"
                         @click="saveRecentJourney(journey)"
-                    >
-                        <AppIcon class="size-4" name="bookmark" />
-                    </button>
-                    <button
+                        label="Save journey"
+                        icon="bookmark"
+                    />
+                    <AppIconButton
                         class="appButton appButton--icon size-8 text-danger hover:text-paper hover:bg-danger"
-                        type="button"
-                        title="Forget journey"
-                        aria-label="Forget journey"
                         @click="forgetJourney(journey.id)"
-                    >
-                        <AppIcon class="size-4" name="close" />
-                    </button>
+                        label="Forget journey"
+                        icon="close"
+                    />
                 </div>
             </div>
         </section>
@@ -152,9 +110,10 @@
 </template>
 
 <script setup lang="ts">
+import AppIconButton from "@/components/AppIconButton.vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {computed, ref} from "vue";
-import {hasSameJourneyFields} from "../../../dto/journeySelection.dto";
+import {hasSameJourneyFields} from "../../../journeys/journeyIdentity";
 import type {Journey} from "../../../dto/journey.dto";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
@@ -162,10 +121,7 @@ import {getJourneyLabelDetails} from "../../../journeys/journeyLabels";
 import {useJourneySelectionStore} from "../../../store/journeySelection.store";
 import JourneyLabel from "../../journeys/JourneyLabel.vue";
 import JourneySettingsFields from "./JourneySettingsFields.vue";
-import {
-    getScheduleNamesUsingJourney,
-    hasJourneyEndpoints,
-} from "../schedules/scheduleSettings";
+import {getScheduleNamesUsingJourney, hasJourneyEndpoints} from "../schedules/scheduleSettings";
 
 const props = defineProps<{
     stationGroups: StationGroup[];
@@ -191,8 +147,7 @@ const recentJourneys = computed(() => {
 
 function isSaved(journey: Journey): boolean {
     return journeys.value.some(
-        (saved) =>
-            saved.id === journey.id || hasSameJourneyFields(saved, journey)
+        (saved) => saved.id === journey.id || hasSameJourneyFields(saved, journey)
     );
 }
 
@@ -203,18 +158,13 @@ function saveRecentJourney(journey: Journey): void {
 }
 
 function forgetJourney(journeyId: string): void {
-    recentJourneyIds.value = recentJourneyIds.value.filter(
-        (id) => id !== journeyId
-    );
+    recentJourneyIds.value = recentJourneyIds.value.filter((id) => id !== journeyId);
     emit("changed");
 }
 
 function removeJourney(journeyId: string): void {
-    if (getScheduleNamesUsingJourney(journeyId, props.schedules).length > 0)
-        return;
-    journeys.value = journeys.value.filter(
-        (journey) => journey.id !== journeyId
-    );
+    if (getScheduleNamesUsingJourney(journeyId, props.schedules).length > 0) return;
+    journeys.value = journeys.value.filter((journey) => journey.id !== journeyId);
     forgetJourney(journeyId);
 }
 </script>

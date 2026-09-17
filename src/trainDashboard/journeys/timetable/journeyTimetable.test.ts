@@ -1,8 +1,11 @@
 import {afterEach, describe, expect, it, vi} from "vitest";
-import * as railDataMarketplaceApi from "../../api/railDataMarketplace.api";
-import type {JourneyRoute} from "../planning/journeyRoutes";
-import {loadRouteTimetables} from "./loadRouteTimetables";
-import {planTimetabledJourneys} from "./planTimetabledJourneys";
+import {service} from "../../testing/departureService.fixture";
+import {
+    testApiAt,
+    mockDepartureBoards,
+    journeyRoute,
+    getTimetabledJourneys,
+} from "./journeyTimetable.fixture";
 
 describe("journey timetable planning", () => {
     afterEach(() => {
@@ -35,37 +38,26 @@ describe("journey timetable planning", () => {
     it("recommends the catchable journey with the earliest finish", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [
-                journeyRoute("HTC", "EDY", 15, 8),
-                journeyRoute("HTC", "MAN", 15, 15),
-            ],
+            [journeyRoute("HTC", "EDY", 15, 8), journeyRoute("HTC", "MAN", 15, 15)],
             8 * 60
         );
 
-        expect(journeys.filter((journey) => journey.recommended)).toHaveLength(
-            1
-        );
-        expect(
-            journeys.find((journey) => journey.recommended)?.destination
-        ).toBe("EDY");
+        expect(journeys.filter((journey) => journey.recommended)).toHaveLength(1);
+        expect(journeys.find((journey) => journey.recommended)?.destination).toBe("EDY");
     });
 
     it("orders journeys by final arrival time", async () => {
         const journeys = await getTimetabledJourneys(
             testApiAt(8 * 60),
-            [
-                journeyRoute("HTC", "MAN", 15, 15),
-                journeyRoute("HTC", "EDY", 15, 8),
-            ],
+            [journeyRoute("HTC", "MAN", 15, 15), journeyRoute("HTC", "EDY", 15, 8)],
             8 * 60
         );
 
-        expect(
-            journeys.slice(0, 2).map((journey) => journey.destination)
-        ).toEqual(["EDY", "MAN"]);
-        expect(
-            journeys.slice(0, 2).map((journey) => journey.segments.at(-1)!.end)
-        ).toEqual([8 * 60 + 44, 8 * 60 + 48]);
+        expect(journeys.slice(0, 2).map((journey) => journey.destination)).toEqual(["EDY", "MAN"]);
+        expect(journeys.slice(0, 2).map((journey) => journey.segments.at(-1)!.end)).toEqual([
+            8 * 60 + 44,
+            8 * 60 + 48,
+        ]);
     });
 
     it("prefers a later departure when journeys finish at the same time", async () => {
@@ -82,9 +74,10 @@ describe("journey timetable planning", () => {
             10 * 60
         );
 
-        expect(
-            journeys.map((journey) => journey.trainLegs[0]!.departure)
-        ).toEqual([10 * 60 + 15, 10 * 60 + 5]);
+        expect(journeys.map((journey) => journey.trainLegs[0]!.departure)).toEqual([
+            10 * 60 + 15,
+            10 * 60 + 5,
+        ]);
     });
 
     it("does not show a journey when its walk has already started", async () => {
@@ -127,30 +120,8 @@ describe("journey timetable planning", () => {
     });
 
     it("uses live times when the service is delayed", async () => {
-        vi.spyOn(
-            railDataMarketplaceApi,
-            "fetchDepartureBoard"
-        ).mockResolvedValue({
-            crs: "HTC",
-            trainServices: [
-                {
-                    serviceID: "delayed-service",
-                    std: "08:20",
-                    etd: "08:25",
-                    isCancelled: false,
-                    subsequentCallingPoints: [
-                        {
-                            callingPoint: [
-                                {
-                                    crs: "EDY",
-                                    st: "08:36",
-                                    et: "08:41",
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
+        mockDepartureBoards({
+            "HTC-EDY": [service("delayed-service", "08:20", "EDY", "08:36", "08:25", "08:41")],
         });
 
         const journeys = await getTimetabledJourneys(
@@ -169,267 +140,4 @@ describe("journey timetable planning", () => {
             ],
         });
     });
-
-    it("combines direct services through a configured connecting station", async () => {
-        const journeys = await getTimetabledJourneys(
-            testApiAt(15 * 60),
-            [journeyRoute("BNA", "LIV", 5, 0, "MAN")],
-            15 * 60
-        );
-
-        expect(journeys[0]).toMatchObject({
-            origin: "BNA",
-            destination: "LIV",
-            railArrivalTime: "16:20",
-            segments: [
-                {kind: "walk", start: 15 * 60 + 5, end: 15 * 60 + 10},
-                {kind: "train", start: 15 * 60 + 10, end: 15 * 60 + 25},
-                {kind: "wait", start: 15 * 60 + 25, end: 15 * 60 + 30},
-                {kind: "train", start: 15 * 60 + 30, end: 16 * 60 + 20},
-            ],
-            trainLegs: [
-                {
-                    origin: "BNA",
-                    destination: "MAN",
-                    departure: 15 * 60 + 10,
-                    arrival: 15 * 60 + 25,
-                },
-                {
-                    origin: "MAN",
-                    destination: "LIV",
-                    departure: 15 * 60 + 30,
-                    arrival: 16 * 60 + 20,
-                },
-            ],
-        });
-    });
-
-    it("finds an onward train after the first catchable transfer time", async () => {
-        vi.spyOn(
-            railDataMarketplaceApi,
-            "fetchDepartureBoard"
-        ).mockImplementation(async (_consumerKey, request) => {
-            if (request.destinationCrs === "GLQ") {
-                return {
-                    crs: "EDB",
-                    trainServices: [
-                        service("fast-first-train", "18:15", "GLQ", "19:06"),
-                    ],
-                };
-            }
-
-            return {
-                crs: "GLQ",
-                trainServices:
-                    request.timeOffsetMinutes === 0
-                        ? Array.from({length: 10}, (_, index) =>
-                              service(
-                                  `too-early-${index}`,
-                                  formatApiTime(18 * 60 + 5 + index * 7),
-                                  "CHC",
-                                  formatApiTime(18 * 60 + 7 + index * 7)
-                              )
-                          )
-                        : [
-                              service(
-                                  "catchable-onward-train",
-                                  "19:13",
-                                  "CHC",
-                                  "19:15"
-                              ),
-                          ],
-            };
-        });
-
-        const journeys = await getTimetabledJourneys(
-            "test-key",
-            [journeyRoute("EDB", "CHC", 0, 0, "GLQ")],
-            18 * 60 + 2
-        );
-
-        expect(journeys[0]!.trainLegs).toMatchObject([
-            {departure: 18 * 60 + 15, arrival: 19 * 60 + 6},
-            {departure: 19 * 60 + 13, arrival: 19 * 60 + 15},
-        ]);
-    });
-
-    it("does not treat one through service as a connection to itself", async () => {
-        mockDepartureBoards({
-            "HTC-MAN": [service("through", "10:05", "MAN", "10:20")],
-            "MAN-LIV": [
-                service("through", "10:25", "LIV", "11:20"),
-                service("connection", "10:30", "LIV", "11:30"),
-            ],
-        });
-
-        const journeys = await getTimetabledJourneys(
-            "test-key",
-            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            10 * 60
-        );
-
-        expect(journeys).toHaveLength(1);
-        expect(journeys[0]!.trainLegs[1]!.departure).toBe(10 * 60 + 30);
-    });
-
-    it("requires three minutes to change trains", async () => {
-        mockDepartureBoards({
-            "HTC-MAN": [service("first-train", "15:10", "MAN", "15:30")],
-            "MAN-LIV": [
-                service("too-soon", "15:30", "LIV", "16:20"),
-                service("catchable", "16:00", "LIV", "16:50"),
-            ],
-        });
-
-        const journeys = await getTimetabledJourneys(
-            "test-key",
-            [journeyRoute("HTC", "LIV", 0, 0, "MAN")],
-            15 * 60
-        );
-
-        expect(journeys[0]!.trainLegs).toMatchObject([
-            {arrival: 15 * 60 + 30},
-            {departure: 16 * 60},
-        ]);
-    });
 });
-
-function testApiAt(now: number): string {
-    const routes: Record<string, {departureAfter: number; duration: number}> = {
-        "HTC-EDY": {departureAfter: 20, duration: 16},
-        "HTC-MAN": {departureAfter: 20, duration: 13},
-        "MAN-LIV": {departureAfter: 30, duration: 50},
-        "BNA-MAN": {departureAfter: 10, duration: 15},
-    };
-
-    vi.spyOn(railDataMarketplaceApi, "fetchDepartureBoard").mockImplementation(
-        async (_consumerKey, request) => {
-            const route =
-                routes[`${request.originCrs}-${request.destinationCrs}`];
-
-            if (!route) {
-                return {
-                    crs: request.originCrs,
-                    trainServices: [],
-                };
-            }
-
-            return {
-                crs: request.originCrs,
-                trainServices: [
-                    route.departureAfter,
-                    route.departureAfter + 30,
-                ].map((departureAfter) => {
-                    const departure = now + departureAfter;
-                    const arrival = departure + route.duration;
-
-                    return {
-                        serviceID: `${request.originCrs}-${request.destinationCrs}-${departure}`,
-                        std: formatApiTime(departure),
-                        etd: "On time",
-                        isCancelled: false,
-                        subsequentCallingPoints: [
-                            {
-                                callingPoint: [
-                                    {
-                                        crs: request.destinationCrs,
-                                        st: formatApiTime(arrival),
-                                        et: "On time",
-                                    },
-                                ],
-                            },
-                        ],
-                    };
-                }),
-            };
-        }
-    );
-
-    return "test-key";
-}
-
-function mockDepartureBoards(
-    servicesByRoute: Record<string, ReturnType<typeof service>[]>
-): void {
-    vi.spyOn(railDataMarketplaceApi, "fetchDepartureBoard").mockImplementation(
-        async (_consumerKey, request) => ({
-            crs: request.originCrs,
-            trainServices:
-                servicesByRoute[
-                    `${request.originCrs}-${request.destinationCrs}`
-                ] ?? [],
-        })
-    );
-}
-
-function service(
-    serviceID: string,
-    departure: string,
-    destinationCrs: string,
-    arrival: string
-) {
-    return {
-        serviceID,
-        std: departure,
-        etd: "On time",
-        isCancelled: false,
-        subsequentCallingPoints: [
-            {
-                callingPoint: [
-                    {
-                        crs: destinationCrs,
-                        st: arrival,
-                        et: "On time",
-                    },
-                ],
-            },
-        ],
-    };
-}
-
-function formatApiTime(minutes: number): string {
-    const normalisedMinutes = ((minutes % 1440) + 1440) % 1440;
-    const hours = Math.floor(normalisedMinutes / 60);
-    const remainingMinutes = normalisedMinutes % 60;
-
-    return `${hours.toString().padStart(2, "0")}:${remainingMinutes
-        .toString()
-        .padStart(2, "0")}`;
-}
-
-function journeyRoute(
-    origin: string,
-    destination: string,
-    originWalkMinutes: number | undefined,
-    destinationWalkMinutes: number | undefined,
-    viaCrs?: string
-): JourneyRoute {
-    return {
-        id: `journeys:${origin}-${destination}`,
-        journeyId: "journeys",
-        origin: {
-            crs: origin,
-            walkMinutes: originWalkMinutes,
-            locationName: "Heaton Chapel",
-        },
-        destination: {
-            crs: destination,
-            walkMinutes: destinationWalkMinutes,
-            locationName: "Manchester Piccadilly",
-        },
-        viaCrs,
-    };
-}
-
-async function getTimetabledJourneys(
-    consumerKey: string,
-    stationRoutes: JourneyRoute[],
-    currentMinutes: number
-) {
-    const routeTimetables = await loadRouteTimetables(
-        consumerKey,
-        stationRoutes,
-        currentMinutes
-    );
-    return planTimetabledJourneys(routeTimetables, currentMinutes);
-}

@@ -51,16 +51,14 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             journeys.value = dashboardJourneys.journeys;
 
             if (!consumerKey) {
-                journeyLoadError.value =
-                    "Add your Consumer key in Settings → API.";
+                journeyLoadError.value = "Add your Consumer key in Settings → API.";
             }
         } catch {
             if (!isCurrentRequest) {
                 return;
             }
             journeys.value = [];
-            journeyLoadError.value =
-                "Train data could not be loaded. Try again later.";
+            journeyLoadError.value = "Train data could not be loaded. Try again later.";
         } finally {
             if (isCurrentRequest) {
                 isLoadingJourneys.value = false;
@@ -76,10 +74,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             () => apiStore.settings.consumerKey,
         ],
         (values, previousValues) => {
-            if (
-                values[0] !== previousValues[0] ||
-                values[1] !== previousValues[1]
-            ) {
+            if (values[0] !== previousValues[0] || values[1] !== previousValues[1]) {
                 routes.value = [];
                 journeys.value = [];
             }

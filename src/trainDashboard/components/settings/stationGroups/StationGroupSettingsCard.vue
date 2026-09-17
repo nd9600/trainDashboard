@@ -2,9 +2,7 @@
     <div class="rounded-lg border border-line bg-paper p-4 shadow-sm">
         <div class="flex items-end gap-3">
             <label class="grow">
-                <span class="mb-1 block text-xs text-ink-subtle">
-                    Group name
-                </span>
+                <span class="mb-1 block text-xs text-ink-subtle"> Group name </span>
                 <input
                     :id="`group-${group.id}-name`"
                     v-model="group.name"
@@ -29,23 +27,19 @@
                 class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-2 gap-y-2"
             >
                 <div>
-                    <span class="mb-1 block text-xs text-ink-subtle">
-                        Station
-                    </span>
+                    <span class="mb-1 block text-xs text-ink-subtle"> Station </span>
                     <StationInput
                         v-model="station.crs"
                         :id="`group-${group.id}-station-${stationIndex}`"
                         :excludedCrsCodes="getOtherStationCodes(stationIndex)"
                     />
                 </div>
-                <button
+                <AppIconButton
                     class="appButton appButton--danger appButton--icon"
-                    type="button"
-                    aria-label="Remove station"
                     @click="removeStation(stationIndex)"
-                >
-                    <AppIcon class="size-4" name="trash" />
-                </button>
+                    label="Remove station"
+                    icon="trash"
+                />
                 <label
                     class="col-span-2 flex flex-wrap items-baseline gap-2 px-3 text-sm text-ink-muted"
                 >
@@ -87,6 +81,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIconButton from "@/components/AppIconButton.vue";
 import {nextTick, ref, watch} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {CoordinatesInputSchema} from "../../../dto/coordinates.dto";
@@ -105,9 +100,7 @@ async function addStation(): Promise<void> {
     group.value.stations.push({crs: ""});
     emit("changed");
     await nextTick();
-    document
-        .getElementById(`group-${group.value.id}-station-${stationIndex}`)
-        ?.focus();
+    document.getElementById(`group-${group.value.id}-station-${stationIndex}`)?.focus();
 }
 
 function removeStation(stationIndex: number): void {
@@ -139,9 +132,7 @@ watch(
 function updateCoordinates(event: Event): void {
     const input = event.target as HTMLInputElement;
     const result = CoordinatesInputSchema.safeParse(input.value);
-    input.setCustomValidity(
-        result.success ? "" : result.error.issues[0]!.message
-    );
+    input.setCustomValidity(result.success ? "" : result.error.issues[0]!.message);
     if (result.success) {
         group.value.coordinates = result.data;
     }

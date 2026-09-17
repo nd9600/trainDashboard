@@ -1,13 +1,7 @@
 <template>
     <a
         class="inline-flex items-center gap-0.5 text-xs font-medium text-ink-subtle underline decoration-line-strong underline-offset-2 hover:text-primary"
-        :href="
-            getNationalRailJourneyUrl(
-                originCrs,
-                destinationCrs,
-                departureMinutes
-            )
-        "
+        :href="getNationalRailJourneyUrl(originCrs, destinationCrs, departureMinutes)"
         :aria-label="ariaLabel ?? `${label} on National Rail Enquiries`"
         rel="noopener noreferrer"
         target="_blank"
@@ -32,7 +26,7 @@ withDefaults(
     }>(),
     {
         label: "NRE",
-        shouldShowLinkIcon: false
+        shouldShowLinkIcon: false,
     }
 );
 </script>

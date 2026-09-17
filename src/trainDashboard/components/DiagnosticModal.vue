@@ -9,17 +9,15 @@
             diagnostic
         </button>
 
-        <AppModal
-            :isOpen="isOpen"
-            closeLabel="Close diagnostic"
-            @close="isOpen = false"
-        >
+        <AppModal :isOpen="isOpen" closeLabel="Close diagnostic" @close="isOpen = false">
             <template #header>Diagnostic</template>
 
             <div class="space-y-6 p-5">
                 <section v-for="store in stores" :key="store.name">
                     <h2 class="mb-2 text-sm font-semibold">{{ store.name }}</h2>
-                    <pre class="overflow-x-auto rounded border border-line bg-paper p-3 text-xs"><code>{{ store.data }}</code></pre>
+                    <pre
+                        class="overflow-x-auto rounded border border-line bg-paper p-3 text-xs"
+                    ><code>{{ store.data }}</code></pre>
                 </section>
             </div>
         </AppModal>

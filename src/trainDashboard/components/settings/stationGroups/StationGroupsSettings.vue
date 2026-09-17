@@ -8,8 +8,7 @@
         <div>
             <h2 class="font-semibold">Station groups</h2>
             <p class="mt-1 text-sm text-ink-subtle">
-                A group expands to each station when the dashboard builds
-                journeys.
+                A group expands to each station when the dashboard builds journeys.
             </p>
         </div>
 
@@ -37,6 +36,8 @@
 </template>
 
 <script setup lang="ts">
+import {newId} from "../../../dto/id.dto";
+
 import {nextTick} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
@@ -64,10 +65,5 @@ async function addGroup(): Promise<void> {
     emit("changed");
     await nextTick();
     document.getElementById(`group-${groupId}-name`)?.focus();
-}
-
-function newId(prefix: string): string {
-    const suffix = Math.random().toString(36).slice(2, 10);
-    return `${prefix}-${suffix}`;
 }
 </script>

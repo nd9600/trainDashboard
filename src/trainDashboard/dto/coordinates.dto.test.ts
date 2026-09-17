@@ -17,9 +17,6 @@ it.each(["55", "55,", ", -4", "91, 0", "0, -181", "1, 2, 3", "north, west"])(
     }
 );
 
-it.each([{latitude: 55}, {longitude: -4}])(
-    "rejects a stored partial pair %j",
-    (coordinates) => {
-        expect(CoordinatesSchema.safeParse(coordinates).success).toBe(false);
-    }
-);
+it.each([{latitude: 55}, {longitude: -4}])("rejects a stored partial pair %j", (coordinates) => {
+    expect(CoordinatesSchema.safeParse(coordinates).success).toBe(false);
+});

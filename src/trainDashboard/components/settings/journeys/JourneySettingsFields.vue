@@ -12,45 +12,29 @@
         />
 
         <p v-if="scheduleNames.length > 1" class="text-xs text-ink-subtle">
-            Used by {{ scheduleNames.length }} schedules:
-            {{ scheduleNames.join(", ") }}. Changes apply to all of them.
+            Used by {{ scheduleNames.length }} schedules: {{ scheduleNames.join(", ") }}. Changes
+            apply to all of them.
         </p>
-
-        <button
-            v-if="canRemove"
-            class="appButton appButton--quiet px-0 py-1 text-xs text-danger hover:text-danger-dark"
-            type="button"
-            @click="emit('remove')"
-        >
-            <AppIcon class="size-3.5" name="trash" />
-            Remove journey from schedule
-        </button>
     </div>
 </template>
 
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
-import AppIcon from "@/components/AppIcon.vue";
 import type {Journey} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import JourneyMaker from "../../journeys/editing/JourneyMaker.vue";
 
-withDefaults(
-    defineProps<{
-        stationGroups: StationGroup[];
-        journeys: Journey[];
-        scheduleNames: string[];
-        canRemove?: boolean;
-    }>(),
-    {canRemove: true}
-);
+defineProps<{
+    stationGroups: StationGroup[];
+    journeys: Journey[];
+    scheduleNames: string[];
+}>();
 
 const journey = defineModel<Journey>("journey", {required: true});
 const journeyMaker = ref<InstanceType<typeof JourneyMaker>>();
 
 const emit = defineEmits<{
     changed: [];
-    remove: [];
 }>();
 
 onMounted(() => {

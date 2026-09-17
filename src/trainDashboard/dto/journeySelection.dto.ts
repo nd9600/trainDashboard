@@ -1,10 +1,6 @@
+import {getAvailableJourneyId} from "../journeys/journeyIdentity";
 import {z} from "zod";
-import {
-    JourneyFieldsSchema,
-    JourneySchema,
-    type Journey,
-    type JourneyFields,
-} from "./journey.dto";
+import {JourneyFieldsSchema, JourneySchema, type JourneyFields, type Journey} from "./journey.dto";
 import {CrsCodeSchema} from "./station.dto";
 
 const StationLocationSchema = z.object({
@@ -30,7 +26,9 @@ export const JourneyMemorySchema = z.object({
 export type JourneyMemory = z.infer<typeof JourneyMemorySchema>;
 
 export type ActiveJourney =
-    {type: "predicted"} | {type: "saved"; id: string} | {type: "ephemeral"};
+    | {type: "predicted"}
+    | {type: "saved"; id: string}
+    | {type: "ephemeral"; journey: EphemeralJourney};
 
 export interface JourneyChoices {
     name: "Predicted" | "Alternatives" | "Recent" | "Saved";
@@ -54,40 +52,4 @@ export function createEphemeralJourney(
         ),
         ...result.data,
     };
-}
-
-export function hasSameJourneyFields(first: Journey, second: Journey): boolean {
-    return (
-        hasSameLocation(first.origin, second.origin) &&
-        hasSameLocation(first.destination, second.destination) &&
-        first.viaCrs === second.viaCrs
-    );
-}
-
-function getAvailableJourneyId(
-    baseId: string,
-    existingJourneyIds: Iterable<string>
-): string {
-    const existingIds = new Set(existingJourneyIds);
-    let id = baseId;
-    let suffix = 2;
-
-    while (existingIds.has(id)) {
-        id = `${baseId}-${suffix}`;
-        suffix += 1;
-    }
-
-    return id;
-}
-
-function hasSameLocation(
-    first: Journey["origin"],
-    second: Journey["origin"]
-): boolean {
-    return (
-        first.type === second.type &&
-        first.groupId === second.groupId &&
-        (first.type === "group" ||
-            (second.type === "station" && first.crs === second.crs))
-    );
 }

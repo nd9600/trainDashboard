@@ -1,15 +1,9 @@
 import {expect, it} from "vitest";
-import {
-    distanceBetweenCoordinatesKm,
-    findClosestPoint,
-} from "./location.utility";
+import {distanceBetweenCoordinatesKm, findClosestPoint} from "./location.utility";
 
 it("calculates kilometres, including across the date line", () => {
     expect(
-        distanceBetweenCoordinatesKm(
-            {latitude: 0, longitude: 0},
-            {latitude: 0, longitude: 1}
-        )
+        distanceBetweenCoordinatesKm({latitude: 0, longitude: 0}, {latitude: 0, longitude: 1})
     ).toBeCloseTo(111.19493, 5);
     expect(
         distanceBetweenCoordinatesKm(

@@ -6,9 +6,7 @@ export const useLocalStorageTyped = <T extends z.ZodType<unknown>>(
     defaultValue: z.output<T>
 ) => {
     const loadFromLocalStorage = (): z.output<T> => {
-        const parsedData = schema.safeParse(
-            JSON.parse(localStorage.getItem(key) ?? "{}")
-        );
+        const parsedData = schema.safeParse(JSON.parse(localStorage.getItem(key) ?? "{}"));
         if (!parsedData.success) {
             localStorage.removeItem(key);
             return defaultValue;

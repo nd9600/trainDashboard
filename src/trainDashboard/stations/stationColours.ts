@@ -9,10 +9,7 @@ const stationColours = [
 ] as const;
 
 export function stationColour(crs: string): string {
-    const hash = [...crs].reduce(
-        (total, character) => total + character.charCodeAt(0),
-        0
-    );
+    const hash = [...crs].reduce((total, character) => total + character.charCodeAt(0), 0);
 
     return stationColours[hash % stationColours.length]!;
 }

@@ -1,7 +1,4 @@
-import {
-    distanceBetweenCoordinatesKm,
-    findClosestPoint,
-} from "@/utilities/location.utility";
+import {distanceBetweenCoordinatesKm, findClosestPoint} from "@/utilities/location.utility";
 import type {Coordinates} from "../dto/coordinates.dto";
 import type {StationGroup} from "../dto/stationGroup.dto";
 
@@ -24,8 +21,8 @@ export function getNearbyStationGroup(
     );
     const closest = findClosestPoint(coordinates, points);
     if (
-        !closest
-        || distanceBetweenCoordinatesKm(coordinates, closest) * 1000 > maximumNearbyDistanceMetres
+        !closest ||
+        distanceBetweenCoordinatesKm(coordinates, closest) * 1000 > maximumNearbyDistanceMetres
     ) {
         return undefined;
     }

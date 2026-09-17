@@ -1,9 +1,7 @@
 <template>
     <section aria-labelledby="api-settings-heading">
         <h2 id="api-settings-heading" class="text-lg font-semibold">
-            <a class="underline" href="https://raildata.org.uk/">
-                Rail Data Marketplace
-            </a>
+            <a class="underline" href="https://raildata.org.uk/"> Rail Data Marketplace </a>
         </h2>
         <p class="mt-1 text-sm text-ink-subtle">
             The dashboard sends your Consumer key in the
@@ -11,9 +9,7 @@
         </p>
 
         <label class="mt-5 block">
-            <span class="mb-1 block text-xs text-ink-subtle">
-                Consumer key
-            </span>
+            <span class="mb-1 block text-xs text-ink-subtle"> Consumer key </span>
             <span class="relative block">
                 <input
                     ref="consumerKeyInput"
@@ -24,24 +20,15 @@
                     :type="isConsumerKeyVisible ? 'text' : 'password'"
                     @input="handleChange"
                 />
-                <button
+                <AppIconButton
                     class="appButton appButton--quiet px-0.5 py-0.5 absolute right-[5px] top-[5px]"
-                    :class="
-                        isConsumerKeyVisible
-                            ? 'text-primary'
-                            : 'text-ink-subtle'
-                    "
-                    type="button"
-                    :aria-label="
-                        isConsumerKeyVisible
-                            ? 'Hide Consumer key'
-                            : 'Show Consumer key'
-                    "
+                    :class="isConsumerKeyVisible ? 'text-primary' : 'text-ink-subtle'"
                     :aria-pressed="isConsumerKeyVisible"
                     @click="isConsumerKeyVisible = !isConsumerKeyVisible"
-                >
-                    <AppIcon class="size-5" name="eye" />
-                </button>
+                    :label="isConsumerKeyVisible ? 'Hide Consumer key' : 'Show Consumer key'"
+                    icon="eye"
+                    iconClass="size-5"
+                />
             </span>
         </label>
 
@@ -55,8 +42,8 @@
 </template>
 
 <script setup lang="ts">
+import AppIconButton from "@/components/AppIconButton.vue";
 import {ref} from "vue";
-import AppIcon from "@/components/AppIcon.vue";
 import type {RailDataApiSettings} from "../../../dto/railDataApiSettings.dto";
 import {useRailDataApiStore} from "../../../store/railDataApi.store";
 
@@ -69,8 +56,7 @@ const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
 });
 
 function handleChange(): void {
-    hasUnsavedChanges.value =
-        draft.value.consumerKey !== apiStore.settings.consumerKey;
+    hasUnsavedChanges.value = draft.value.consumerKey !== apiStore.settings.consumerKey;
 }
 
 function save(): void {

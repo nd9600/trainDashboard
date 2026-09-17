@@ -17,16 +17,12 @@
                 <div
                     class="flex size-4 items-center justify-center rounded-full bg-paper text-primary"
                 >
-                    <AppIcon class="size-3" :name="stepIcon(step.kind)" />
+                    <AppIcon class="size-3" :name="stepIcons[step.kind]" />
                 </div>
                 <div>
                     <p
                         class="leading-tight text-ink-muted"
-                        :class="
-                            ['change', 'walk'].includes(step.kind)
-                                ? 'text-xs'
-                                : ''
-                        "
+                        :class="['change', 'walk'].includes(step.kind) ? 'text-xs' : ''"
                     >
                         {{ step.label }}
                         <strong
@@ -36,10 +32,7 @@
                             {{ stationName(step.stationCrs) }}
                         </strong>
                         <span
-                            v-if="
-                                step.kind === 'train' &&
-                                step.trainLeg?.platform !== undefined
-                            "
+                            v-if="step.kind === 'train' && step.trainLeg?.platform !== undefined"
                             class="ml-1 whitespace-nowrap text-xs font-semibold"
                             :style="{
                                 color: stationColour(step.trainLeg.origin),
@@ -50,17 +43,7 @@
                         {{ step.suffix }}
                     </p>
 
-                    <p
-                        v-if="(step.alternativeTrainLegs ?? []).length > 0"
-                        class="mt-1 inline-flex items-baseline gap-1 pl-6 text-xs text-ink-subtle"
-                    >
-                        Also at <span
-                            v-for="(alternativeTrainLeg, index) in step.alternativeTrainLegs"
-                            :key="`${alternativeTrainLeg.serviceId}-${alternativeTrainLeg.departure}`"
-                        >
-                            <AlternativeTrainLink :trainLeg="alternativeTrainLeg"/>{{ index < (step.alternativeTrainLegs ?? []).length - 1 ? ", " : "" }}
-                        </span>
-                    </p>
+                    <AlternativeTrains :legs="step.alternativeTrainLegs" class="mt-1" />
                 </div>
             </div>
         </li>
@@ -71,13 +54,10 @@
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {formatTime} from "@/utilities/time.utility.ts";
-import type {
-    TimetabledJourney,
-    TrainLeg,
-} from "../../../../dto/timetabledJourney.dto";
+import type {TimetabledJourney, TrainLeg} from "../../../../dto/timetabledJourney.dto";
 import {stationColour} from "../../../../stations/stationColours";
 import {stationName} from "../../../../stations/stations";
-import AlternativeTrainLink from "../AlternativeTrainLink.vue";
+import AlternativeTrains from "../AlternativeTrains.vue";
 import TrainDepartureLink from "../TrainDepartureLink.vue";
 
 const props = defineProps<{
@@ -175,18 +155,5 @@ function formatDuration(start: number, end: number): string {
     return `${minutes} minute${minutes === 1 ? "" : "s"}`;
 }
 
-function stepIcon(
-    kind: ItineraryStepKind
-): "clock" | "map-pin" | "train" | "walk" {
-    switch (kind) {
-        case "arrival":
-            return "map-pin";
-        case "change":
-            return "clock";
-        case "train":
-            return "train";
-        case "walk":
-            return "walk";
-    }
-}
+const stepIcons = {arrival: "map-pin", change: "clock", train: "train", walk: "walk"} as const;
 </script>

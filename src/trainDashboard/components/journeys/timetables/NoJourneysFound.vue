@@ -1,10 +1,6 @@
 <template>
-    <div
-        class="rounded-lg border border-line bg-surface p-3 text-sm sm:text-base text-ink-muted"
-    >
-        <p>
-            No journeys were found for these routes, check them out on National Rail Enquiries:
-        </p>
+    <div class="rounded-lg border border-line bg-surface p-3 text-sm sm:text-base text-ink-muted">
+        <p>No journeys were found for these routes, check them out on National Rail Enquiries:</p>
         <ul class="mt-2 space-y-1">
             <li
                 v-for="route in journeyRoutes"
@@ -29,10 +25,7 @@
 
 <script setup lang="ts">
 import type {JourneyRoute} from "../../../journeys/planning/journeyRoutes";
-import {
-    getJourneyLabelText,
-    getStationRouteLabelDetails,
-} from "../../../journeys/journeyLabels";
+import {getJourneyLabelText, getStationRouteLabelDetails} from "../../../journeys/journeyLabels";
 import JourneyLabel from "../JourneyLabel.vue";
 import NationalRailLink from "./NationalRailLink.vue";
 

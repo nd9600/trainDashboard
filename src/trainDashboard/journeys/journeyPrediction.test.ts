@@ -8,23 +8,15 @@ describe("getJourneyPrediction", () => {
         {day: 1, minutes: 8 * 60, scheduleId: "weekday-morning"},
         {day: 3, minutes: 12 * 60, scheduleId: "weekday-afternoon"},
         {day: 6, minutes: 14 * 60, scheduleId: "weekend"},
-    ] as const)(
-        "uses $scheduleId at its configured day and time",
-        ({day, minutes, scheduleId}) => {
-            const prediction = getJourneyPrediction(
-                manchesterDashboardConfig,
-                {day, minutes},
-                null
-            );
+    ] as const)("uses $scheduleId at its configured day and time", ({day, minutes, scheduleId}) => {
+        const prediction = getJourneyPrediction(manchesterDashboardConfig, {day, minutes}, null);
 
-            expect(prediction.reason).toMatchObject({scheduleId});
-            expect(prediction.predictedJourneyId).toBe(
-                manchesterDashboardConfig.schedules.find(
-                    (schedule) => schedule.id === scheduleId
-                )?.journeyId
-            );
-        }
-    );
+        expect(prediction.reason).toMatchObject({scheduleId});
+        expect(prediction.predictedJourneyId).toBe(
+            manchesterDashboardConfig.schedules.find((schedule) => schedule.id === scheduleId)
+                ?.journeyId
+        );
+    });
 });
 
 const locationConfig: DashboardConfig = {
@@ -145,11 +137,7 @@ it.each([
 ] as const)(
     "orders active and upcoming schedules across days: %i %i",
     (day, minutes, journeyId, timing) => {
-        const prediction = getJourneyPrediction(
-            locationConfig,
-            {day, minutes},
-            workCoordinates
-        );
+        const prediction = getJourneyPrediction(locationConfig, {day, minutes}, workCoordinates);
         expect(prediction.predictedJourneyId).toBe(journeyId);
         expect(prediction.reason).toMatchObject({type: "schedule", timing});
     }
@@ -160,11 +148,7 @@ it("uses saved order when no schedules start at the nearby group", () => {
         ...locationConfig,
         schedules: [locationConfig.schedules[0]!],
     };
-    const prediction = getJourneyPrediction(
-        config,
-        {day: 1, minutes: 9 * 60},
-        workCoordinates
-    );
+    const prediction = getJourneyPrediction(config, {day: 1, minutes: 9 * 60}, workCoordinates);
     expect(prediction).toMatchObject({
         predictedJourneyId: "back",
         alternativeJourneyIds: ["gym"],
@@ -174,11 +158,7 @@ it("uses saved order when no schedules start at the nearby group", () => {
 
 it("reports only the nearby group when no journey starts there", () => {
     const config = {...locationConfig, journeys: [locationConfig.journeys[0]!]};
-    const prediction = getJourneyPrediction(
-        config,
-        {day: 1, minutes: 9 * 60},
-        workCoordinates
-    );
+    const prediction = getJourneyPrediction(config, {day: 1, minutes: 9 * 60}, workCoordinates);
     expect(prediction).toMatchObject({
         predictedJourneyId: undefined,
         nearbyStationGroupId: "work",
@@ -199,8 +179,7 @@ it("falls back to time when no group is near, without using recent history", () 
         reason: {type: "schedule", scheduleId: "morning", timing: "active"},
     });
     expect(
-        getJourneyPrediction(locationConfig, {day: 3, minutes: 9 * 60}, null)
-            .predictedJourneyId
+        getJourneyPrediction(locationConfig, {day: 3, minutes: 9 * 60}, null).predictedJourneyId
     ).toBeUndefined();
 });
 

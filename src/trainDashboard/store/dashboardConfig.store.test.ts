@@ -30,10 +30,19 @@ describe("useDashboardConfigStore", () => {
             viaCrs: "CRE",
         });
         expect(secondResult).toEqual(firstResult);
-        expect(
-            store.config.journeys.filter(
-                (journey) => journey.id === "man-to-liv"
-            )
-        ).toHaveLength(1);
+        expect(store.config.journeys.filter((journey) => journey.id === "man-to-liv")).toHaveLength(
+            1
+        );
+    });
+    it("keeps journeys with different connecting stations separate", () => {
+        const store = useDashboardConfigStore();
+        const direct = store.saveJourney({
+            id: "man-to-liv",
+            origin: {type: "station", crs: "MAN"},
+            destination: {type: "station", crs: "LIV"},
+        });
+        const connected = store.saveJourney({...direct, viaCrs: "CRE"});
+        expect(connected.id).toBe("man-to-liv-2");
+        expect(store.config.journeys.map((journey) => journey.viaCrs)).toEqual([undefined, "CRE"]);
     });
 });

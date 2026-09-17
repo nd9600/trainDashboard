@@ -8,15 +8,11 @@ export function planTimetabledJourneys(
     currentMinutes: number
 ): TimetabledJourney[] {
     const journeys = routeTimetables
-        .flatMap((routeTimetable) =>
-            getTrainPlans(routeTimetable, currentMinutes)
-        )
+        .flatMap((routeTimetable) => getTrainPlans(routeTimetable, currentMinutes))
         .map(makeTimetabledJourney)
         .filter((journey) => journey.segments.at(0)!.start >= currentMinutes)
         .sort(compareJourneysByFinishTime);
-    const recommendedJourney = journeys.find(
-        (journey) => journey.walkingTimesKnown
-    );
+    const recommendedJourney = journeys.find((journey) => journey.walkingTimesKnown);
 
     return journeys.map((journey) => ({
         ...journey,
@@ -24,15 +20,8 @@ export function planTimetabledJourneys(
     }));
 }
 
-function compareJourneysByFinishTime(
-    first: TimetabledJourney,
-    second: TimetabledJourney
-): number {
-    const arrivalDifference =
-        first.segments.at(-1)!.end - second.segments.at(-1)!.end;
+function compareJourneysByFinishTime(first: TimetabledJourney, second: TimetabledJourney): number {
+    const arrivalDifference = first.segments.at(-1)!.end - second.segments.at(-1)!.end;
 
-    return (
-        arrivalDifference ||
-        second.segments.at(0)!.start - first.segments.at(0)!.start
-    );
+    return arrivalDifference || second.segments.at(0)!.start - first.segments.at(0)!.start;
 }

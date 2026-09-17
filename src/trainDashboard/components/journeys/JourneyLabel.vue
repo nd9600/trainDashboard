@@ -1,7 +1,8 @@
 <template>
     <span class="whitespace-normal">
         <template v-if="details.origin.type === 'location'">
-            {{ details.origin.name }}<template v-if="details.origin.stationCrs">
+            {{ details.origin.name
+            }}<template v-if="details.origin.stationCrs">
                 <span>, from </span>
                 <StationLabel :crs="details.origin.stationCrs" />
             </template>
@@ -13,7 +14,8 @@
         <span> → </span>
 
         <template v-if="details.destination.type === 'location'">
-            {{ details.destination.name }}<template v-if="details.destination.stationCrs">
+            {{ details.destination.name
+            }}<template v-if="details.destination.stationCrs">
                 <span>, arriving at </span>
                 <StationLabel :crs="details.destination.stationCrs" />
             </template>
@@ -34,7 +36,7 @@
 import type {JourneyLabelDetails} from "../../journeys/journeyLabels";
 import StationLabel from "../stations/StationLabel.vue";
 
-const {details, shouldSayWhenDirect = true } = defineProps<{
+const {details, shouldSayWhenDirect = true} = defineProps<{
     details: JourneyLabelDetails;
     shouldSayWhenDirect?: boolean;
 }>();

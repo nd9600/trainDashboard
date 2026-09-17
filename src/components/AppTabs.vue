@@ -1,11 +1,7 @@
 <template>
     <div
         class="overflow-x-auto"
-        :class="
-            variant === 'card'
-                ? 'grid grid-cols-2 gap-2 sm:flex'
-                : 'flex border-b border-line'
-        "
+        :class="variant === 'card' ? 'grid grid-cols-2 gap-2 sm:flex' : 'flex border-b border-line'"
         role="tablist"
     >
         <button
@@ -20,11 +16,7 @@
             :aria-selected="modelValue === tab.value"
             @click="emit('update:modelValue', tab.value)"
         >
-            <AppIcon
-                v-if="tab.icon"
-                class="mr-2 size-4"
-                :name="tab.icon"
-            />
+            <AppIcon v-if="tab.icon" class="mr-2 size-4" :name="tab.icon" />
             <span>{{ tab.label }}</span>
         </button>
     </div>

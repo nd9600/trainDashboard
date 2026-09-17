@@ -64,7 +64,6 @@ describe("useJourneySelectionStore", () => {
             currentCoordinates: null,
             recentJourneyIds: [],
             ephemeralJourneys: [],
-            currentEphemeralJourney: undefined,
             activeJourney: {type: "predicted"},
         });
 
@@ -112,8 +111,7 @@ describe("useJourneySelectionStore", () => {
                 name: "Saved",
                 journeys: manchesterDashboardConfig.journeys.filter(
                     (journey) =>
-                        journey.id !== predictedJourney.id &&
-                        journey.id !== savedJourney.id
+                        journey.id !== predictedJourney.id && journey.id !== savedJourney.id
                 ),
             },
         ]);
@@ -144,14 +142,10 @@ describe("useJourneySelectionStore", () => {
 
         store.selectJourney(savedJourney.id);
         store.currentCoordinates = {latitude: 53.5, longitude: -2.2};
-        expect(store.predictedJourneyId).toBe(
-            "manchester-piccadilly-to-heaton-chapel"
-        );
+        expect(store.predictedJourneyId).toBe("manchester-piccadilly-to-heaton-chapel");
         expect(store.activeJourneyId).toBe(savedJourney.id);
         store.clearActiveJourney();
-        expect(store.activeJourneyId).toBe(
-            "manchester-piccadilly-to-heaton-chapel"
-        );
+        expect(store.activeJourneyId).toBe("manchester-piccadilly-to-heaton-chapel");
         store.currentCoordinates = null;
         expect(store.activeJourneyId).toBe(predictedJourney.id);
     });
@@ -165,9 +159,7 @@ describe("useJourneySelectionStore", () => {
         useDashboardConfigStore().saveConfig(config);
         const store = getJourneySelectionStore();
         store.currentCoordinates = {latitude: 53.5, longitude: -2.2};
-        expect(store.predictedJourneyId).toBe(
-            "manchester-piccadilly-to-heaton-chapel"
-        );
+        expect(store.predictedJourneyId).toBe("manchester-piccadilly-to-heaton-chapel");
 
         useDashboardConfigStore().setShouldUseLocation(false);
         expect(store.currentCoordinates).toBeNull();
@@ -183,9 +175,7 @@ describe("useJourneySelectionStore", () => {
         expect(geolocation.resume).toHaveBeenCalledTimes(2);
         geolocation.coords.value = {latitude: 53.5, longitude: -2.2};
         await nextTick();
-        expect(store.predictedJourneyId).toBe(
-            "manchester-piccadilly-to-heaton-chapel"
-        );
+        expect(store.predictedJourneyId).toBe("manchester-piccadilly-to-heaton-chapel");
     });
 
     it("remembers disabled location without starting geolocation after reload", () => {
@@ -219,9 +209,7 @@ describe("useJourneySelectionStore", () => {
 
         store.selectEphemeralJourney(manchesterToLiverpool);
 
-        expect(store.activeJourney).toEqual({
-            type: "ephemeral",
-        });
+        expect(store.activeJourney.type).toBe("ephemeral");
         expect(store.currentEphemeralJourney).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
@@ -265,23 +253,19 @@ describe("useJourneySelectionStore", () => {
         expect(store.activeJourney.type).toBe("saved");
         expect(store.currentEphemeralJourney).toBeUndefined();
         expect(
-            useDashboardConfigStore().config.journeys.find(
-                (journey) => journey.id === "man-to-liv"
-            )
+            useDashboardConfigStore().config.journeys.find((journey) => journey.id === "man-to-liv")
         ).toEqual({id: "man-to-liv", ...manchesterToLiverpool});
     });
 
     it("selects a recent ephemeral journey after a page refresh", () => {
         useDashboardConfigStore().saveConfig(getConfigWithoutActiveSchedule());
-        getJourneySelectionStore().selectEphemeralJourney(
-            manchesterToLiverpool
-        );
+        getJourneySelectionStore().selectEphemeralJourney(manchesterToLiverpool);
         recreateStores();
         const store = getJourneySelectionStore();
 
         store.selectJourney("man-to-liv");
 
-        expect(store.activeJourney).toEqual({type: "ephemeral"});
+        expect(store.activeJourney.type).toBe("ephemeral");
         expect(store.currentEphemeralJourney).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
@@ -295,9 +279,7 @@ describe("useJourneySelectionStore", () => {
         store.removeRecentJourney(savedJourney.id);
 
         expect(store.recentJourneyIds).toEqual([]);
-        expect(useDashboardConfigStore().config.journeys).toContainEqual(
-            savedJourney
-        );
+        expect(useDashboardConfigStore().config.journeys).toContainEqual(savedJourney);
         expect(store.journeyChoices.at(-1)).toMatchObject({
             name: "Saved",
             journeys: expect.arrayContaining([savedJourney]),
@@ -315,11 +297,9 @@ describe("useJourneySelectionStore", () => {
             id: "man-to-liv",
             ...manchesterToLiverpool,
         });
-        expect(
-            JSON.parse(
-                localStorage.getItem("train-dashboard-journey-memory-v2") ?? ""
-            )
-        ).toEqual({recentJourneyIds: [], ephemeralJourneys: []});
+        expect(JSON.parse(localStorage.getItem("train-dashboard-journey-memory-v2") ?? "")).toEqual(
+            {recentJourneyIds: [], ephemeralJourneys: []}
+        );
     });
 
     it("removes an unscheduled saved journey", () => {
@@ -327,18 +307,14 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
 
         store.removeSavedJourney(unscheduledJourney.id);
-        expect(useDashboardConfigStore().config.journeys).not.toContainEqual(
-            unscheduledJourney
-        );
+        expect(useDashboardConfigStore().config.journeys).not.toContainEqual(unscheduledJourney);
     });
 
     it("does not remove a journey used by a schedule", () => {
         const store = getJourneySelectionStore();
 
         store.removeSavedJourney(predictedJourney.id);
-        expect(useDashboardConfigStore().config.journeys).toContainEqual(
-            predictedJourney
-        );
+        expect(useDashboardConfigStore().config.journeys).toContainEqual(predictedJourney);
     });
 
     it("edits an unscheduled active saved journey", () => {

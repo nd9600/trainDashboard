@@ -8,20 +8,21 @@
             v-if="location || !configStore.config.shouldUseLocation"
             class="flex gap-2 items-start mb-1"
         >
-            <p
-                class="my-0"
-            >
-                {{ configStore.config.shouldUseLocation ? `We think you are near ${location}.` : 'Your location is not being used for predictions.' }}
+            <p class="my-0">
+                {{
+                    configStore.config.shouldUseLocation
+                        ? `We think you are near ${location}.`
+                        : "Your location is not being used for predictions."
+                }}
             </p>
 
-            <button
-                type="button"
-                aria-label="Location settings"
+            <AppIconButton
                 class="appButton appButton--secondary p-0 border-none bg-inherit text-ink-muted"
                 @click="shouldShowSettingsPopup = true"
-            >
-                <AppIcon class="size-4 inline" name="settings" />
-            </button>
+                label="Location settings"
+                icon="settings"
+                iconClass="size-4 inline"
+            />
         </div>
         <p v-if="explanation">
             {{ explanation }}
@@ -40,10 +41,7 @@
                 Your location is not being used for predictions.
             </p>
             <p v-else-if="location">We think you are near {{ location }}.</p>
-            <p
-                v-if="journeySelectionStore.currentCoordinates"
-                class="flex gap-2 items-baseline"
-            >
+            <p v-if="journeySelectionStore.currentCoordinates" class="flex gap-2 items-baseline">
                 Your current coordinates are latitude
                 <a
                     :href="`https://google.com/maps/search/?api=1&query=${journeySelectionStore.currentCoordinates?.latitude},${journeySelectionStore.currentCoordinates?.longitude}`"
@@ -51,9 +49,7 @@
                     class="underline"
                 >
                     <pre class="inline"
-                        >{{
-                            journeySelectionStore.currentCoordinates?.latitude
-                        }}, {{
+                        >{{ journeySelectionStore.currentCoordinates?.latitude }}, {{
                             journeySelectionStore.currentCoordinates?.longitude
                         }}</pre>
                 </a>
@@ -78,10 +74,10 @@
 </template>
 
 <script setup lang="ts">
+import AppIconButton from "@/components/AppIconButton.vue";
 import type {JourneyPrediction} from "../../../journeys/journeyPrediction";
 import {ref, computed} from "vue";
 import {useDashboardConfigStore} from "@/trainDashboard/store/dashboardConfig.store.ts";
-import AppIcon from "@/components/AppIcon.vue";
 import AppModal from "@/components/Modal/AppModal.vue";
 import {useJourneySelectionStore} from "@/trainDashboard/store/journeySelection.store.ts";
 
@@ -104,10 +100,7 @@ const location = computed(() => {
 });
 
 const explanation = computed(() => {
-    const {reason, nearbyStationGroupId} = props.prediction;
-    const group = configStore.config.stationGroups.find(
-        (group) => group.id === nearbyStationGroupId
-    );
+    const {reason} = props.prediction;
 
     if (!props.isPredicted || !reason) {
         return null;
@@ -118,8 +111,8 @@ const explanation = computed(() => {
     }
 
     if (reason.type === "saved") {
-        return group
-            ? `This is your ${reason.onlyJourney ? "only" : "first"} saved journey from ${group.name}.`
+        return location.value
+            ? `This is your ${reason.onlyJourney ? "only" : "first"} saved journey from ${location.value}.`
             : null;
     }
 
@@ -131,8 +124,8 @@ const explanation = computed(() => {
         return null;
     }
 
-    return !group || reason.timing === "active"
+    return !location.value || reason.timing === "active"
         ? `This journey was chosen because of your “${schedule.name}” schedule.`
-        : `"${schedule.name}" is your next schedule from ${group.name}.`;
+        : `"${schedule.name}" is your next schedule from ${location.value}.`;
 });
 </script>

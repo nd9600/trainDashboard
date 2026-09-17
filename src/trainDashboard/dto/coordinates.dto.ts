@@ -18,9 +18,7 @@ export const CoordinatesInputSchema = z
     .refine(
         (value) =>
             value === "" ||
-            /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*,\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(
-                value
-            ),
+            /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*,\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value),
         "Enter latitude and longitude separated by a comma."
     )
     .transform((value) => {

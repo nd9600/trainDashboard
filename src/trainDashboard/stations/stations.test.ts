@@ -1,9 +1,5 @@
 import {describe, expect, it} from "vitest";
-import {
-    findStationOptions,
-    stationCodeFromInput,
-    stationDisplayName,
-} from "./stations";
+import {findStationOptions, stationCodeFromInput, stationDisplayName} from "./stations";
 
 describe("station lookup", () => {
     it("shows the station name and CRS code", () => {

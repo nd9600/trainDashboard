@@ -8,9 +8,7 @@ describe("getRoutesWithoutTimetabledJourneys", () => {
         const routes = [journeyRoute("HTC", "LIV"), journeyRoute("BNA", "LIV")];
         const timetabledJourneys = [journey("HTC", "LIV")];
 
-        expect(
-            getRoutesWithoutTimetabledJourneys(routes, timetabledJourneys)
-        ).toEqual([routes[1]]);
+        expect(getRoutesWithoutTimetabledJourneys(routes, timetabledJourneys)).toEqual([routes[1]]);
     });
 
     it("returns one missing route for direct and connected options with the same endpoints", () => {
@@ -21,12 +19,9 @@ describe("getRoutesWithoutTimetabledJourneys", () => {
             viaCrs: "MAN",
         };
 
-        expect(
-            getRoutesWithoutTimetabledJourneys(
-                [directRoute, connectedRoute],
-                []
-            )
-        ).toEqual([directRoute]);
+        expect(getRoutesWithoutTimetabledJourneys([directRoute, connectedRoute], [])).toEqual([
+            directRoute,
+        ]);
     });
 });
 

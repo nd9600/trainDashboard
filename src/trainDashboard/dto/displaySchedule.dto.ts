@@ -15,10 +15,7 @@ export type Day = z.infer<typeof DaySchema>;
 
 const TimeSchema = z
     .string()
-    .regex(
-        /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/,
-        "Enter a time from 00:00 to 24:00."
-    );
+    .regex(/^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/, "Enter a time from 00:00 to 24:00.");
 
 export const DisplayScheduleSchema = z
     .object({
@@ -29,12 +26,8 @@ export const DisplayScheduleSchema = z
         endsAt: TimeSchema,
         journeyId: IdSchema,
     })
-    .refine(
-        (schedule) =>
-            timeToMinutes(schedule.startsAt) < timeToMinutes(schedule.endsAt),
-        {
-            message: "The end time must be after the start time.",
-            path: ["endsAt"],
-        }
-    );
+    .refine((schedule) => timeToMinutes(schedule.startsAt) < timeToMinutes(schedule.endsAt), {
+        message: "The end time must be after the start time.",
+        path: ["endsAt"],
+    });
 export type DisplaySchedule = z.infer<typeof DisplayScheduleSchema>;

@@ -35,7 +35,9 @@
         @apply bg-canvas font-sans text-ink;
     }
 
-    button, input, select {
+    button,
+    input,
+    select {
         @apply cursor-pointer;
     }
 
@@ -90,7 +92,7 @@
     }
 
     .appInput:focus {
-            @apply border-primary outline-2 outline-primary;
+        @apply border-primary outline-2 outline-primary;
     }
 
     .appInput:disabled {

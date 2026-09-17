@@ -5,7 +5,4 @@ export const CrsCodeSchema = z
     .string()
     .trim()
     .transform((code) => code.toUpperCase())
-    .refine(
-        (code) => stationNames[code] !== undefined,
-        "Enter a valid CRS station code."
-    );
+    .refine((code) => stationNames[code] !== undefined, "Enter a valid CRS station code.");

@@ -22,9 +22,7 @@
                     {{ stationName(headerJourney.origin) }}
                 </span>
             </span>
-            <span>
-                · train {{ formatTime(headerJourney.trainLegs[0]!.departure) }}
-            </span>
+            <span> · train {{ formatTime(headerJourney.trainLegs[0]!.departure) }} </span>
             <span>
                 · arrive
                 <span
@@ -41,9 +39,7 @@
                 · {{ changeCount }} change{{ changeCount === 1 ? "" : "s" }}
             </span>
         </p>
-        <p class="mt-1 text-sm text-ink-subtle">
-            It is now {{ formatTime(currentMinutes) }}
-        </p>
+        <p class="mt-1 text-sm text-ink-subtle">It is now {{ formatTime(currentMinutes) }}</p>
     </header>
 </template>
 
@@ -61,22 +57,15 @@ import JourneySwitcher from "./journeys/switcher/JourneySwitcher.vue";
 const trainServicesStore = useTrainServicesStore();
 const dashboardClockStore = useDashboardClockStore();
 const journeySelectionStore = useJourneySelectionStore();
-const {isLoadingJourneys, journeys, recommendedJourney} =
-    storeToRefs(trainServicesStore);
-const {activeJourney, activeJourneyDetails, activeJourneyId} = storeToRefs(
-    journeySelectionStore
-);
+const {isLoadingJourneys, journeys, recommendedJourney} = storeToRefs(trainServicesStore);
+const {activeJourney, activeJourneyDetails, activeJourneyId} = storeToRefs(journeySelectionStore);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 
-const headerJourney = computed(
-    () => recommendedJourney.value ?? journeys.value.at(0)
-);
+const headerJourney = computed(() => recommendedJourney.value ?? journeys.value.at(0));
 
 const leaveInMinutes = computed(() => {
     const journey = recommendedJourney.value;
-    return journey
-        ? journey.segments.at(0)!.start - currentMinutes.value
-        : undefined;
+    return journey ? journey.segments.at(0)!.start - currentMinutes.value : undefined;
 });
 
 const leaveInString = computed(() => {
@@ -88,8 +77,7 @@ const leaveInString = computed(() => {
             return "No trains found";
         }
 
-        const trainInMinutes =
-            headerJourney.value.trainLegs[0]!.departure - currentMinutes.value;
+        const trainInMinutes = headerJourney.value.trainLegs[0]!.departure - currentMinutes.value;
 
         if (trainInMinutes <= 0) {
             return "Train now";
@@ -120,7 +108,5 @@ const shouldWalk = computed(() => {
     return firstSegment?.kind === "walk";
 });
 
-const changeCount = computed(
-    () => (headerJourney.value?.trainLegs.length ?? 1) - 1
-);
+const changeCount = computed(() => (headerJourney.value?.trainLegs.length ?? 1) - 1);
 </script>

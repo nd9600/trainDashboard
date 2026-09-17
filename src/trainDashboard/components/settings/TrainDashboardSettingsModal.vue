@@ -9,18 +9,10 @@
             <span class="max-sm:hidden">Settings</span>
         </button>
 
-        <AppModal
-            :isOpen="isOpen"
-            closeLabel="Close settings"
-            @close="closeSettings"
-        >
+        <AppModal :isOpen="isOpen" closeLabel="Close settings" @close="closeSettings">
             <template #header>Settings</template>
 
-            <AppTabs
-                idPrefix="settings"
-                v-model="activeSection"
-                :tabs="sections"
-            />
+            <AppTabs idPrefix="settings" v-model="activeSection" :tabs="sections" />
             <div
                 v-show="activeSection === 'journeys'"
                 id="settings-panel-journeys"

@@ -1,4 +1,5 @@
 import {fileURLToPath, URL} from "node:url";
+import {readFileSync} from "node:fs";
 
 import tailwindcss from "@tailwindcss/vite";
 import {defineConfig} from "vite";
@@ -12,7 +13,28 @@ if (!basePath.startsWith("/") || !basePath.endsWith("/")) {
 
 export default defineConfig(({mode}) => ({
     base: basePath,
-    plugins: [vue(), tailwindcss()],
+    plugins: [
+        vue(),
+        tailwindcss(),
+        {
+            name: "station-names",
+            enforce: "pre",
+            load(id) {
+                if (!id.endsWith("/stations.csv?names")) return;
+                const file = id.slice(0, -"?names".length);
+                this.addWatchFile(file);
+                // The catalogue has unquoted fields. Only names and codes enter the browser bundle.
+                const rows = readFileSync(file, "utf8").trim().split(/\r?\n/).slice(1);
+                const names = Object.fromEntries(
+                    rows.map((row) => {
+                        const [name, , , code] = row.split(",");
+                        return [code, name];
+                    })
+                );
+                return `export default ${JSON.stringify(names)}`;
+            },
+        },
+    ],
     resolve: {
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -29,7 +51,7 @@ export default defineConfig(({mode}) => ({
                     groups: [
                         {
                             name: "station-data",
-                            test: /[\\/]trainDashboard[\\/]stations[\\/]stationNames\.ts$/,
+                            test: /(?:stationNames\.ts|stations\.csv\?names)$/,
                         },
                         {
                             name: "vue-vendor",

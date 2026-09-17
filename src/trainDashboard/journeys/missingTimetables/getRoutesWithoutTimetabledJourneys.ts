@@ -6,9 +6,7 @@ export function getRoutesWithoutTimetabledJourneys(
     timetabledJourneys: TimetabledJourney[]
 ): JourneyRoute[] {
     const timetabledRoutes = new Set(
-        timetabledJourneys.map(
-            (journey) => `${journey.origin}-${journey.destination}`
-        )
+        timetabledJourneys.map((journey) => `${journey.origin}-${journey.destination}`)
     );
 
     const missingRouteKeys = new Set<string>();

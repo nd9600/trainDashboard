@@ -56,7 +56,9 @@ flowchart TD
     trainPlans[getTrainPlans]
     make[makeTimetabledJourney]
 
-    config[Configuration location preference] --> selection
+    config[Configuration location preference] --> location[useJourneyLocation]
+    location -->|Coordinates or no location| selection
+    config --> selection
     selection --> prediction
     prediction --> nearby
     nearby --> closest[findClosestPoint]
@@ -79,26 +81,24 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    onward[Take one onward train]
-    matching[Find catchable first trains]
+    first[Filter catchable first trains and sort by latest departure]
+    onward[Sort onward trains by earliest arrival]
+    matching[Find first trains with a valid transfer]
     any{Any first trains?}
     discard[Discard this onward train]
-    order[Order first trains by latest departure]
-    plan[Use the latest first train]
-    firstAlternatives[Attach earlier first trains as alternatives]
-    group[Group plans that use the same first train]
-    onwardMain[Show the onward train that arrives first]
-    onwardAlternatives[Attach other onward trains as alternatives]
+    plan[Use the latest first train and attach earlier alternatives]
+    exists{Plan already uses this first train?}
+    add[Keep the earliest-arriving plan]
+    alternative[Append this onward train as an alternative]
 
+    first --> matching
     onward --> matching
     matching --> any
     any -->|No| discard
-    any -->|Yes| order
-    order --> plan
-    plan --> firstAlternatives
-    firstAlternatives --> group
-    group --> onwardMain
-    onwardMain --> onwardAlternatives
+    any -->|Yes| plan
+    plan --> exists
+    exists -->|No| add
+    exists -->|Yes| alternative
 ```
 
 A catchable first train must meet all these rules:
@@ -155,12 +155,14 @@ Minute-based refreshes keep the current trains visible while updated trains load
 
 ```mermaid
 sequenceDiagram
+    participant Location as useJourneyLocation
     participant Selection as Journey selection
     participant Store as Train services store
     participant Planner as getDashboardJourneys
     Selection->>Store: Initial scheduled journey
     Store->>Planner: Load scheduled journey
-    Selection->>Store: Location or its preference selects another journey
+    Location->>Selection: Updated coordinates or location disabled
+    Selection->>Store: Prediction resolves another active journey
     Store->>Store: Invalidate old request and clear displayed data
     Store->>Planner: Load newly selected journey
     Planner-->>Store: Old request finishes
@@ -172,7 +174,8 @@ sequenceDiagram
 ## Source map
 
 - `src/trainDashboard/store/dashboardConfig.store.ts` stores the location preference.
-- `src/trainDashboard/store/journeySelection.store.ts` starts or stops geolocation and applies the preference to predictions.
+- `src/composables/useJourneyLocation.ts` starts or stops geolocation and reports coordinates or errors.
+- `src/trainDashboard/store/journeySelection.store.ts` owns selection state and supplies enabled coordinates to prediction.
 
 - `src/trainDashboard/store/trainServices.store.ts` refreshes trains, clears data after journey changes, and ignores outdated requests.
 - `src/trainDashboard/store/trainServices.store.test.ts` checks location changes and requests that finish out of order.
@@ -198,3 +201,7 @@ sequenceDiagram
 - `src/trainDashboard/journeys/nearbyStationGroup.ts` finds the nearest group within 2,000 metres.
 
 - `src/utilities/location.utility.ts` calculates spherical distances and finds the closest point.
+
+- `src/trainDashboard/journeys/journeyTimes.ts` selects whole-minute chart ticks and the visible time range.
+- `src/trainDashboard/components/journeys/timetables/AlternativeTrains.vue` renders alternative departure links in both layouts.
+- `src/trainDashboard/journeys/timetable/connectionTimetable.test.ts` checks connected journeys through the request and planning pipeline.

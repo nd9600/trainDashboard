@@ -1,8 +1,6 @@
+import {hasSameJourneyFields} from "../journeys/journeyIdentity";
 import {describe, expect, it} from "vitest";
-import {
-    createEphemeralJourney,
-    hasSameJourneyFields,
-} from "./journeySelection.dto";
+import {createEphemeralJourney} from "./journeySelection.dto";
 
 const manchesterToLiverpool = {
     origin: {type: "station" as const, crs: "MAN"},

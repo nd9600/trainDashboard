@@ -5,8 +5,7 @@ import type {JourneyRoute} from "./planning/journeyRoutes";
 import {stationName} from "../stations/stations";
 
 export type JourneyLabelEndpoint =
-    | {type: "location"; name: string; stationCrs?: string}
-    | {type: "station"; stationCrs: string};
+    {type: "location"; name: string; stationCrs?: string} | {type: "station"; stationCrs: string};
 
 export interface JourneyLabelDetails {
     origin: JourneyLabelEndpoint;
@@ -18,9 +17,7 @@ export function getJourneyLabelDetails(
     journey: Journey,
     stationGroups: StationGroup[]
 ): JourneyLabelDetails {
-    const stationGroupsById = new Map(
-        stationGroups.map((group) => [group.id, group])
-    );
+    const stationGroupsById = new Map(stationGroups.map((group) => [group.id, group]));
 
     return {
         origin: getEndpointDetails(journey.origin, stationGroupsById),
@@ -37,9 +34,7 @@ export function getRouteLabelDetails(route: JourneyRoute): JourneyLabelDetails {
     };
 }
 
-export function getStationRouteLabelDetails(
-    route: JourneyRoute
-): JourneyLabelDetails {
+export function getStationRouteLabelDetails(route: JourneyRoute): JourneyLabelDetails {
     return {
         origin: {type: "station", stationCrs: route.origin.crs},
         destination: {type: "station", stationCrs: route.destination.crs},
@@ -47,9 +42,7 @@ export function getStationRouteLabelDetails(
     };
 }
 
-export function getTimetabledJourneyLabelDetails(
-    journey: TimetabledJourney
-): JourneyLabelDetails {
+export function getTimetabledJourneyLabelDetails(journey: TimetabledJourney): JourneyLabelDetails {
     return {
         origin: {type: "location", name: journey.originLocationName},
         destination: {
@@ -57,9 +50,7 @@ export function getTimetabledJourneyLabelDetails(
             name: journey.destinationLocationName,
         },
         connectingStationCrs:
-            journey.trainLegs.length > 1
-                ? journey.trainLegs.at(0)?.destination
-                : undefined,
+            journey.trainLegs.length > 1 ? journey.trainLegs.at(0)?.destination : undefined,
     };
 }
 

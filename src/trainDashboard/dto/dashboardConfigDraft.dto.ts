@@ -4,9 +4,7 @@ export function dashboardConfigErrorMessages(error: z.ZodError): string[] {
     return error.issues.map(getDashboardConfigErrorMessage);
 }
 
-function getDashboardConfigErrorMessage(
-    issue: z.ZodError["issues"][number]
-): string {
+function getDashboardConfigErrorMessage(issue: z.ZodError["issues"][number]): string {
     const location = getErrorLocation(issue.path);
     return location ? `${location}: ${issue.message}` : issue.message;
 }
@@ -20,41 +18,30 @@ function getErrorLocation(path: PropertyKey[]): string {
         if (field === "stations" && typeof nestedIndex === "number") {
             const station = `${stationGroup}, station ${nestedIndex + 1}`;
 
-            return nestedField === "walkMinutes"
-                ? `${station} walk time`
-                : station;
+            return nestedField === "walkMinutes" ? `${station} walk time` : station;
         }
 
         return field === "name" ? `${stationGroup} name` : stationGroup;
     }
 
-    if (section === "journeys" && typeof itemIndex === "number") {
-        const journey = `Journey ${itemIndex + 1}`;
-        const journeyFields: Record<string, string> = {
-            origin: "start",
-            destination: "destination",
-            viaCrs: "connecting station",
-        };
-        const fieldLabel =
-            typeof field === "string" ? journeyFields[field] : undefined;
-
-        return fieldLabel ? `${journey} ${fieldLabel}` : journey;
-    }
-
-    if (section === "schedules" && typeof itemIndex === "number") {
-        const schedule = `Schedule ${itemIndex + 1}`;
-        const scheduleFields: Record<string, string> = {
-            name: "name",
-            days: "days",
-            startsAt: "start time",
-            endsAt: "end time",
-            journeyId: "journey",
-        };
-        const fieldLabel =
-            typeof field === "string" ? scheduleFields[field] : undefined;
-
-        return fieldLabel ? `${schedule} ${fieldLabel}` : schedule;
-    }
-
-    return "";
+    if (typeof itemIndex !== "number") return "";
+    const sections: Record<string, {label: string; fields: Record<string, string>}> = {
+        journeys: {
+            label: "Journey",
+            fields: {origin: "start", destination: "destination", viaCrs: "connecting station"},
+        },
+        schedules: {
+            label: "Schedule",
+            fields: {
+                name: "name",
+                days: "days",
+                startsAt: "start time",
+                endsAt: "end time",
+                journeyId: "journey",
+            },
+        },
+    };
+    const details = sections[String(section)];
+    if (!details) return "";
+    return `${details.label} ${itemIndex + 1}${details.fields[String(field)] ? ` ${details.fields[String(field)]}` : ""}`;
 }

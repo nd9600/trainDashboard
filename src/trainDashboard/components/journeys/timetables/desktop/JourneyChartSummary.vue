@@ -1,8 +1,5 @@
 <template>
-    <div
-        class="flex max-w-96 items-center px-2"
-        :style="{height: `${height}px`}"
-    >
+    <div class="flex max-w-96 items-center px-2" :style="{height: `${height}px`}">
         <div class="min-w-0">
             <JourneyDesktopItinerary :journey="journey" />
             <span

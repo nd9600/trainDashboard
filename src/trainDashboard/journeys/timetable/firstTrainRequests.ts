@@ -21,69 +21,32 @@ export async function loadFirstTrainsForRoutes(
     currentMinutes: number,
     loadDepartureBoard: LoadDepartureBoard
 ): Promise<RouteFirstTrains[]> {
-    const initialBoards = await Promise.all(
-        routes.map((route) =>
-            loadDepartureBoard(getFirstDepartureBoardRequest(route))
-        )
-    );
-
-    return Promise.all(
-        routes.map((route, index) =>
-            loadFirstTrains(
-                route,
-                initialBoards[index]!,
-                currentMinutes,
-                loadDepartureBoard
-            )
-        )
-    );
-}
-
-async function loadFirstTrains(
-    route: JourneyRoute,
-    initialBoard: DepartureBoard,
-    currentMinutes: number,
-    loadDepartureBoard: LoadDepartureBoard
-): Promise<RouteFirstTrains> {
-    const firstRequest = getFirstDepartureBoardRequest(route);
-    const initialTrainLegs = getCatchableTrainLegs(
-        initialBoard,
-        firstRequest,
-        currentMinutes
-    );
-
-    if (
-        !route.viaCrs ||
-        initialTrainLegs.length >= minimumFirstTrainCount ||
-        firstRequest.timeOffsetMinutes >= maximumTimeOffsetMinutes
-    ) {
-        return {route, firstTrainLegs: initialTrainLegs};
-    }
-
-    const laterBoard = await loadDepartureBoard({
-        ...firstRequest,
-        timeOffsetMinutes: maximumTimeOffsetMinutes,
-    });
-    const combinedBoard = mergeDepartureBoards(initialBoard, laterBoard);
-
-    return {
-        route,
-        firstTrainLegs: getCatchableTrainLegs(
-            combinedBoard,
-            firstRequest,
-            currentMinutes
-        ),
-    };
-}
-
-function getFirstDepartureBoardRequest(
-    route: JourneyRoute
-): DepartureBoardRequest {
-    return {
+    const requests = routes.map((route) => ({
         originCrs: route.origin.crs,
         destinationCrs: route.viaCrs ?? route.destination.crs,
         timeOffsetMinutes: route.origin.walkMinutes ?? 0,
-    };
+    }));
+    const boards = await Promise.all(requests.map(loadDepartureBoard));
+    return Promise.all(
+        routes.map(async (route, index) => {
+            const request = requests[index]!;
+            let board = boards[index]!;
+            let firstTrainLegs = getCatchableTrainLegs(board, request, currentMinutes);
+            if (
+                route.viaCrs &&
+                firstTrainLegs.length < minimumFirstTrainCount &&
+                request.timeOffsetMinutes < maximumTimeOffsetMinutes
+            ) {
+                const laterBoard = await loadDepartureBoard({
+                    ...request,
+                    timeOffsetMinutes: maximumTimeOffsetMinutes,
+                });
+                board = mergeDepartureBoards(board, laterBoard);
+                firstTrainLegs = getCatchableTrainLegs(board, request, currentMinutes);
+            }
+            return {route, firstTrainLegs};
+        })
+    );
 }
 
 function getCatchableTrainLegs(
@@ -96,8 +59,5 @@ function getCatchableTrainLegs(
         request.originCrs,
         request.destinationCrs,
         currentMinutes
-    ).filter(
-        (trainLeg) =>
-            trainLeg.departure - request.timeOffsetMinutes >= currentMinutes
-    );
+    ).filter((trainLeg) => trainLeg.departure - request.timeOffsetMinutes >= currentMinutes);
 }

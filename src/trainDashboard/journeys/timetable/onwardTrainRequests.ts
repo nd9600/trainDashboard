@@ -4,7 +4,6 @@ import type {JourneyRoute} from "../planning/journeyRoutes";
 import {
     maximumTimeOffsetMinutes,
     mergeDepartureBoards,
-    type DepartureBoardRequest,
     type LoadDepartureBoard,
 } from "./departureBoards";
 import {getDirectTrainLegs, minimumTransferMinutes} from "./trainLegs";
@@ -19,45 +18,16 @@ export async function loadOnwardDepartureBoard(
         return undefined;
     }
 
-    const request = {
-        originCrs: route.viaCrs,
-        destinationCrs: route.destination.crs,
-        timeOffsetMinutes: 0,
-    };
-    const transferReadyTimes = getTransferReadyTimes(firstTrainLegs);
-    return loadDepartureBoardWindows(
-        request,
-        transferReadyTimes,
-        currentMinutes,
-        loadDepartureBoard
-    );
-}
-
-function getTransferReadyTimes(firstTrainLegs: TrainLeg[]): number[] {
-    return Array.from(
-        new Set(
-            firstTrainLegs.map(
-                (trainLeg) => trainLeg.arrival + minimumTransferMinutes
-            )
-        )
-    ).sort((first, second) => first - second);
-}
-
-async function loadDepartureBoardWindows(
-    baseRequest: DepartureBoardRequest,
-    transferReadyTimes: number[],
-    currentMinutes: number,
-    loadDepartureBoard: LoadDepartureBoard
-): Promise<DepartureBoard> {
-    let combinedBoard: DepartureBoard = {
-        crs: baseRequest.originCrs,
-        trainServices: [],
-    };
+    const transferReadyTimes = [
+        ...new Set(firstTrainLegs.map((leg) => leg.arrival + minimumTransferMinutes)),
+    ].sort((first, second) => first - second);
+    let combinedBoard: DepartureBoard = {crs: route.viaCrs, trainServices: []};
     let nextTransferReadyTime = transferReadyTimes.at(0);
 
     while (nextTransferReadyTime !== undefined) {
         const request = {
-            ...baseRequest,
+            originCrs: route.viaCrs,
+            destinationCrs: route.destination.crs,
             timeOffsetMinutes: Math.min(
                 Math.max(nextTransferReadyTime - currentMinutes, 0),
                 maximumTimeOffsetMinutes

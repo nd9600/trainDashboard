@@ -1,10 +1,8 @@
+import {newId} from "../../../dto/id.dto";
 import type {Day, DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {Journey} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
-import {
-    getJourneyLabelDetails,
-    getJourneyLabelText,
-} from "../../../journeys/journeyLabels";
+import {getJourneyLabelDetails, getJourneyLabelText} from "../../../journeys/journeyLabels";
 
 export const scheduleDays: Array<{value: Day; label: string}> = [
     {value: 1, label: "Monday"},
@@ -17,9 +15,7 @@ export const scheduleDays: Array<{value: Day; label: string}> = [
 ];
 
 export function getActiveDaysText(activeDays: Day[]): string {
-    const selectedDays = scheduleDays.filter((day) =>
-        activeDays.includes(day.value)
-    );
+    const selectedDays = scheduleDays.filter((day) => activeDays.includes(day.value));
 
     if (selectedDays.length === 0) {
         return "No days selected";
@@ -41,8 +37,7 @@ function getConsecutiveDayRanges(
         const currentRange = ranges.at(-1);
         const previousDay = currentRange?.at(-1);
         const daysAreConsecutive =
-            previousDay &&
-            scheduleDays.indexOf(day) === scheduleDays.indexOf(previousDay) + 1;
+            previousDay && scheduleDays.indexOf(day) === scheduleDays.indexOf(previousDay) + 1;
 
         if (currentRange && daysAreConsecutive) {
             currentRange.push(day);
@@ -59,9 +54,7 @@ function formatDayRange(range: Array<(typeof scheduleDays)[number]>): string {
     const firstDay = range.at(0)!;
     const lastDay = range.at(-1)!;
 
-    return range.length === 1
-        ? firstDay.label
-        : `${firstDay.label}–${lastDay.label}`;
+    return range.length === 1 ? firstDay.label : `${firstDay.label}–${lastDay.label}`;
 }
 
 export function createEmptyJourney(): Journey {
@@ -72,10 +65,7 @@ export function createEmptyJourney(): Journey {
     };
 }
 
-export function hasJourneyEndpoints(
-    journey: Journey,
-    stationGroups: StationGroup[]
-): boolean {
+export function hasJourneyEndpoints(journey: Journey, stationGroups: StationGroup[]): boolean {
     return [journey.origin, journey.destination].every(
         (location) =>
             (location.type === "station" && location.groupId === undefined) ||
@@ -83,10 +73,7 @@ export function hasJourneyEndpoints(
     );
 }
 
-export function getJourneySettingsLabel(
-    journey: Journey,
-    stationGroups: StationGroup[]
-): string {
+export function getJourneySettingsLabel(journey: Journey, stationGroups: StationGroup[]): string {
     return getJourneyLabelText(getJourneyLabelDetails(journey, stationGroups));
 }
 
@@ -97,9 +84,4 @@ export function getScheduleNamesUsingJourney(
     return schedules
         .filter((schedule) => schedule.journeyId === journeyId)
         .map((schedule) => schedule.name);
-}
-
-function newId(prefix: string): string {
-    const suffix = Math.random().toString(36).slice(2, 10);
-    return `${prefix}-${suffix}`;
 }

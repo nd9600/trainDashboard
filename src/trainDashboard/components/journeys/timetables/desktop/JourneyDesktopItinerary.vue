@@ -1,9 +1,6 @@
 <template>
     <div class="text-sm leading-snug text-ink-muted">
-        <p
-            v-if="journey.segments.at(0)?.kind === 'walk'"
-            class="flex items-baseline gap-1"
-        >
+        <p v-if="journey.segments.at(0)?.kind === 'walk'" class="flex items-baseline gap-1">
             <time class="font-semibold text-ink">
                 {{ formatTime(journey.segments.at(0)!.start) }}
             </time>
@@ -45,17 +42,7 @@
                     {{ formatTime(leg.arrival) }}
                 </time>
             </p>
-            <p
-                v-if="(leg.alternativeTrainLegs ?? []).length > 0"
-                class="inline-flex items-baseline gap-1 pl-6 text-xs text-ink-subtle"
-            >
-                Also at <span
-                    v-for="(alternativeTrainLeg, index) in leg.alternativeTrainLegs"
-                    :key="`${alternativeTrainLeg.serviceId}-${alternativeTrainLeg.departure}`"
-                >
-                    <AlternativeTrainLink :trainLeg="alternativeTrainLeg"/>{{ index < (leg.alternativeTrainLegs ?? []).length - 1 ? ", " : "" }}
-                </span>
-            </p>
+            <AlternativeTrains :legs="leg.alternativeTrainLegs" />
         </template>
 
         <p v-if="journey.arrivalLabel && journey.arrivalTime">
@@ -72,7 +59,7 @@ import {formatTime} from "@/utilities/time.utility.ts";
 import type {TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
 import {stationColour} from "../../../../stations/stationColours";
 import {stationName} from "../../../../stations/stations";
-import AlternativeTrainLink from "../AlternativeTrainLink.vue";
+import AlternativeTrains from "../AlternativeTrains.vue";
 import TrainDepartureLink from "../TrainDepartureLink.vue";
 
 defineProps<{

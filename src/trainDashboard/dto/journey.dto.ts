@@ -2,10 +2,7 @@ import {z} from "zod";
 import {IdSchema} from "./id.dto";
 import {CrsCodeSchema} from "./station.dto";
 
-const LocationGroupIdSchema = z
-    .string()
-    .min(1, "Choose a station or group.")
-    .pipe(IdSchema);
+const LocationGroupIdSchema = z.string().min(1, "Choose a station or group.").pipe(IdSchema);
 
 export const LocationReferenceSchema = z.discriminatedUnion("type", [
     z.object({

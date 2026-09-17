@@ -24,31 +24,30 @@ describe("getDashboardJourneys", () => {
     });
 
     it("runs the complete pipeline for the scheduled journey", async () => {
-        vi.spyOn(
-            railDataMarketplaceApi,
-            "fetchDepartureBoard"
-        ).mockImplementation(async (_consumerKey, request) => ({
-            crs: request.originCrs,
-            trainServices: [
-                {
-                    serviceID: `${request.originCrs}-${request.destinationCrs}`,
-                    std: "08:20",
-                    etd: "On time",
-                    isCancelled: false,
-                    subsequentCallingPoints: [
-                        {
-                            callingPoint: [
-                                {
-                                    crs: request.destinationCrs,
-                                    st: "08:40",
-                                    et: "On time",
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        }));
+        vi.spyOn(railDataMarketplaceApi, "fetchDepartureBoard").mockImplementation(
+            async (_consumerKey, request) => ({
+                crs: request.originCrs,
+                trainServices: [
+                    {
+                        serviceID: `${request.originCrs}-${request.destinationCrs}`,
+                        std: "08:20",
+                        etd: "On time",
+                        isCancelled: false,
+                        subsequentCallingPoints: [
+                            {
+                                callingPoint: [
+                                    {
+                                        crs: request.destinationCrs,
+                                        st: "08:40",
+                                        et: "On time",
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            })
+        );
 
         const result = await getDashboardJourneys(
             manchesterDashboardConfig.journeys[0],
@@ -58,8 +57,6 @@ describe("getDashboardJourneys", () => {
         );
 
         expect(result.journeys).toHaveLength(2);
-        expect(
-            result.journeys.find((journey) => journey.recommended)?.destination
-        ).toBe("EDY");
+        expect(result.journeys.find((journey) => journey.recommended)?.destination).toBe("EDY");
     });
 });

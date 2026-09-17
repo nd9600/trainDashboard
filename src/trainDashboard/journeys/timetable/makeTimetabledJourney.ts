@@ -1,8 +1,5 @@
 import {formatTime} from "@/utilities/time.utility.ts";
-import type {
-    TimetabledJourney,
-    TrainLeg,
-} from "../../dto/timetabledJourney.dto";
+import type {TimetabledJourney, TrainLeg} from "../../dto/timetabledJourney.dto";
 import type {TrainPlan} from "./trainPlans";
 
 export function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
@@ -10,18 +7,11 @@ export function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
     const firstLeg = trainLegs.at(0)!;
     const lastLeg = trainLegs.at(-1)!;
     const walkingTimesKnown =
-        route.origin.walkMinutes !== undefined &&
-        route.destination.walkMinutes !== undefined;
-    const finish =
-        route.destination.walkMinutes === undefined
-            ? lastLeg.arrival
-            : lastLeg.arrival + route.destination.walkMinutes;
+        route.origin.walkMinutes !== undefined && route.destination.walkMinutes !== undefined;
+    const finish = lastLeg.arrival + (route.destination.walkMinutes ?? 0);
     const segments: TimetabledJourney["segments"] = [];
 
-    if (
-        route.origin.walkMinutes !== undefined &&
-        route.origin.walkMinutes > 0
-    ) {
+    if (route.origin.walkMinutes) {
         segments.push({
             kind: "walk",
             start: firstLeg.departure - route.origin.walkMinutes,
@@ -31,10 +21,7 @@ export function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
 
     addTrainSegments(segments, trainLegs);
 
-    if (
-        route.destination.walkMinutes !== undefined &&
-        route.destination.walkMinutes > 0
-    ) {
+    if (route.destination.walkMinutes) {
         segments.push({
             kind: "walk",
             start: lastLeg.arrival,
@@ -54,10 +41,7 @@ export function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
             route.destination.walkMinutes === undefined
                 ? undefined
                 : route.destination.locationName,
-        arrivalTime:
-            route.destination.walkMinutes === undefined
-                ? undefined
-                : formatTime(finish),
+        arrivalTime: route.destination.walkMinutes === undefined ? undefined : formatTime(finish),
         boldArrivalTime:
             route.destination.walkMinutes !== undefined &&
             route.destination.locationName.toLowerCase() === "home",
@@ -67,10 +51,7 @@ export function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
     };
 }
 
-function addTrainSegments(
-    segments: TimetabledJourney["segments"],
-    trainLegs: TrainLeg[]
-): void {
+function addTrainSegments(segments: TimetabledJourney["segments"], trainLegs: TrainLeg[]): void {
     for (const [index, leg] of trainLegs.entries()) {
         const previousLeg = trainLegs[index - 1];
 

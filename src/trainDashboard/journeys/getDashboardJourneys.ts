@@ -22,11 +22,7 @@ export async function getDashboardJourneys(
         return {routes, journeys: []};
     }
 
-    const routeTimetables = await loadRouteTimetables(
-        consumerKey,
-        routes,
-        currentMinutes
-    );
+    const routeTimetables = await loadRouteTimetables(consumerKey, routes, currentMinutes);
     return {
         routes,
         journeys: planTimetabledJourneys(routeTimetables, currentMinutes),

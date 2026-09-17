@@ -1,10 +1,6 @@
 <template>
     <div ref="root" class="relative">
-        <Combobox
-            :modelValue="selectedCode"
-            nullable
-            @update:model-value="selectStation"
-        >
+        <Combobox :modelValue="selectedCode" nullable @update:model-value="selectStation">
             <ComboboxInput
                 v-bind="$attrs"
                 class="appInput text-xs sm:text-base pr-9"
@@ -43,10 +39,7 @@
                         {{ station.label }}
                     </li>
                 </ComboboxOption>
-                <li
-                    v-if="filteredStations.length === 0"
-                    class="px-3 py-2 text-sm text-ink-subtle"
-                >
+                <li v-if="filteredStations.length === 0" class="px-3 py-2 text-sm text-ink-subtle">
                     No stations found.
                 </li>
             </ComboboxOptions>
@@ -86,17 +79,13 @@ const emit = defineEmits<{
 
 const root = ref<HTMLDivElement | null>(null);
 const query = ref("");
-const selectedCode = ref<string | null>(
-    stationNames[props.modelValue] ? props.modelValue : null
-);
+const selectedCode = ref<string | null>(stationNames[props.modelValue] ? props.modelValue : null);
 const filteredStations = computed(() =>
     findStationOptions(query.value).filter(
         (station) => !props.excludedCrsCodes?.includes(station.code)
     )
 );
-const isValidStation = computed(
-    () => stationNames[props.modelValue] !== undefined
-);
+const isValidStation = computed(() => stationNames[props.modelValue] !== undefined);
 
 watch(
     () => props.modelValue,

@@ -5,17 +5,11 @@
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
             class="text-ink-subtle"
         >
-            <span
-                class="font-semibold"
-                :style="{color: stationColour(leg.origin)}"
-            >
+            <span class="font-semibold" :style="{color: stationColour(leg.origin)}">
                 {{ stationName(leg.origin) }}
             </span>
             →
-            <span
-                class="font-semibold"
-                :style="{color: stationColour(leg.destination)}"
-            >
+            <span class="font-semibold" :style="{color: stationColour(leg.destination)}">
                 {{ stationName(leg.destination) }}
             </span>
             <span>· {{ formatTime(leg.departure) }}</span>

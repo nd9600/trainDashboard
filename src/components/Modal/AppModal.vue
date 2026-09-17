@@ -37,10 +37,7 @@
                             <AppIcon class="size-5" name="close" />
                         </button>
 
-                        <header
-                            v-if="$slots.header"
-                            class="border-b border-line px-5 py-4 pr-14"
-                        >
+                        <header v-if="$slots.header" class="border-b border-line px-5 py-4 pr-14">
                             <DialogTitle class="text-lg font-semibold text-ink">
                                 <slot name="header" />
                             </DialogTitle>
@@ -68,13 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    TransitionChild,
-    TransitionRoot,
-} from "@headlessui/vue";
+import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {onBeforeUnmount, ref, watch} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 
@@ -106,8 +97,7 @@ function updateBodyOverflow([entry]: ResizeObserverEntry[]): void {
         return;
     }
 
-    isBodyOverflowing.value =
-        entry.target.scrollHeight > entry.target.clientHeight;
+    isBodyOverflowing.value = entry.target.scrollHeight > entry.target.clientHeight;
 }
 
 onBeforeUnmount(() => {

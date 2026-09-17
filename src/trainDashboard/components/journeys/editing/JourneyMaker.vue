@@ -1,43 +1,29 @@
 <template>
     <div class="space-y-2">
         <div class="flex flex-wrap items-end gap-x-2 gap-y-3">
-            <template v-if="endpointMode === 'locations'">
+            <template v-for="endpoint in endpoints" :key="endpoint.name">
                 <LocationReferenceInput
-                    ref="originLocationInput"
-                    v-model="journey.origin"
+                    v-if="endpointMode === 'locations'"
+                    :ref="endpoint.name === 'origin' ? 'originInput' : undefined"
+                    v-model="journey[endpoint.name]"
                     :stationGroups="stationGroups"
-                    :excludedGroupId="excludedGroupIdForOrigin"
-                    :excludedCrs="excludedCrsForOrigin"
-                    :excludedLocationKeys="excludedOriginKeys"
-                    :label="originLabel"
+                    :excludedGroupId="endpoint.opposite.groupId || undefined"
+                    :excludedCrs="getCrs(endpoint.opposite)"
+                    :excludedLocationKeys="endpoint.excludedKeys"
+                    :label="endpoint.label"
                 />
-                <LocationReferenceInput
-                    v-model="journey.destination"
-                    :stationGroups="stationGroups"
-                    :excludedGroupId="excludedGroupIdForDestination"
-                    :excludedCrs="excludedCrsForDestination"
-                    :excludedLocationKeys="excludedDestinationKeys"
-                    :label="destinationLabel"
-                />
-            </template>
-            <template v-else>
-                <label class="block space-y-1 text-xs text-ink-muted">
-                    <span>{{ originLabel }}</span>
+                <label v-else class="block space-y-1 text-xs text-ink-muted">
+                    <span>{{ endpoint.label }}</span>
                     <StationInput
-                        ref="originStationInput"
-                        v-model="originCrs"
+                        :ref="endpoint.name === 'origin' ? 'originInput' : undefined"
+                        :modelValue="getCrs(journey[endpoint.name]) ?? ''"
                         class="min-w-84"
                         :excludedCrsCodes="
-                            destinationCrs ? [destinationCrs] : []
+                            [getCrs(endpoint.opposite)].filter(
+                                (crs): crs is string => crs !== undefined
+                            )
                         "
-                    />
-                </label>
-                <label class="block space-y-1 text-xs text-ink-muted">
-                    <span>{{ destinationLabel }}</span>
-                    <StationInput
-                        v-model="destinationCrs"
-                        class="min-w-84"
-                        :excludedCrsCodes="originCrs ? [originCrs] : []"
+                        @update:modelValue="journey[endpoint.name] = {type: 'station', crs: $event}"
                     />
                 </label>
             </template>
@@ -72,16 +58,17 @@
         </div>
 
         <p v-if="journey.viaCrs !== undefined" class="text-xs text-ink-subtle">
-            The dashboard allows at least 3 minutes to change trains. It can't
-            check the station’s official minimum connection time.
+            The dashboard allows at least 3 minutes to change trains. It can't check the station’s
+            official minimum connection time.
         </p>
     </div>
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, ref} from "vue";
+import {computed, nextTick, ref, useTemplateRef} from "vue";
 import type {Journey, LocationReference} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
+import {getLocationKey} from "../../../journeys/journeyIdentity";
 import LocationReferenceInput from "./LocationReferenceInput.vue";
 import StationInput from "../../stations/StationInput.vue";
 
@@ -101,74 +88,45 @@ const props = withDefaults(
 
 const journey = defineModel<Journey>("journey", {required: true});
 const emit = defineEmits<{changed: []}>();
-const originLocationInput = ref<InstanceType<typeof LocationReferenceInput>>();
-const originStationInput = ref<InstanceType<typeof StationInput>>();
+const originInput =
+    useTemplateRef<
+        Array<InstanceType<typeof LocationReferenceInput> | InstanceType<typeof StationInput>>
+    >("originInput");
 const connectingStationInput = ref<InstanceType<typeof StationInput>>();
-const addConnectionButton = ref<HTMLButtonElement | null>(null);
-
-const originCrs = computed({
-    get: () =>
-        journey.value.origin.type === "station" ? journey.value.origin.crs : "",
-    set: (crs: string) => {
-        journey.value.origin = {type: "station", crs};
-    },
-});
-const destinationCrs = computed({
-    get: () =>
-        journey.value.destination.type === "station"
-            ? journey.value.destination.crs
-            : "",
-    set: (crs: string) => {
-        journey.value.destination = {type: "station", crs};
-    },
-});
+const addConnectionButton = ref<HTMLButtonElement>();
+const endpointNames = ["origin", "destination"] as const;
+const endpoints = computed(() =>
+    endpointNames.map((name, index) => {
+        const oppositeName = endpointNames[1 - index]!;
+        const opposite = journey.value[oppositeName];
+        const oppositeKey = getLocationKey(opposite, props.stationGroups);
+        const excludedKeys = oppositeKey
+            ? props.journeys
+                  .filter(
+                      (candidate) =>
+                          candidate.id !== journey.value.id &&
+                          getLocationKey(candidate[oppositeName], props.stationGroups) ===
+                              oppositeKey
+                  )
+                  .map((candidate) => getLocationKey(candidate[name], props.stationGroups))
+            : [];
+        return {
+            name,
+            opposite,
+            excludedKeys,
+            label: name === "origin" ? props.originLabel : props.destinationLabel,
+        };
+    })
+);
 const connectingStationExclusions = computed(() =>
-    [originCrs.value, destinationCrs.value].filter((crs) => crs !== "")
+    endpointNames
+        .map((name) => getCrs(journey.value[name]))
+        .filter((crs): crs is string => crs !== undefined && crs !== "")
 );
-const excludedCrsForOrigin = computed(() =>
-    journey.value.destination.type === "station"
-        ? journey.value.destination.crs
-        : undefined
-);
-const excludedCrsForDestination = computed(() =>
-    journey.value.origin.type === "station"
-        ? journey.value.origin.crs
-        : undefined
-);
-const excludedGroupIdForOrigin = computed(
-    () => journey.value.destination.groupId || undefined
-);
-const excludedGroupIdForDestination = computed(
-    () => journey.value.origin.groupId || undefined
-);
-const otherJourneys = computed(() =>
-    props.journeys.filter((candidate) => candidate.id !== journey.value.id)
-);
-const excludedOriginKeys = computed(() => {
-    if (journey.value.destination.groupId === "") {
-        return [];
-    }
 
-    const destinationKey = getLocationKey(journey.value.destination);
-
-    return otherJourneys.value
-        .filter(
-            (candidate) =>
-                getLocationKey(candidate.destination) === destinationKey
-        )
-        .map((candidate) => getLocationKey(candidate.origin));
-});
-const excludedDestinationKeys = computed(() => {
-    if (journey.value.origin.groupId === "") {
-        return [];
-    }
-
-    const originKey = getLocationKey(journey.value.origin);
-
-    return otherJourneys.value
-        .filter((candidate) => getLocationKey(candidate.origin) === originKey)
-        .map((candidate) => getLocationKey(candidate.destination));
-});
+function getCrs(location: LocationReference): string | undefined {
+    return location.type === "station" ? location.crs : undefined;
+}
 
 async function addConnectingStation(): Promise<void> {
     journey.value.viaCrs = "";
@@ -184,30 +142,5 @@ async function removeConnectingStation(): Promise<void> {
     addConnectionButton.value?.focus();
 }
 
-function getLocationKey(location: LocationReference): string {
-    if (location.type === "station" && location.groupId === undefined) {
-        return `station:${location.crs}`;
-    }
-
-    const group = props.stationGroups.find(
-        (candidate) => candidate.id === location.groupId
-    );
-
-    if (location.type === "group" || group?.stations.length === 1) {
-        return `group:${location.groupId}`;
-    }
-
-    return `station:${location.groupId}:${location.crs}`;
-}
-
-function focusOrigin(): void {
-    if (props.endpointMode === "locations") {
-        originLocationInput.value?.focus();
-        return;
-    }
-
-    originStationInput.value?.focus();
-}
-
-defineExpose({focusOrigin});
+defineExpose({focusOrigin: () => originInput.value?.[0]?.focus()});
 </script>

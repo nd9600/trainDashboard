@@ -24,12 +24,7 @@
                     :x2="xAt(tick)"
                     :y2="chartBottom"
                 />
-                <text
-                    class="fill-ink-subtle text-xs"
-                    :x="xAt(tick)"
-                    y="32"
-                    text-anchor="middle"
-                >
+                <text class="fill-ink-subtle text-xs" :x="xAt(tick)" y="32" text-anchor="middle">
                     {{ formatTime(tick) }}
                 </text>
             </g>
@@ -100,11 +95,7 @@
                         y="-14"
                         text-anchor="middle"
                     >
-                        d{{
-                            formatTime(
-                                journey.trainLegs[legIndex + 1]!.departure
-                            )
-                        }}
+                        d{{ formatTime(journey.trainLegs[legIndex + 1]!.departure) }}
                     </text>
                 </template>
                 <text
@@ -118,12 +109,7 @@
                             ? journey.arrivalLabel
                             : "Train arrives"
                     }}
-                    <tspan
-                        dx="4"
-                        :class="
-                            journey.boldArrivalTime ? 'font-bold' : undefined
-                        "
-                    >
+                    <tspan dx="4" :class="journey.boldArrivalTime ? 'font-bold' : undefined">
                         {{ journey.arrivalTime ?? journey.railArrivalTime }}
                     </tspan>
                 </text>
@@ -159,13 +145,10 @@
 </template>
 
 <script setup lang="ts">
-import {scaleLinear} from "d3-scale";
+import {getTimelineTicks} from "../../../../journeys/journeyTimes";
 import {computed, useId} from "vue";
 import {formatTime} from "@/utilities/time.utility.ts";
-import type {
-    SegmentKind,
-    TimetabledJourney,
-} from "../../../../dto/timetabledJourney.dto";
+import type {SegmentKind, TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
 import {stationColour} from "../../../../stations/stationColours";
 import {stationName} from "../../../../stations/stations";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
@@ -181,16 +164,10 @@ const props = defineProps<{
 
 const chartDescriptionId = useId();
 const chartBottom = computed(
-    () =>
-        props.rowStart +
-        (props.journeys.length - 1) * props.rowGap +
-        props.rowGap / 2
+    () => props.rowStart + (props.journeys.length - 1) * props.rowGap + props.rowGap / 2
 );
 const chartHeight = computed(() => chartBottom.value + 30);
-const timelineScale = computed(() =>
-    scaleLinear().domain([props.windowStart, props.windowEnd]).range([0, 85])
-);
-const ticks = computed(() => timelineScale.value.ticks(8));
+const ticks = computed(() => getTimelineTicks(props.windowStart, props.windowEnd));
 
 const segmentClasses: Record<SegmentKind, string> = {
     wait: "[stroke-width:3] [stroke-dasharray:4_5]",
@@ -199,7 +176,7 @@ const segmentClasses: Record<SegmentKind, string> = {
 };
 
 function xAt(minutes: number): string {
-    return `${timelineScale.value(minutes)}%`;
+    return `${(85 * (minutes - props.windowStart)) / (props.windowEnd - props.windowStart)}%`;
 }
 
 function timelineLabelClasses(journey: TimetabledJourney): string[] {
@@ -216,19 +193,14 @@ function getSegmentColour(
     const stationCrs =
         segment.kind === "train"
             ? journey.trainLegs.find(
-                  (leg) =>
-                      leg.departure === segment.start &&
-                      leg.arrival === segment.end
+                  (leg) => leg.departure === segment.start && leg.arrival === segment.end
               )?.origin
-            : journey.trainLegs.find((leg) => leg.arrival === segment.start)
-                  ?.destination;
+            : journey.trainLegs.find((leg) => leg.arrival === segment.start)?.destination;
 
     return stationColour(stationCrs ?? journey.origin);
 }
 
-function orderedSegments(
-    journey: TimetabledJourney
-): TimetabledJourney["segments"] {
+function orderedSegments(journey: TimetabledJourney): TimetabledJourney["segments"] {
     return [
         ...journey.segments.filter((segment) => segment.kind === "walk"),
         ...journey.segments.filter((segment) => segment.kind === "wait"),

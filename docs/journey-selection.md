@@ -38,12 +38,15 @@ Schedules can overlap. Use Move up and Move down in settings to put preferred sc
 ```mermaid
 sequenceDiagram
     participant Browser as Browser geolocation
+    participant Location as useJourneyLocation
     participant Store as Journey selection store
     participant Prediction as getJourneyPrediction
     participant UI as Journey switcher
     UI->>Store: Change configuration location preference
-    Store->>Browser: Start or stop location updates
-    Browser->>Store: Updated coordinates, or location error
+    Store->>Location: Read configuration location preference
+    Location->>Browser: Start or stop location updates
+    Browser->>Location: Updated coordinates, or location error
+    Location->>Store: Coordinates or no location
     Store->>Prediction: Configuration, clock, coordinates
     Prediction->>Prediction: Rank matching schedules and remove duplicate journeys
     Prediction-->>Store: Journey ID, alternatives, nearby group, reason
@@ -79,7 +82,9 @@ The active selection has one of these shapes:
 
 - `{type: "predicted"}` resolves the current predicted journey ID.
 - `{type: "saved", id}` resolves one configured journey.
-- `{type: "ephemeral"}` resolves the current ephemeral journey.
+- `{type: "ephemeral", journey}` contains the active temporary journey.
+
+`currentEphemeralJourney` is derived from the active selection. It is not a separate copy of selection state.
 
 The active override stays only in the current page session. Page refresh and Clear restore the current prediction.
 
@@ -141,3 +146,9 @@ These settings actions update a draft. Save configuration applies the changes; C
 - `src/trainDashboard/components/journeys/switcher/JourneyPredictionExplanation.vue` explains the rule that selected the journey.
 
 - `src/utilities/location.utility.ts` calculates spherical distances and finds the closest point.
+
+- `src/trainDashboard/journeys/journeyChoices.ts` builds ordered, deduplicated switcher groups.
+- `src/trainDashboard/journeys/journeyIdentity.ts` defines shared location keys, journey comparison, and available journey IDs.
+- `src/composables/useJourneyLocation.ts` owns geolocation watches.
+- `src/trainDashboard/components/journeys/switcher/JourneyChoiceOption.vue` renders one choice and its permitted removal action.
+- `src/trainDashboard/components/settings/useJourneySettingsDraft.ts` validates, saves, and cancels the settings draft.

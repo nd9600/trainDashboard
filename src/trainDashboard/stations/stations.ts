@@ -20,10 +20,7 @@ export const stationOptions: StationOption[] = Object.entries(stationNames)
     .sort((first, second) => first.name.localeCompare(second.name));
 
 const stationCodesByName = Object.fromEntries(
-    Object.entries(stationNames).map(([code, name]) => [
-        name.toLowerCase(),
-        code,
-    ])
+    Object.entries(stationNames).map(([code, name]) => [name.toLowerCase(), code])
 );
 
 export function stationDisplayName(code: string): string {
@@ -37,10 +34,7 @@ export function stationCodeFromInput(value: string): string {
     const trimmedValue = value.trim();
     const codeFromLabel = trimmedValue.match(/\(([A-Z]{3})\)$/i)?.[1];
 
-    if (
-        codeFromLabel &&
-        stationNames[codeFromLabel.toUpperCase()] !== undefined
-    ) {
+    if (codeFromLabel && stationNames[codeFromLabel.toUpperCase()] !== undefined) {
         return codeFromLabel.toUpperCase();
     }
 
@@ -52,10 +46,7 @@ export function stationCodeFromInput(value: string): string {
     return stationCodesByName[trimmedValue.toLowerCase()] ?? possibleCode;
 }
 
-export function findStationOptions(
-    query: string,
-    limit: number = 10
-): StationOption[] {
+export function findStationOptions(query: string, limit: number = 10): StationOption[] {
     const normalisedQuery = query.trim().toLowerCase();
 
     if (!normalisedQuery) {
@@ -77,10 +68,7 @@ export function findStationOptions(
         .slice(0, limit);
 }
 
-function stationMatchRank(
-    station: StationOption,
-    normalisedQuery: string
-): number {
+function stationMatchRank(station: StationOption, normalisedQuery: string): number {
     const code = station.code.toLowerCase();
     const name = station.name.toLowerCase();
 

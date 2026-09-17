@@ -13,7 +13,5 @@ function formatNationalRailDepartureTime(minutes: number): string {
     const hours = Math.floor(normalisedMinutes / 60);
     const remainingMinutes = normalisedMinutes % 60;
 
-    return `${hours.toString().padStart(2, "0")}${remainingMinutes
-        .toString()
-        .padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}${remainingMinutes.toString().padStart(2, "0")}`;
 }

@@ -51,3 +51,27 @@ npm test
 ```sh
 npm run lint
 ```
+
+## Code structure
+
+The application has one active journey and one timetable pipeline.
+
+| Responsibility | Location |
+| --- | --- |
+| Validated stored and API shapes | `src/trainDashboard/dto/` |
+| Configuration, selection, clock, and request state | `src/trainDashboard/store/` |
+| Pure prediction, identity, and choice rules | `src/trainDashboard/journeys/` |
+| Route expansion | `src/trainDashboard/journeys/planning/` |
+| Board requests and train planning | `src/trainDashboard/journeys/timetable/` |
+| Shared endpoint editor | `src/trainDashboard/components/journeys/editing/` |
+| Selection controls | `src/trainDashboard/components/journeys/switcher/` |
+| Shared results, desktop charts, and mobile cards | `src/trainDashboard/components/journeys/timetables/` |
+| Settings drafts and editors | `src/trainDashboard/components/settings/` |
+| Shared controls and icon catalogue | `src/components/` |
+
+See [selection](docs/journey-selection.md), [requests](docs/departure-boards.md), and [planning](docs/journey-planning.md) for diagrams and source maps.
+
+`stations.csv` is the only station catalogue. The Vite `station-names` loader exports names and CRS codes from its unquoted columns.
+The browser receives the generated lookup, not the CSV or its unused fields. The station lookup remains in a separate cacheable bundle.
+
+The formatter uses a 100-character line width. Run `npm run format` after edits.

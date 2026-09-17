@@ -1,14 +1,8 @@
 import type {DepartureBoard} from "../../dto/liveDepartureBoard.dto";
 import type {TrainLeg} from "../../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "../planning/journeyRoutes";
-import {
-    createDepartureBoardLoader,
-    mergeDepartureBoards,
-} from "./departureBoards";
-import {
-    loadFirstTrainsForRoutes,
-    type RouteFirstTrains,
-} from "./firstTrainRequests";
+import {createDepartureBoardLoader, mergeDepartureBoards} from "./departureBoards";
+import {loadFirstTrainsForRoutes, type RouteFirstTrains} from "./firstTrainRequests";
 import {loadOnwardDepartureBoard} from "./onwardTrainRequests";
 import {getDirectTrainLegs} from "./trainLegs";
 
@@ -32,12 +26,7 @@ export async function loadRouteTimetables(
 
     const onwardBoards = await Promise.all(
         firstTrains.map(({route, firstTrainLegs}) =>
-            loadOnwardDepartureBoard(
-                route,
-                firstTrainLegs,
-                currentMinutes,
-                loadDepartureBoard
-            )
+            loadOnwardDepartureBoard(route, firstTrainLegs, currentMinutes, loadDepartureBoard)
         )
     );
 
@@ -63,10 +52,7 @@ function makeRouteTimetables(
             crs: route.viaCrs,
             trainServices: [],
         };
-        onwardBoardsByStationPair.set(
-            key,
-            mergeDepartureBoards(existingBoard, board)
-        );
+        onwardBoardsByStationPair.set(key, mergeDepartureBoards(existingBoard, board));
     }
 
     return firstTrains.map(({route, firstTrainLegs}) => {
