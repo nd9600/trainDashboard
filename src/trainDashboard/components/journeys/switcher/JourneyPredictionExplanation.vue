@@ -11,7 +11,7 @@
             <p
                 class="my-0"
             >
-                {{ configStore.config.shouldUseLocation ? `We think you are near ${location}` : 'Your location is not being used for predictions.' }}.
+                {{ configStore.config.shouldUseLocation ? `We think you are near ${location}.` : 'Your location is not being used for predictions.' }}
             </p>
 
             <button
@@ -23,7 +23,7 @@
                 <AppIcon class="size-4 inline" name="settings" />
             </button>
         </div>
-        <p v-if="explanation && configStore.config.shouldUseLocation">
+        <p v-if="explanation">
             {{ explanation }}
         </p>
     </div>
@@ -132,7 +132,7 @@ const explanation = computed(() => {
     }
 
     return !group || reason.timing === "active"
-        ? `Your “${schedule.name}” schedule selects this journey.`
+        ? `This journey was chosen because of your “${schedule.name}” schedule.`
         : `"${schedule.name}" is your next schedule from ${group.name}.`;
 });
 </script>
