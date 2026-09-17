@@ -36,10 +36,22 @@
                     :scheduleNames="getScheduleNamesUsingJourney(selectedJourney!.id, schedules)"
                     @changed="emit('changed')"
                 />
+
+                <button
+                    v-if="isEditingJourney"
+                    class="appButton appButton--secondary"
+                    @click="isEditingJourney = !isEditingJourney"
+                >
+                    Cancel
+                </button>
+
             </div>
         </section>
 
-        <section class="space-y-3 border-t border-line pt-5">
+        <section
+            v-if="!isEditingJourney"
+            class="space-y-3 border-t border-line pt-5"
+        >
             <h3 class="font-semibold text-primary">Choose a different journey</h3>
             <label class="block">
                 <span class="mb-1 block text-xs text-ink-subtle"> Use an existing journey </span>
@@ -143,7 +155,7 @@ function setJourney(journeyId: string): void {
 
 function createJourney(): void {
     const journey = createEmptyJourney();
-    journeys.value = [...journeys.value, journey];
+    journeys.value.push(journey);
     setJourney(journey.id);
     isEditingJourney.value = true;
 }

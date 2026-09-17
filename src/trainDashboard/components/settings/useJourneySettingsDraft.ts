@@ -74,7 +74,7 @@ export function useJourneySettingsDraft(
 
     function validateDraft(): DashboardConfig | undefined {
         const result = DashboardConfigSchema.safeParse(draft.value);
-        errors.value = result.success ? [] : dashboardConfigErrorMessages(result.error);
+        errors.value = result.success ? [] : dashboardConfigErrorMessages(result.error, draft.value);
 
         // Incomplete numbers have an empty value, but are not optional blank fields.
         for (const input of form.value?.querySelectorAll("input") ?? []) {

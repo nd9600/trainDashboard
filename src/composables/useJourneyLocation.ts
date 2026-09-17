@@ -3,7 +3,7 @@ import {useGeolocation} from "@vueuse/core";
 import type {Coordinates} from "@/trainDashboard/dto/coordinates.dto";
 
 export function useJourneyLocation(
-    enabled: () => boolean,
+    shouldUseLocation: () => boolean,
     update: (coordinates: Coordinates | null) => void
 ): void {
     const {coords, locatedAt, error, pause, resume} = useGeolocation({
@@ -12,7 +12,7 @@ export function useJourneyLocation(
         enableHighAccuracy: false,
     });
     watch(
-        enabled,
+        shouldUseLocation,
         (value) => {
             if (value) resume();
             else {
@@ -24,7 +24,7 @@ export function useJourneyLocation(
     );
     watch([coords, error], ([coordinates, geolocationError]) => {
         update(
-            enabled() && !geolocationError && locatedAt.value !== null
+            shouldUseLocation() && !geolocationError && locatedAt.value !== null
                 ? {latitude: coordinates.latitude, longitude: coordinates.longitude}
                 : null
         );
