@@ -31,13 +31,16 @@ export function getJourneyPrediction(
     currentCoordinates: Coordinates | null
 ): JourneyPrediction {
     const nearbyGroup = getNearbyStationGroup(config.stationGroups, currentCoordinates);
+    
     const journeys = nearbyGroup
-        ? config.journeys.filter((journey) => startsAtGroup(journey, nearbyGroup))
+        ? config.journeys.filter((journey) => journeyStartsAtGroup(journey, nearbyGroup))
         : [];
     const journeyIds = new Set(journeys.map((journey) => journey.id));
+    
     const schedules = config.schedules.filter((schedule) =>
         nearbyGroup ? journeyIds.has(schedule.journeyId) : isScheduleActive(schedule, currentClock)
     );
+    
     // Active schedules rank first, then the next start in the weekly cycle.
     if (nearbyGroup) {
         schedules.sort(
@@ -46,10 +49,13 @@ export function getJourneyPrediction(
                 getMinutesUntilSchedule(second, currentClock)
         );
     }
+    
     const [predictedJourneyId, ...alternativeJourneyIds] = new Set([
         ...schedules.map((schedule) => schedule.journeyId),
         ...journeyIds,
     ]);
+    
+    // get reason for prediction
     const schedule = schedules[0];
     let reason: JourneyPredictionReason | undefined;
     if (schedule) {
@@ -63,6 +69,7 @@ export function getJourneyPrediction(
             ? {type: "saved", onlyJourney: journeys.length === 1}
             : {type: "nearby"};
     }
+    
     return {
         predictedJourneyId,
         alternativeJourneyIds,
@@ -71,14 +78,14 @@ export function getJourneyPrediction(
     };
 }
 
-function startsAtGroup(journey: Journey, group: StationGroup): boolean {
+function journeyStartsAtGroup(journey: Journey, group: StationGroup): boolean {
     const origin = journey.origin;
     if (origin.groupId !== undefined) {
         return origin.groupId === group.id;
     }
-    return (
-        origin.type === "station" && group.stations.some((station) => station.crs === origin.crs)
-    );
+    return origin.type === "station" 
+        && group.stations.some((station) => station.crs === origin.crs)
+    ;
 }
 
 function isScheduleActive(schedule: DisplaySchedule, clock: CurrentClock): boolean {
@@ -97,8 +104,7 @@ function getMinutesUntilSchedule(schedule: DisplaySchedule, clock: CurrentClock)
     const weekMinutes = 7 * 1440;
     return Math.min(
         ...schedule.days.map((day) => {
-            const difference =
-                (day - clock.day) * 1440 + timeToMinutes(schedule.startsAt) - clock.minutes;
+            const difference = (day - clock.day) * 1440 + timeToMinutes(schedule.startsAt) - clock.minutes;
             return (difference + weekMinutes) % weekMinutes;
         })
     );

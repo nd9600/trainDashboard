@@ -8,15 +8,22 @@ export function getJourneyChoices(
     recentIds: string[],
     saved: Journey[]
 ): JourneyChoices[] {
-    const seen = new Set<string>();
+    const alreadyListedJourneyIds = new Set<string>();
     function take(ids: (string | undefined)[], limit = Infinity): Journey[] {
         const choices: Journey[] = [];
         for (const id of ids) {
-            const journey = id ? journeys.get(id) : undefined;
-            if (!journey || seen.has(journey.id)) continue;
-            seen.add(journey.id);
+            const journey = id 
+                ? journeys.get(id) 
+                : undefined;
+            if (!journey || alreadyListedJourneyIds.has(journey.id)) {
+                continue
+            }
+            
+            alreadyListedJourneyIds.add(journey.id);
             choices.push(journey);
-            if (choices.length === limit) break;
+            if (choices.length === limit) {
+                break
+            }
         }
         return choices;
     }
