@@ -81,7 +81,7 @@
                 v-if="activeJourney.type === 'ephemeral'"
                 class="appButton appButton--primary px-2 py-1 text-xs"
                 type="button"
-                @click="journeySelectionStore.saveActiveJourney"
+                @click="journeySelectionStore.saveEphemeralJourney"
             >
                 <AppIcon class="size-3.5" name="bookmark" />
                 Save
@@ -172,7 +172,7 @@ function selectJourney(journeyId: string): void {
 
 function submitJourney(journey: JourneyFields): void {
     if (formMode.value === "edit") {
-        journeySelectionStore.editActiveJourney(journey)
+        journeySelectionStore.editSavedOrEphemeralJourney(journey)
     } else {
         journeySelectionStore.addEphemeralJourney(journey)
     }

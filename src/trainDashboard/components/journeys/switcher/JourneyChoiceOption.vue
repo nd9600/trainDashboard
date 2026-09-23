@@ -49,15 +49,17 @@ import JourneyLabel from "../JourneyLabel.vue";
 
 const props = defineProps<{journey: Journey; section: JourneyChoices["name"]}>();
 const {config} = storeToRefs(useDashboardConfigStore());
-const selection = useJourneySelectionStore();
+const journeySelectionStore = useJourneySelectionStore();
 const removeAction = computed(() => {
-    if (props.section === "Recent")
-        return {label: "Remove from recent journeys", run: selection.removeRecentJourney};
+    if (props.section === "Recent") {
+        return {label: "Remove from recent journeys", run: journeySelectionStore.removeRecentJourney}
+    }
+
     if (
-        props.section === "Saved" &&
-        !config.value.schedules.some((schedule) => schedule.journeyId === props.journey.id)
+        props.section === "Saved"
+        && !config.value.schedules.some((schedule) => schedule.journeyId === props.journey.id)
     ) {
-        return {label: "Remove saved journey", run: selection.removeSavedJourney};
+        return {label: "Remove saved journey", run: journeySelectionStore.removeSavedJourney};
     }
     return undefined;
 });

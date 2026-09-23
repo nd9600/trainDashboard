@@ -239,8 +239,8 @@ describe("useJourneySelectionStore", () => {
             ...fields,
             destination: {type: "group", groupId: "manchester-piccadilly"},
         };
-        restored.editActiveJourney(edited);
-        restored.saveActiveJourney();
+        restored.editSavedOrEphemeralJourney(edited);
+        restored.saveEphemeralJourney();
         expect(restored.activeJourney.type).toBe("saved");
         expect(useDashboardConfigStore().config.journeys).toContainEqual({
             id: "heaton-chapel-to-man",
@@ -260,7 +260,7 @@ describe("useJourneySelectionStore", () => {
         });
         expect(store.activeJourneyDetails).toBeUndefined();
         expect(store.journeyChoices.flatMap((section) => section.journeys)).toEqual([]);
-        store.saveActiveJourney();
+        store.saveEphemeralJourney();
         expect(
             useDashboardConfigStore().config.journeys.some(
                 (journey) => journey.id === "heaton-chapel-to-man"
@@ -290,7 +290,7 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
         store.addEphemeralJourney(manchesterToLiverpool);
 
-        store.saveActiveJourney();
+        store.saveEphemeralJourney();
 
         expect(store.activeJourney).toEqual({
             type: "saved",
@@ -369,7 +369,7 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
         store.selectJourney(unscheduledJourney.id);
 
-        store.editActiveJourney({...unscheduledJourney, viaCrs: "CRE"});
+        store.editSavedOrEphemeralJourney({...unscheduledJourney, viaCrs: "CRE"});
         expect(store.activeJourneyDetails).toEqual({
             ...unscheduledJourney,
             viaCrs: "CRE",
@@ -380,7 +380,7 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
         store.selectJourney(savedJourney.id);
 
-        store.editActiveJourney({...savedJourney, viaCrs: "CRE"});
+        store.editSavedOrEphemeralJourney({...savedJourney, viaCrs: "CRE"});
         expect(store.activeJourneyDetails).toEqual(savedJourney);
     });
 
@@ -388,7 +388,7 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
         store.addEphemeralJourney(manchesterToLiverpool);
 
-        store.editActiveJourney({
+        store.editSavedOrEphemeralJourney({
             ...manchesterToLiverpool,
             viaCrs: "CRE",
         });

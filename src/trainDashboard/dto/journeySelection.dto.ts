@@ -7,6 +7,8 @@ import {
     type Journey,
     type LocationReference,
 } from "./journey.dto";
+
+// can't start and end at the same place
 const EphemeralJourneyFieldsSchema = JourneyFieldsSchema.refine(
     (journey) => getLocationKey(journey.origin) !== getLocationKey(journey.destination)
 );
@@ -32,7 +34,6 @@ export function createEphemeralJourney(
     existingJourneyIds: Iterable<string> = []
 ): EphemeralJourney | undefined {
     const result = EphemeralJourneyFieldsSchema.safeParse(fields);
-
     if (!result.success) {
         return undefined;
     }

@@ -142,7 +142,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 ...this.recentJourneyIds.filter((id) => id !== journeyId),
             ].slice(0, 50);
 
-            this.saveRecentJourneysInStorage();
+            this.storeRecentJourneys();
         },
 
         addEphemeralJourney(fields: JourneyFields): void {
@@ -150,6 +150,8 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 return;
             }
 
+            // we add an ephemeral journey by giving it an ID, adding it to the recentEphemeralJourneys, then selecting
+            // that new ID
             const parsedJourney = createEphemeralJourney(fields, this.journeysById.keys());
             if (!parsedJourney) {
                 return;
@@ -159,7 +161,8 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 journeysAreTheSame(journey, parsedJourney)
             );
 
-            if (existingJourney) {
+            const newEphemeralJourneyAlreadyExists = existingJourney !== undefined;
+            if (newEphemeralJourneyAlreadyExists) {
                 this.selectJourney(existingJourney.id);
                 return;
             }
@@ -168,7 +171,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.selectJourney(parsedJourney.id);
         },
 
-        saveActiveJourney(): void {
+        saveEphemeralJourney(): void {
             if (
                 !this.isInitialised 
                 || this.activeJourney.type !== "ephemeral" 
@@ -194,16 +197,14 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 (candidate) => candidate.id !== ephemeralJourneyId
             );
             this.activeJourney = {type: "saved", id: savedJourney.id};
-            this.saveRecentJourneysInStorage();
+            this.storeRecentJourneys();
         },
 
-        editActiveJourney(fields: JourneyFields): void {
-            const activeJourneyDetails = this.activeJourneyDetails;
-
+        editSavedOrEphemeralJourney(fields: JourneyFields): void {
             if (
                 !this.isInitialised 
                 || this.activeJourney.type === "predicted" 
-                || !activeJourneyDetails
+                || !this.activeJourneyDetails
             ) {
                 return;
             }
@@ -223,14 +224,15 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                     journey.id === updatedJourney.id ? updatedJourney : journey
                 );
                 this.activeJourney = {type: "ephemeral", journey: updatedJourney};
-                this.saveRecentJourneysInStorage();
+                this.storeRecentJourneys();
                 return;
+            } else {
+                // is saved journey
+                useDashboardConfigStore().updateJourney({
+                    id: this.activeJourneyDetails.id,
+                    ...fields,
+                });
             }
-
-            useDashboardConfigStore().updateJourney({
-                id: activeJourneyDetails.id,
-                ...fields,
-            });
         },
 
         removeRecentJourney(journeyId: string): void {
@@ -241,7 +243,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.recentJourneyIds = this.recentJourneyIds.filter(
                 (recentJourneyId) => recentJourneyId !== journeyId
             );
-            this.saveRecentJourneysInStorage();
+            this.storeRecentJourneys();
         },
 
         removeSavedJourney(journeyId: string): void {
@@ -257,7 +259,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 this.resetActiveJourneyToPredicted();
             }
 
-            this.saveRecentJourneysInStorage();
+            this.storeRecentJourneys();
         },
 
         resetActiveJourneyToPredicted(): void {
@@ -267,11 +269,16 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.activeJourney = {type: "predicted"};
         },
 
-        saveRecentJourneysInStorage(): void {
+        //todo: better name for this that isn't "saveRecentJourneys"? "save" means "add to saved journeys"
+        storeRecentJourneys(): void {
             const retainedJourneyIds = new Set(this.recentJourneyIds);
+
+            //todo: why do we need this filter?
             this.recentEphemeralJourneys = this.recentEphemeralJourneys.filter((journey) =>
                 retainedJourneyIds.has(journey.id)
             );
+
+            // could we have a watcher on recentJourneyIds and recentEphemeralJourneys that does this instead of having to call storeRecentJourneys everytime?
             recentJourneyStorage.saveToLocalStorage({
                 recentJourneyIds: this.recentJourneyIds,
                 ephemeralJourneys: this.recentEphemeralJourneys,
