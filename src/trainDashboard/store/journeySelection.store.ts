@@ -15,7 +15,7 @@ import {
 import {getJourneyPrediction, type JourneyPrediction} from "../journeys/journeyPrediction";
 import {useDashboardClockStore} from "./dashboardClock.store";
 import {useDashboardConfigStore} from "./dashboardConfig.store";
-const memoryStorage = useLocalStorageTyped(
+const recentJourneyStorage = useLocalStorageTyped(
     "train-dashboard-journey-memory-v2",
     JourneyMemorySchema,
     {recentJourneyIds: [], ephemeralJourneys: []}
@@ -105,7 +105,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 return;
             }
 
-            const savedMemory = memoryStorage.loadFromLocalStorage();
+            const savedMemory = recentJourneyStorage.loadFromLocalStorage();
             this.recentJourneyIds = savedMemory.recentJourneyIds;
             this.ephemeralJourneys = savedMemory.ephemeralJourneys;
             this.isInitialised = true;
@@ -267,7 +267,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.ephemeralJourneys = this.ephemeralJourneys.filter((journey) =>
                 retainedJourneyIds.has(journey.id)
             );
-            memoryStorage.saveToLocalStorage({
+            recentJourneyStorage.saveToLocalStorage({
                 recentJourneyIds: this.recentJourneyIds,
                 ephemeralJourneys: this.ephemeralJourneys,
             });

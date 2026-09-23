@@ -65,7 +65,7 @@ describe("useTrainServicesStore", () => {
         const config = structuredClone(manchesterDashboardConfig);
         config.stationGroups[2]!.coordinates = {latitude: 53.4, longitude: -3};
         useDashboardConfigStore().saveConfig(config);
-        useRailDataApiStore().saveSettings({consumerKey: "test-key"});
+        useRailDataApiStore().saveApiSettings({consumerKey: "test-key"});
     });
 
     afterEach(() => {

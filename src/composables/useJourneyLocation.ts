@@ -9,7 +9,7 @@ export function useJourneyLocation(
     const {coords, locatedAt, error, pause, resume} = useGeolocation({
         immediate: false,
         maximumAge: 60_000,
-        enableHighAccuracy: false,
+        enableHighAccuracy: true,
     });
     watch(
         shouldUseLocation,

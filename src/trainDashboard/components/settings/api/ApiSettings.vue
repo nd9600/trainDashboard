@@ -60,7 +60,7 @@ function handleChange(): void {
 }
 
 function save(): void {
-    apiStore.saveSettings(draft.value);
+    apiStore.saveApiSettings(draft.value);
     draft.value = {...apiStore.settings};
     isConsumerKeyVisible.value = false;
     hasUnsavedChanges.value = false;
