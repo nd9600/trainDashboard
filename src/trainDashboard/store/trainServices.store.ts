@@ -8,6 +8,11 @@ import {useDashboardConfigStore} from "./dashboardConfig.store";
 import {useJourneySelectionStore} from "./journeySelection.store";
 import {useRailDataApiStore} from "./railDataApi.store";
 
+export enum JourneyLoadError {
+    NoConsumerKey = "NoConsumerKey",
+    DataCouldntBeLoaded = "DataCouldntBeLoaded",
+}
+
 export const useTrainServicesStore = defineStore("train-services", () => {
     const journeySelectionStore = useJourneySelectionStore();
     const dashboardClockStore = useDashboardClockStore();
@@ -18,7 +23,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const routes = ref<JourneyRoute[]>([]);
     const journeys = ref<TimetabledJourney[]>([]);
     const isLoadingJourneys = ref(true);
-    const journeyLoadError = ref<string>();
+    const journeyLoadError = ref<JourneyLoadError|null>(null);
 
     const recommendedJourney = computed(() =>
         journeys.value.find((journey) => journey.recommended)
@@ -31,7 +36,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             isCurrentRequest = false;
         });
         isLoadingJourneys.value = true;
-        journeyLoadError.value = undefined;
+        journeyLoadError.value = null;
 
         const consumerKey = apiStore.settings.consumerKey;
 
@@ -51,14 +56,14 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             journeys.value = dashboardJourneys.journeys;
 
             if (!consumerKey) {
-                journeyLoadError.value = "Add your Consumer key in Settings → API.";
+                journeyLoadError.value = JourneyLoadError.NoConsumerKey;
             }
         } catch {
             if (!isCurrentRequest) {
                 return;
             }
             journeys.value = [];
-            journeyLoadError.value = "Train data could not be loaded. Try again later.";
+            journeyLoadError.value = JourneyLoadError.DataCouldntBeLoaded;
         } finally {
             if (isCurrentRequest) {
                 isLoadingJourneys.value = false;

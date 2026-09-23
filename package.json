@@ -10,7 +10,7 @@
         "test": "vitest run",
         "build-only": "vite build",
         "postbuild-only": "node scripts/generate-service-worker.mjs",
-        "type-check": "vue-tsc --build",
+        "typecheck": "vue-tsc --build",
         "lint": "npm run lint:oxlint && npm run lint:eslint",
         "lint:oxlint": "oxlint . --fix",
         "lint:eslint": "eslint . --fix --cache",

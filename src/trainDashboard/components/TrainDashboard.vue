@@ -3,11 +3,11 @@
         <div class="mx-auto max-w-dashboard pt-8 pb-8">
             <div class="flex justify-between max-sm:px-2">
                 <DashboardHeader />
-                <TrainDashboardSettingsModal ref="settingsModal" />
+                <TrainDashboardSettingsModal ref="settingsModalRef" />
             </div>
 
             <section
-                v-if="hasNoJourneyConfiguration"
+                v-if="!hasFinishedSetup"
                 class="mx-2 mt-8 rounded-lg border border-line bg-surface p-5 sm:mx-0"
                 aria-labelledby="empty-dashboard-title"
             >
@@ -18,18 +18,15 @@
                             Set up your regular journeys
                         </h2>
                         <p class="mt-1 text-sm text-ink-muted">
-                            First, add at least two station groups. Then add a schedule that selects
-                            a journey.
+                            First, add at least two station groups. Then add a schedule that selects a journey.
                         </p>
                         <p class="mt-3 border-l-2 border-japonica pl-3 text-sm text-ink-muted">
-                            For example: add “Home” with Manchester Piccadilly, add “Work” with
-                            Euston and Kings Cross, then schedule Home → Work on weekday mornings
-                            (RIP HS2 Phase 2b).
+                            For example: add “Home” with Manchester Piccadilly, add “Work” with Euston and Kings Cross, then schedule Home → Work on weekday mornings (RIP HS2 Phase 2b).
                         </p>
                         <button
                             class="appButton appButton--primary mt-4"
                             type="button"
-                            @click="settingsModal?.open()"
+                            @click="settingsModalRef?.open()"
                         >
                             <AppIcon class="size-4" name="settings" />
                             Open journey settings
@@ -58,12 +55,12 @@
                     v-if="journeyLoadError"
                     class="rounded-lg border border-line bg-surface p-4 text-ink-muted"
                 >
-                    {{ journeyLoadError }}
+                    {{ journeyLoadErrorString }}
                     <button
-                        v-if="!apiKeyConfigured"
+                        v-if="journeyLoadError === JourneyLoadError.NoConsumerKey"
                         class="appButton appButton--secondary ml-3 py-1"
                         type="button"
-                        @click="settingsModal?.openApiSettings()"
+                        @click="settingsModalRef?.openApiSettings()"
                     >
                         Open API settings
                     </button>
@@ -92,7 +89,7 @@ import AppIcon from "@/components/AppIcon.vue";
 import NoJourneysFound from "./journeys/timetables/NoJourneysFound.vue";
 import JourneyTimelines from "./journeys/timetables/JourneyTimelines.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";
-import {useTrainServicesStore} from "../store/trainServices.store";
+import {JourneyLoadError, useTrainServicesStore} from "../store/trainServices.store";
 import {useDashboardConfigStore} from "../store/dashboardConfig.store";
 import {useDashboardClockStore} from "../store/dashboardClock.store";
 import {useJourneySelectionStore} from "../store/journeySelection.store";
@@ -105,24 +102,34 @@ const trainServicesStore = useTrainServicesStore();
 const dashboardClockStore = useDashboardClockStore();
 const dashboardConfigStore = useDashboardConfigStore();
 const journeySelectionStore = useJourneySelectionStore();
-const settingsModal = ref<{
+
+const settingsModalRef = ref<{
     open: () => void;
     openApiSettings: () => void;
 } | null>(null);
+
 const {isLoadingJourneys, journeyLoadError, journeys, routes} = storeToRefs(trainServicesStore);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
 const {activeJourneyDetails} = storeToRefs(journeySelectionStore);
 
 const hasJourneyData = computed(() => journeys.value.length > 0);
-const hasNoJourneyConfiguration = computed(
+const hasFinishedSetup = computed(
     () =>
-        dashboardConfig.value.stationGroups.length === 0 &&
-        dashboardConfig.value.schedules.length === 0
+        dashboardConfig.value.stationGroups.length > 0
+        && dashboardConfig.value.schedules.length > 0
 );
-const apiKeyConfigured = computed(() => !journeyLoadError.value?.includes("Consumer key"));
-
 const routesWithoutTimetabledJourneys = computed(() =>
     getRoutesWithoutTimetabledJourneys(routes.value, journeys.value)
 );
+
+const journeyLoadErrorString = computed(() => {
+    if (!journeyLoadError.value) {
+        return null;
+    }
+    if (journeyLoadError.value === JourneyLoadError.NoConsumerKey) {
+        return "Add your Consumer key in Settings → API.";
+    }
+    return "Train data could not be loaded. Try again later."
+});
 </script>
