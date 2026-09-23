@@ -69,7 +69,7 @@ export function getJourneySettingsLabel(journey: Journey, stationGroups: Station
     return getJourneyLabelText(getJourneyLabelDetails(journey, stationGroups));
 }
 
-export function getScheduleNamesUsingJourney(
+export function getScheduleNamesThatUseJourney(
     journeyId: string,
     schedules: DisplaySchedule[]
 ): string[] {

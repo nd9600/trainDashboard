@@ -33,7 +33,7 @@
                     v-model:journey="journeys[selectedJourneyIndex]!"
                     :stationGroups="stationGroups"
                     :journeys="journeys"
-                    :scheduleNames="getScheduleNamesUsingJourney(selectedJourney!.id, schedules)"
+                    :scheduleNames="getScheduleNamesThatUseJourney(selectedJourney!.id, schedules)"
                     @changed="emit('changed')"
                 />
 
@@ -99,7 +99,7 @@ import JourneySettingsFields from "../journeys/JourneySettingsFields.vue";
 import {
     createEmptyJourney,
     getJourneySettingsLabel,
-    getScheduleNamesUsingJourney,
+    getScheduleNamesThatUseJourney,
 } from "./scheduleSettings";
 
 const props = defineProps<{

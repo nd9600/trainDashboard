@@ -25,34 +25,30 @@
                             class="appButton appButton--icon text-ink hover:text-paper hover:bg-ink"
                             @click="
                                 editingJourneyId =
-                                    editingJourneyId === journey.id ? undefined : journey.id
+                                    editingJourneyId === journey.id 
+                                        ? undefined 
+                                        : journey.id
                             "
-                            :label="
-                                editingJourneyId === journey.id ? 'Done editing' : 'Edit journey'
-                            "
+                            :label="editingJourneyId === journey.id ? 'Done editing' : 'Edit journey'"
                             :icon="editingJourneyId === journey.id ? 'close' : 'pencil'"
                         />
                         <button
                             class="appButton appButton--icon text-danger hover:text-paper hover:bg-danger"
                             type="button"
-                            :disabled="
-                                getScheduleNamesUsingJourney(journey.id, schedules).length > 0
-                            "
+                            :disabled="getScheduleNamesThatUseJourney(journey.id, schedules).length > 0"
                             title="Remove journey"
                             aria-label="Remove journey"
-                            @click="removeJourney(journey.id)"
+                            @click="removeSavedJourney(journey.id)"
                         >
                             <AppIcon class="size-4" name="trash" />
                         </button>
                     </div>
                 </div>
                 <p
-                    v-if="getScheduleNamesUsingJourney(journey.id, schedules).length"
+                    v-if="getScheduleNamesThatUseJourney(journey.id, schedules).length"
                     class="mt-2 text-xs text-ink-subtle"
                 >
-                    Used by:
-                    {{ getScheduleNamesUsingJourney(journey.id, schedules).join(", ") }}. Change
-                    these schedules before removing this journey.
+                    Used by: {{ getScheduleNamesThatUseJourney(journey.id, schedules).join(", ") }}. Change these schedules before removing this journey.
                 </p>
                 <JourneySettingsFields
                     v-if="editingJourneyId === journey.id"
@@ -99,7 +95,7 @@
                     />
                     <AppIconButton
                         class="appButton appButton--icon size-8 text-danger hover:text-paper hover:bg-danger"
-                        @click="forgetJourney(journey.id)"
+                        @click="forgetRecentJourney(journey.id)"
                         label="Forget journey"
                         icon="close"
                     />
@@ -121,7 +117,7 @@ import {getJourneyLabelDetails} from "../../../journeys/journeyLabels";
 import {useJourneySelectionStore} from "../../../store/journeySelection.store";
 import JourneyLabel from "../../journeys/JourneyLabel.vue";
 import JourneySettingsFields from "./JourneySettingsFields.vue";
-import {getScheduleNamesUsingJourney} from "../schedules/scheduleSettings";
+import {getScheduleNamesThatUseJourney} from "../schedules/scheduleSettings";
 
 const props = defineProps<{
     stationGroups: StationGroup[];
@@ -157,16 +153,17 @@ function saveRecentJourney(journey: Journey): void {
     emit("changed");
 }
 
-function forgetJourney(journeyId: string): void {
+function forgetRecentJourney(journeyId: string): void {
     recentJourneyIds.value = recentJourneyIds.value.filter((id) => id !== journeyId);
     emit("changed");
 }
 
-function removeJourney(journeyId: string): void {
-    if (getScheduleNamesUsingJourney(journeyId, props.schedules).length > 0) {
-        return
+function removeSavedJourney(journeyId: string): void {
+    const journeyIsUsedInSchedule = getScheduleNamesThatUseJourney(journeyId, props.schedules).length > 0;
+    if (journeyIsUsedInSchedule) {
+        return;
     }
     journeys.value = journeys.value.filter((journey) => journey.id !== journeyId);
-    forgetJourney(journeyId);
+    forgetRecentJourney(journeyId);
 }
 </script>

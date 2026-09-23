@@ -46,32 +46,38 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     }
 
     function updateJourney(candidate: Journey): void {
-        if (
-            config.value.schedules.some((schedule) => schedule.journeyId === candidate.id) ||
-            !config.value.journeys.some((journey) => journey.id === candidate.id)
-        ) {
+        const journeyIsInASchedule = config.value.schedules
+            .some((schedule) => schedule.journeyId === candidate.id);
+        const isASavedJourney = config.value.journeys.some((journey) => journey.id === candidate.id);
+        if (journeyIsInASchedule || !isASavedJourney) {
             return;
         }
 
         saveConfig({
             ...config.value,
+
+            // overwrite this journey only
             journeys: config.value.journeys.map((journey) =>
-                journey.id === candidate.id ? candidate : journey
+                journey.id === candidate.id
+                    ? candidate
+                    : journey
             ),
         });
     }
 
     function removeJourney(journeyId: string): boolean {
-        if (
-            !config.value.journeys.some((journey) => journey.id === journeyId) ||
-            config.value.schedules.some((schedule) => schedule.journeyId === journeyId)
-        ) {
+        const journeyIsInASchedule = config.value.schedules
+            .some((schedule) => schedule.journeyId === journeyId);
+        const isASavedJourney = config.value.journeys
+            .some((journey) => journey.id === journeyId);
+        if (journeyIsInASchedule || !isASavedJourney) {
             return false;
         }
 
         saveConfig({
             ...config.value,
-            journeys: config.value.journeys.filter((journey) => journey.id !== journeyId),
+            journeys: config.value.journeys
+                .filter((journey) => journey.id !== journeyId),
         });
 
         return true;
