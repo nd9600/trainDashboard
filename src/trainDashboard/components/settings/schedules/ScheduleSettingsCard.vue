@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import {hasJourneyEndpoints} from "../../../journeys/journeyIdentity";
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
@@ -31,7 +32,7 @@ import type {Journey} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import {getJourneyLabelDetails} from "../../../journeys/journeyLabels";
 import JourneyLabel from "../../journeys/JourneyLabel.vue";
-import {getActiveDaysText, hasJourneyEndpoints} from "./scheduleSettings";
+import {getActiveDaysText} from "./scheduleSettings";
 
 const props = defineProps<{
     schedule: DisplaySchedule;

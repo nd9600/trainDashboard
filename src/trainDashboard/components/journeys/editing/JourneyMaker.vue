@@ -12,20 +12,14 @@
                     :excludedLocationKeys="endpoint.excludedKeys"
                     :label="endpoint.label"
                 />
-                <label v-else class="block space-y-1 text-xs text-ink-muted">
-                    <span>{{ endpoint.label }}</span>
-                    <StationInput
-                        :ref="endpoint.name === 'origin' ? 'originInput' : undefined"
-                        :modelValue="getCrs(journey[endpoint.name]) ?? ''"
-                        class="min-w-84"
-                        :excludedCrsCodes="
-                            [getCrs(endpoint.opposite)].filter(
-                                (crs): crs is string => crs !== undefined
-                            )
-                        "
-                        @update:modelValue="journey[endpoint.name] = {type: 'station', crs: $event}"
-                    />
-                </label>
+                <LocationSearchInput
+                    v-else
+                    :ref="endpoint.name === 'origin' ? 'originInput' : undefined"
+                    v-model="journey[endpoint.name]"
+                    :stationGroups="stationGroups"
+                    :excludedLocation="endpoint.opposite"
+                    :label="endpoint.label"
+                />
             </template>
 
             <template v-if="journey.viaCrs !== undefined">
@@ -69,12 +63,13 @@ import {computed, nextTick, ref, useTemplateRef} from "vue";
 import type {Journey, LocationReference} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import {getLocationKey} from "../../../journeys/journeyIdentity";
+import LocationSearchInput from "./LocationSearchInput.vue";
 import LocationReferenceInput from "./LocationReferenceInput.vue";
 import StationInput from "../../stations/StationInput.vue";
 
 const props = withDefaults(
     defineProps<{
-        endpointMode: "locations" | "stations";
+        endpointMode: "locations" | "search";
         originLabel: string;
         destinationLabel: string;
         stationGroups?: StationGroup[];
@@ -90,7 +85,9 @@ const journey = defineModel<Journey>("journey", {required: true});
 const emit = defineEmits<{changed: []}>();
 const originInput =
     useTemplateRef<
-        Array<InstanceType<typeof LocationReferenceInput> | InstanceType<typeof StationInput>>
+        Array<
+            InstanceType<typeof LocationReferenceInput> | InstanceType<typeof LocationSearchInput>
+        >
     >("originInput");
 const connectingStationInput = ref<InstanceType<typeof StationInput>>();
 const addConnectionButton = ref<HTMLButtonElement>();

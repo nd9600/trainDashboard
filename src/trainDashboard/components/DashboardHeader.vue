@@ -72,7 +72,10 @@ const leaveInString = computed(() => {
     if (isLoadingJourneys.value) {
         return "Finding trains…";
     }
-    if (activeJourney.value.type === "ephemeral") {
+    if (
+        activeJourney.value.type === "ephemeral"
+        && activeJourneyDetails.value?.origin.groupId === undefined
+    ) {
         if (!headerJourney.value) {
             return "No trains found";
         }

@@ -113,7 +113,7 @@
 import AppIconButton from "@/components/AppIconButton.vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {computed, ref} from "vue";
-import {hasSameJourneyFields} from "../../../journeys/journeyIdentity";
+import {hasJourneyEndpoints, hasSameJourneyFields} from "../../../journeys/journeyIdentity";
 import type {Journey} from "../../../dto/journey.dto";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
@@ -121,7 +121,7 @@ import {getJourneyLabelDetails} from "../../../journeys/journeyLabels";
 import {useJourneySelectionStore} from "../../../store/journeySelection.store";
 import JourneyLabel from "../../journeys/JourneyLabel.vue";
 import JourneySettingsFields from "./JourneySettingsFields.vue";
-import {getScheduleNamesUsingJourney, hasJourneyEndpoints} from "../schedules/scheduleSettings";
+import {getScheduleNamesUsingJourney} from "../schedules/scheduleSettings";
 
 const props = defineProps<{
     stationGroups: StationGroup[];
@@ -141,7 +141,7 @@ const recentJourneys = computed(() => {
     }
     return recentJourneyIds.value.flatMap((id) => {
         const journey = journeysById.get(id);
-        return journey ? [journey] : [];
+        return journey && hasJourneyEndpoints(journey, props.stationGroups) ? [journey] : [];
     });
 });
 

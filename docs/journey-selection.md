@@ -94,7 +94,7 @@ The active override stays only in the current page session. Page refresh and Cle
 flowchart TD
     switcher[Journey switcher]
     existing[Select predicted, alternative, recent, or saved]
-    create[Create station-to-station journey]
+    create[Create journey with stations or groups]
     edit[Edit active unscheduled journey]
     save[Save active ephemeral journey]
     clear[Clear active override]
@@ -118,6 +118,10 @@ flowchart TD
     removeSaved --> config[Update configuration]
 ```
 
+The switcher searches individual stations and configured groups for both endpoints. Connecting stations remain individual stations.
+
+Temporary journeys retain group references, so route expansion uses the group stations and their walking times. Journeys with removed groups are hidden.
+
 Selecting a temporary journey adds its ID to recent history. The switcher shows at most three recent journeys.
 
 Recent history contains journey IDs. Ephemeral definitions remain in journey memory while a recent or active selection refers to them.
@@ -139,6 +143,7 @@ These settings actions update a draft. Save configuration applies the changes; C
 - `src/trainDashboard/store/dashboardConfig.store.ts` supplies schedules and saved journeys.
 - `src/trainDashboard/components/journeys/switcher/JourneySwitcher.vue` presents journey choices and actions.
 - `src/trainDashboard/components/journeys/switcher/JourneyForm.vue` creates and edits journey fields.
+- `src/trainDashboard/components/journeys/editing/LocationSearchInput.vue` searches stations and groups for switcher endpoints.
 
 - `src/trainDashboard/components/settings/journeys/SavedJourneysSettings.vue` edits saved journeys and manages recent entries in the settings draft.
 

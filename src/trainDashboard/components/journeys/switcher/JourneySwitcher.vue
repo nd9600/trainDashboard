@@ -101,7 +101,6 @@
             v-if="formMode"
             :key="`${formMode}-${activeJourneyId}`"
             :initialJourney="formMode === 'edit' ? activeJourneyDetails : undefined"
-            :endpointMode="formMode === 'edit' ? activeJourneyEndpointMode : 'stations'"
             :stationGroups="stationGroups"
             :journeys="config.journeys"
             :submitLabel="formMode === 'edit' ? 'Save' : 'Use journey'"
@@ -148,12 +147,6 @@ const canEditActiveJourney = computed(
     () =>
         activeJourneyDetails.value !== undefined &&
         !scheduledJourneyIds.value.has(activeJourneyDetails.value.id)
-);
-const activeJourneyEndpointMode = computed(() =>
-    activeJourneyDetails.value?.origin.groupId !== undefined ||
-    activeJourneyDetails.value?.destination.groupId !== undefined
-        ? "locations"
-        : "stations"
 );
 const switcherButtonLabel = computed(() => {
     if (!activeJourneyDetails.value) {

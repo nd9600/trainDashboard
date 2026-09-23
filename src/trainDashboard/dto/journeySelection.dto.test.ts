@@ -20,11 +20,21 @@ describe("createEphemeralJourney", () => {
         expect(journey?.id).toBe("man-to-liv-3");
     });
 
-    it("rejects location groups and matching stations", () => {
+    it("accepts groups and rejects matching endpoints", () => {
         expect(
             createEphemeralJourney({
                 origin: {type: "group", groupId: "home"},
                 destination: {type: "station", crs: "LIV"},
+            })
+        ).toEqual({
+            id: "home-to-liv",
+            origin: {type: "group", groupId: "home"},
+            destination: {type: "station", crs: "LIV"},
+        });
+        expect(
+            createEphemeralJourney({
+                origin: {type: "group", groupId: "home"},
+                destination: {type: "group", groupId: "home"},
             })
         ).toBeUndefined();
         expect(

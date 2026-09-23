@@ -65,14 +65,6 @@ export function createEmptyJourney(): Journey {
     };
 }
 
-export function hasJourneyEndpoints(journey: Journey, stationGroups: StationGroup[]): boolean {
-    return [journey.origin, journey.destination].every(
-        (location) =>
-            (location.type === "station" && location.groupId === undefined) ||
-            stationGroups.some((group) => group.id === location.groupId)
-    );
-}
-
 export function getJourneySettingsLabel(journey: Journey, stationGroups: StationGroup[]): string {
     return getJourneyLabelText(getJourneyLabelDetails(journey, stationGroups));
 }

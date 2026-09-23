@@ -221,6 +221,53 @@ describe("useJourneySelectionStore", () => {
         expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
     });
 
+    it("restores, edits and saves a temporary journey with group endpoints", () => {
+        const store = getJourneySelectionStore();
+        const fields: JourneyFields = {
+            origin: {type: "group", groupId: "heaton-chapel"},
+            destination: {type: "station", crs: "MAN"},
+        };
+        store.selectEphemeralJourney(fields);
+        expect(store.activeJourneyDetails).toEqual({id: "heaton-chapel-to-man", ...fields});
+
+        recreateStores();
+        const restored = getJourneySelectionStore();
+        restored.selectJourney("heaton-chapel-to-man");
+        expect(restored.activeJourneyDetails).toEqual({id: "heaton-chapel-to-man", ...fields});
+
+        const edited: JourneyFields = {
+            ...fields,
+            destination: {type: "group", groupId: "manchester-piccadilly"},
+        };
+        restored.editActiveJourney(edited);
+        restored.saveActiveJourney();
+        expect(restored.activeJourney.type).toBe("saved");
+        expect(useDashboardConfigStore().config.journeys).toContainEqual({
+            id: "heaton-chapel-to-man",
+            ...edited,
+        });
+    });
+
+    it("hides temporary journeys when their group is removed", () => {
+        const store = getJourneySelectionStore();
+        store.selectEphemeralJourney({
+            origin: {type: "group", groupId: "heaton-chapel"},
+            destination: {type: "station", crs: "MAN"},
+        });
+        useDashboardConfigStore().saveConfig({
+            ...useDashboardConfigStore().config,
+            stationGroups: [],
+        });
+        expect(store.activeJourneyDetails).toBeUndefined();
+        expect(store.journeyChoices.flatMap((section) => section.journeys)).toEqual([]);
+        store.saveActiveJourney();
+        expect(
+            useDashboardConfigStore().config.journeys.some(
+                (journey) => journey.id === "heaton-chapel-to-man"
+            )
+        ).toBe(false);
+    });
+
     it("does not use recent history as a prediction", () => {
         useDashboardConfigStore().saveConfig(getConfigWithoutActiveSchedule());
         const firstStore = getJourneySelectionStore();

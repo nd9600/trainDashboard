@@ -1,4 +1,4 @@
-import {hasSameJourneyFields} from "../journeys/journeyIdentity";
+import {hasJourneyEndpoints, hasSameJourneyFields} from "../journeys/journeyIdentity";
 import {useJourneyLocation} from "@/composables/useJourneyLocation";
 import {getJourneyChoices} from "../journeys/journeyChoices";
 import type {Coordinates} from "../dto/coordinates.dto";
@@ -40,8 +40,13 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
 
     getters: {
         currentEphemeralJourney(state): EphemeralJourney | undefined {
-            return state.activeJourney.type === "ephemeral"
-                ? state.activeJourney.journey
+            const selection = state.activeJourney;
+            return selection.type === "ephemeral" &&
+                hasJourneyEndpoints(
+                    selection.journey,
+                    useDashboardConfigStore().config.stationGroups
+                )
+                ? selection.journey
                 : undefined;
         },
         currentJourneyPrediction(): JourneyPrediction {
@@ -58,13 +63,15 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
         },
 
         journeysById(state): Map<string, Journey> {
-            const savedJourneys = useDashboardConfigStore().config.journeys;
+            const config = useDashboardConfigStore().config;
             return new Map(
                 [
                     ...state.ephemeralJourneys,
                     ...(this.currentEphemeralJourney ? [this.currentEphemeralJourney] : []),
-                    ...savedJourneys,
-                ].map((journey) => [journey.id, journey])
+                    ...config.journeys,
+                ]
+                    .filter((journey) => hasJourneyEndpoints(journey, config.stationGroups))
+                    .map((journey) => [journey.id, journey])
             );
         },
 

@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+import {hasJourneyEndpoints} from "../../../journeys/journeyIdentity";
 import {computed, ref} from "vue";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {Journey} from "../../../dto/journey.dto";
@@ -99,7 +100,6 @@ import {
     createEmptyJourney,
     getJourneySettingsLabel,
     getScheduleNamesUsingJourney,
-    hasJourneyEndpoints,
 } from "./scheduleSettings";
 
 const props = defineProps<{

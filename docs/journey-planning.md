@@ -10,7 +10,7 @@ Prediction alternatives include saved journeys from the nearby group, with sched
 flowchart LR
     preference[Configuration location preference]
     prediction[Time and enabled nearby group prediction]
-    override[Manual selection]
+    override[Manual selection with stations or groups]
     journey[Active journey]
     routes[Station routes]
     timetables[Route timetables]
@@ -27,6 +27,8 @@ flowchart LR
     planner --> journeys
     journeys --> display
 ```
+
+Temporary journeys and saved journeys use the same route expansion and group walking times.
 
 `getStationRoutes` expands station groups into concrete origin and destination pairs. It removes pairs that use the same station.
 
@@ -63,6 +65,7 @@ flowchart TD
     prediction --> nearby
     nearby --> closest[findClosestPoint]
     nearby --> distance[distanceBetweenCoordinatesKm]
+    manual[selectEphemeralJourney: station or group endpoints] -->|Active journey changes| refresh
     selection -->|Active journey changes| refresh
     refresh --> dashboard
     dashboard --> routes
@@ -155,12 +158,18 @@ Minute-based refreshes keep the current trains visible while updated trains load
 
 ```mermaid
 sequenceDiagram
+    participant Switcher as Journey switcher
     participant Location as useJourneyLocation
     participant Selection as Journey selection
     participant Store as Train services store
     participant Planner as getDashboardJourneys
     Selection->>Store: Initial scheduled journey
     Store->>Planner: Load scheduled journey
+    opt Manual journey
+        Switcher->>Selection: Select station or group endpoints
+        Selection->>Store: Active temporary journey
+        Store->>Planner: Expand groups and load journey
+    end
     Location->>Selection: Updated coordinates or location disabled
     Selection->>Store: Prediction resolves another active journey
     Store->>Store: Invalidate old request and clear displayed data
@@ -173,6 +182,7 @@ sequenceDiagram
 
 ## Source map
 
+- `src/trainDashboard/components/journeys/editing/LocationSearchInput.vue` searches switcher endpoints.
 - `src/trainDashboard/store/dashboardConfig.store.ts` stores the location preference.
 - `src/composables/useJourneyLocation.ts` starts or stops geolocation and reports coordinates or errors.
 - `src/trainDashboard/store/journeySelection.store.ts` owns selection state and supplies enabled coordinates to prediction.

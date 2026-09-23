@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import {hasJourneyEndpoints} from "../../../journeys/journeyIdentity";
 import {newId} from "../../../dto/id.dto";
 
 import {computed, nextTick, ref} from "vue";
@@ -93,7 +94,7 @@ import type {Journey} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import ScheduleDetails from "./ScheduleDetails.vue";
 import ScheduleSettingsCard from "./ScheduleSettingsCard.vue";
-import {createEmptyJourney, hasJourneyEndpoints} from "./scheduleSettings";
+import {createEmptyJourney} from "./scheduleSettings";
 
 const props = defineProps<{
     stationGroups: StationGroup[];

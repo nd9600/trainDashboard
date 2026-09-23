@@ -1,27 +1,20 @@
-import {getAvailableJourneyId} from "../journeys/journeyIdentity";
+import {getAvailableJourneyId, getLocationKey} from "../journeys/journeyIdentity";
 import {z} from "zod";
-import {JourneyFieldsSchema, JourneySchema, type JourneyFields, type Journey} from "./journey.dto";
-import {CrsCodeSchema} from "./station.dto";
-
-const StationLocationSchema = z.object({
-    type: z.literal("station"),
-    crs: CrsCodeSchema,
-});
-
-const EphemeralJourneyFieldsSchema = JourneyFieldsSchema.extend({
-    origin: StationLocationSchema,
-    destination: StationLocationSchema,
-}).refine((journey) => journey.origin.crs !== journey.destination.crs);
-
-const EphemeralJourneySchema = JourneySchema.extend({
-    origin: StationLocationSchema,
-    destination: StationLocationSchema,
-});
-export type EphemeralJourney = z.infer<typeof EphemeralJourneySchema>;
+import {
+    JourneyFieldsSchema,
+    JourneySchema,
+    type JourneyFields,
+    type Journey,
+    type LocationReference,
+} from "./journey.dto";
+const EphemeralJourneyFieldsSchema = JourneyFieldsSchema.refine(
+    (journey) => getLocationKey(journey.origin) !== getLocationKey(journey.destination)
+);
+export type EphemeralJourney = Journey;
 
 export const JourneyMemorySchema = z.object({
     recentJourneyIds: z.array(z.string().min(1)).max(50),
-    ephemeralJourneys: z.array(EphemeralJourneySchema),
+    ephemeralJourneys: z.array(JourneySchema),
 });
 export type JourneyMemory = z.infer<typeof JourneyMemorySchema>;
 
@@ -47,9 +40,13 @@ export function createEphemeralJourney(
 
     return {
         id: getAvailableJourneyId(
-            `${result.data.origin.crs}-to-${result.data.destination.crs}`.toLowerCase(),
+            `${getLocationId(result.data.origin)}-to-${getLocationId(result.data.destination)}`.toLowerCase(),
             existingJourneyIds
         ),
         ...result.data,
     };
+}
+
+function getLocationId(location: LocationReference): string {
+    return location.type === "group" ? location.groupId : location.crs;
 }

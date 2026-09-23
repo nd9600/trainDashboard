@@ -6,7 +6,7 @@
         <JourneyMaker
             ref="journeyMaker"
             v-model:journey="journey"
-            :endpointMode="endpointMode"
+            endpointMode="search"
             :stationGroups="stationGroups"
             :journeys="journeys"
             originLabel="From"
@@ -30,20 +30,19 @@
 <script setup lang="ts">
 import {computed, onMounted, ref, toRaw} from "vue";
 import {JourneyFieldsSchema, type Journey, type JourneyFields} from "../../../dto/journey.dto";
+import {getLocationKey} from "../../../journeys/journeyIdentity";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import JourneyMaker from "../editing/JourneyMaker.vue";
 
 const props = withDefaults(
     defineProps<{
         initialJourney?: Journey;
-        endpointMode?: "locations" | "stations";
         stationGroups?: StationGroup[];
         journeys?: Journey[];
         submitLabel?: string;
     }>(),
     {
         initialJourney: undefined,
-        endpointMode: "stations",
         stationGroups: () => [],
         journeys: () => [],
         submitLabel: "Use journey",
@@ -65,7 +64,11 @@ const journey = ref<Journey>(
               destination: {type: "station", crs: ""},
           }
 );
-const validJourney = computed(() => JourneyFieldsSchema.safeParse(journey.value).success);
+const validJourney = computed(
+    () =>
+        JourneyFieldsSchema.safeParse(journey.value).success &&
+        getLocationKey(journey.value.origin) !== getLocationKey(journey.value.destination)
+);
 
 onMounted(() => {
     journeyMaker.value?.focusOrigin();
@@ -74,7 +77,7 @@ onMounted(() => {
 function submit(): void {
     const result = JourneyFieldsSchema.safeParse(journey.value);
 
-    if (!result.success) {
+    if (!result.success || !validJourney.value) {
         return;
     }
 
