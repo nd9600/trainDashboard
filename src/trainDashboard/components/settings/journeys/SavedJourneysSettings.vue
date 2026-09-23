@@ -113,7 +113,7 @@
 import AppIconButton from "@/components/AppIconButton.vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {computed, ref} from "vue";
-import {hasJourneyEndpoints, hasSameJourneyFields} from "../../../journeys/journeyIdentity";
+import {hasJourneyEndpoints, journeysAreTheSame} from "../../../journeys/journeyIdentity";
 import type {Journey} from "../../../dto/journey.dto";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
@@ -147,7 +147,7 @@ const recentJourneys = computed(() => {
 
 function isSaved(journey: Journey): boolean {
     return journeys.value.some(
-        (saved) => saved.id === journey.id || hasSameJourneyFields(saved, journey)
+        (saved) => saved.id === journey.id || journeysAreTheSame(saved, journey)
     );
 }
 
@@ -163,7 +163,9 @@ function forgetJourney(journeyId: string): void {
 }
 
 function removeJourney(journeyId: string): void {
-    if (getScheduleNamesUsingJourney(journeyId, props.schedules).length > 0) return;
+    if (getScheduleNamesUsingJourney(journeyId, props.schedules).length > 0) {
+        return
+    }
     journeys.value = journeys.value.filter((journey) => journey.id !== journeyId);
     forgetJourney(journeyId);
 }

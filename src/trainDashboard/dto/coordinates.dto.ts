@@ -22,7 +22,9 @@ export const CoordinatesInputSchema = z
         "Enter latitude and longitude separated by a comma."
     )
     .transform((value) => {
-        if (value === "") return undefined;
+        if (value === "") {
+            return undefined
+        }
         const [latitude, longitude] = value.split(",").map(Number);
         return {latitude: latitude!, longitude: longitude!};
     })

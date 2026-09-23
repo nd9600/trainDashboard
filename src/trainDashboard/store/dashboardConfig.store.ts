@@ -1,4 +1,4 @@
-import {getAvailableJourneyId, hasSameJourneyFields} from "../journeys/journeyIdentity";
+import {getNewJourneyId, journeysAreTheSame} from "../journeys/journeyIdentity";
 import {defineStore} from "pinia";
 import {ref} from "vue";
 import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
@@ -21,13 +21,9 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         storage.saveToLocalStorage(candidate);
     }
 
-    function setShouldUseLocation(shouldUseLocation: boolean): void {
-        saveConfig({...config.value, shouldUseLocation});
-    }
-
     function saveJourney(candidate: Journey): Journey {
         const existingJourney = config.value.journeys.find((journey) =>
-            hasSameJourneyFields(journey, candidate)
+            journeysAreTheSame(journey, candidate)
         );
 
         if (existingJourney) {
@@ -36,7 +32,7 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
 
         const journey: Journey = {
             ...candidate,
-            id: getAvailableJourneyId(
+            id: getNewJourneyId(
                 candidate.id,
                 config.value.journeys.map((journey) => journey.id)
             ),
@@ -84,7 +80,6 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     return {
         config,
         saveConfig,
-        setShouldUseLocation,
         saveJourney,
         updateJourney,
         removeJourney,

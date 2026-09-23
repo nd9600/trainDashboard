@@ -1,4 +1,4 @@
-import {hasJourneyEndpoints, hasSameJourneyFields} from "../journeys/journeyIdentity";
+import {hasJourneyEndpoints, journeysAreTheSame} from "../journeys/journeyIdentity";
 import {useJourneyLocation} from "@/composables/useJourneyLocation";
 import {getJourneyChoices} from "../journeys/journeyChoices";
 import type {Coordinates} from "../dto/coordinates.dto";
@@ -120,25 +120,32 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
         },
 
         selectJourney(journeyId: string): void {
-            if (!this.isInitialised || !this.journeysById.has(journeyId)) return;
+            if (!this.isInitialised || !this.journeysById.has(journeyId)) {
+                return
+            }
+
             if (journeyId === this.predictedJourneyId) {
-                this.clearActiveJourney();
+                this.resetActiveJourneyToPredicted();
                 return;
             }
-            const saved = useDashboardConfigStore().config.journeys.some(
+            const configStore = useDashboardConfigStore();
+
+            const savedJourney = configStore.config.journeys.some(
                 (journey) => journey.id === journeyId
             );
             const ephemeral =
                 this.ephemeralJourneys.find((journey) => journey.id === journeyId) ??
                 this.currentEphemeralJourney;
-            this.activeJourney = saved
+
+            this.activeJourney = savedJourney
                 ? {type: "saved", id: journeyId}
                 : {type: "ephemeral", journey: ephemeral!};
             this.recentJourneyIds = [
                 journeyId,
                 ...this.recentJourneyIds.filter((id) => id !== journeyId),
             ].slice(0, 50);
-            this.saveMemory();
+
+            this.saveRecentJourneysInStorage();
         },
 
         selectEphemeralJourney(fields: JourneyFields): void {
@@ -153,7 +160,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             }
 
             const existingJourney = [...this.journeysById.values()].find((journey) =>
-                hasSameJourneyFields(journey, parsedJourney)
+                journeysAreTheSame(journey, parsedJourney)
             );
 
             if (existingJourney) {
@@ -191,7 +198,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                 (candidate) => candidate.id !== ephemeralJourneyId
             );
             this.activeJourney = {type: "saved", id: savedJourney.id};
-            this.saveMemory();
+            this.saveRecentJourneysInStorage();
         },
 
         editActiveJourney(fields: JourneyFields): void {
@@ -220,7 +227,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
                     journey.id === updatedJourney.id ? updatedJourney : journey
                 );
                 this.activeJourney = {type: "ephemeral", journey: updatedJourney};
-                this.saveMemory();
+                this.saveRecentJourneysInStorage();
                 return;
             }
 
@@ -238,7 +245,7 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             this.recentJourneyIds = this.recentJourneyIds.filter(
                 (recentJourneyId) => recentJourneyId !== journeyId
             );
-            this.saveMemory();
+            this.saveRecentJourneysInStorage();
         },
 
         removeSavedJourney(journeyId: string): void {
@@ -251,18 +258,20 @@ export const useJourneySelectionStore = defineStore("journey-selection", {
             );
 
             if (this.activeJourneyId === journeyId) {
-                this.clearActiveJourney();
+                this.resetActiveJourneyToPredicted();
             }
 
-            this.saveMemory();
+            this.saveRecentJourneysInStorage();
         },
 
-        clearActiveJourney(): void {
-            if (!this.isInitialised) return;
+        resetActiveJourneyToPredicted(): void {
+            if (!this.isInitialised) {
+                return
+            }
             this.activeJourney = {type: "predicted"};
         },
 
-        saveMemory(): void {
+        saveRecentJourneysInStorage(): void {
             const retainedJourneyIds = new Set(this.recentJourneyIds);
             this.ephemeralJourneys = this.ephemeralJourneys.filter((journey) =>
                 retainedJourneyIds.has(journey.id)

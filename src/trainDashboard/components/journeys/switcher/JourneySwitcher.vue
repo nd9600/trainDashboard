@@ -28,7 +28,7 @@
             <AppIconButton
                 v-if="activeJourney.type !== 'predicted' && !formMode"
                 class="appButton appButton--quiet appButton--icon size-7 shrink-0 text-ink-subtle"
-                @click="journeySelectionStore.clearActiveJourney"
+                @click="journeySelectionStore.resetActiveJourneyToPredicted"
                 label="Clear temporary journey"
                 icon="close"
                 iconClass="size-3.5"
@@ -71,9 +71,9 @@
 
         <div
             v-if="
-                activeJourney.type !== 'predicted' &&
-                !formMode &&
-                (activeJourney.type === 'ephemeral' || canEditActiveJourney)
+                activeJourney.type !== 'predicted'
+                && !formMode
+                && (activeJourney.type === 'ephemeral' || canEditActiveJourney)
             "
             class="flex items-center gap-2"
         >

@@ -32,7 +32,9 @@ function getErrorLocation(path: PropertyKey[], config: DashboardConfig): string 
         return field === "name" ? `${stationGroup} name` : stationGroup;
     }
 
-    if (typeof itemIndex !== "number") return "";
+    if (typeof itemIndex !== "number") {
+        return ""
+    }
     const sections: Record<string, {label: string; fields: Record<string, string>}> = {
         journeys: {
             label: getJourneyErrorLocation(itemIndex, config),
@@ -50,7 +52,9 @@ function getErrorLocation(path: PropertyKey[], config: DashboardConfig): string 
         },
     };
     const details = sections[String(section)];
-    if (!details) return "";
+    if (!details) {
+        return ""
+    }
     return `${details.label}${details.fields[String(field)] ? ` ${details.fields[String(field)]}` : ""}`;
 }
 
@@ -60,7 +64,9 @@ function getNamedLocation(label: string, name: string | undefined, index: number
 
 function getJourneyErrorLocation(index: number, config: DashboardConfig): string {
     const journey = config.journeys[index];
-    if (!journey) return `Journey ${index + 1}`;
+    if (!journey) {
+        return `Journey ${index + 1}`
+    }
 
     const schedules = config.schedules
         .map((schedule, scheduleIndex) =>
@@ -69,7 +75,9 @@ function getJourneyErrorLocation(index: number, config: DashboardConfig): string
                 : undefined
         )
         .filter((label) => label !== undefined);
-    if (schedules.length) return `${schedules.join(", ")} journey`;
+    if (schedules.length) {
+        return `${schedules.join(", ")} journey`
+    }
 
     const origin = getLocationName(journey.origin, config);
     const destination = getLocationName(journey.destination, config);

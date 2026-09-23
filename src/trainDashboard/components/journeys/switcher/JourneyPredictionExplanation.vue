@@ -59,13 +59,8 @@
                     type="checkbox"
                     role="switch"
                     class="size-4 accent-primary"
-                    :checked="configStore.config.shouldUseLocation"
+                    v-model="configStore.config.shouldUseLocation"
                     data-test="location-predictions-toggle"
-                    @change="
-                        configStore.setShouldUseLocation(
-                            ($event.target as HTMLInputElement).checked
-                        )
-                    "
                 />
                 Use location for predictions
             </label>

@@ -9,8 +9,8 @@ export function useJourneySettingsDraft(
     onValidityChange: (valid: boolean) => void
 ) {
     const dashboardConfigStore = useDashboardConfigStore();
-    const selection = useJourneySelectionStore();
-    const recentJourneyIds = ref([...selection.recentJourneyIds]);
+    const journeySelectionStore = useJourneySelectionStore();
+    const recentJourneyIds = ref([...journeySelectionStore.recentJourneyIds]);
     const form = ref<HTMLFormElement | null>(null);
     const draft = ref<DashboardConfig>(getConfigDraft());
     const errors = ref<string[]>([]);
@@ -38,29 +38,31 @@ export function useJourneySettingsDraft(
         const removedJourneyIds = dashboardConfigStore.config.journeys
             .filter((journey) => !config.journeys.some((candidate) => candidate.id === journey.id))
             .map((journey) => journey.id);
-        const activeJourneyId = selection.activeJourneyId;
+        const activeJourneyId = journeySelectionStore.activeJourneyId;
         dashboardConfigStore.saveConfig(config);
-        for (const journeyId of selection.recentJourneyIds) {
+        for (const journeyId of journeySelectionStore.recentJourneyIds) {
             if (
                 !recentJourneyIds.value.includes(journeyId) ||
                 removedJourneyIds.includes(journeyId)
             ) {
-                selection.removeRecentJourney(journeyId);
+                journeySelectionStore.removeRecentJourney(journeyId);
             }
         }
+
         if (activeJourneyId && removedJourneyIds.includes(activeJourneyId)) {
-            selection.clearActiveJourney();
+            journeySelectionStore.resetActiveJourneyToPredicted();
         } else if (
-            selection.activeJourney.type === "ephemeral" &&
+            journeySelectionStore.activeJourney.type === "ephemeral" &&
             config.journeys.some((journey) => journey.id === activeJourneyId)
         ) {
-            selection.selectJourney(activeJourneyId!);
+            journeySelectionStore.selectJourney(activeJourneyId!);
         }
+
         cancel();
     }
 
     function cancel(): void {
-        recentJourneyIds.value = [...selection.recentJourneyIds];
+        recentJourneyIds.value = [...journeySelectionStore.recentJourneyIds];
         draft.value = getConfigDraft();
         errors.value = [];
         hasUnsavedChanges.value = false;

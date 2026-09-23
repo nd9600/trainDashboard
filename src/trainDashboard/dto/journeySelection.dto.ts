@@ -1,4 +1,4 @@
-import {getAvailableJourneyId, getLocationKey} from "../journeys/journeyIdentity";
+import {getNewJourneyId, getLocationKey} from "../journeys/journeyIdentity";
 import {z} from "zod";
 import {
     JourneyFieldsSchema,
@@ -16,7 +16,6 @@ export const JourneyMemorySchema = z.object({
     recentJourneyIds: z.array(z.string().min(1)).max(50),
     ephemeralJourneys: z.array(JourneySchema),
 });
-export type JourneyMemory = z.infer<typeof JourneyMemorySchema>;
 
 export type ActiveJourney =
     | {type: "predicted"}
@@ -39,7 +38,7 @@ export function createEphemeralJourney(
     }
 
     return {
-        id: getAvailableJourneyId(
+        id: getNewJourneyId(
             `${getLocationId(result.data.origin)}-to-${getLocationId(result.data.destination)}`.toLowerCase(),
             existingJourneyIds
         ),

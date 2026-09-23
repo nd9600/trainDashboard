@@ -12,7 +12,9 @@ export function getTrainPlans(
     {route, firstTrainLegs, onwardTrainLegs = []}: RouteTimetable,
     currentMinutes: number
 ): TrainPlan[] {
-    if (!route.viaCrs) return firstTrainLegs.map((leg) => ({route, trainLegs: [leg]}));
+    if (!route.viaCrs) {
+        return firstTrainLegs.map((leg) => ({route, trainLegs: [leg]}))
+    }
 
     const plans = new Map<string, TrainPlan>();
     const feeders = firstTrainLegs

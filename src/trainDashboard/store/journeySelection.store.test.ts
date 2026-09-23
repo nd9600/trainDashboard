@@ -144,7 +144,7 @@ describe("useJourneySelectionStore", () => {
         store.currentCoordinates = {latitude: 53.5, longitude: -2.2};
         expect(store.predictedJourneyId).toBe("manchester-piccadilly-to-heaton-chapel");
         expect(store.activeJourneyId).toBe(savedJourney.id);
-        store.clearActiveJourney();
+        store.resetActiveJourneyToPredicted();
         expect(store.activeJourneyId).toBe("manchester-piccadilly-to-heaton-chapel");
         store.currentCoordinates = null;
         expect(store.activeJourneyId).toBe(predictedJourney.id);
@@ -161,7 +161,7 @@ describe("useJourneySelectionStore", () => {
         store.currentCoordinates = {latitude: 53.5, longitude: -2.2};
         expect(store.predictedJourneyId).toBe("manchester-piccadilly-to-heaton-chapel");
 
-        useDashboardConfigStore().setShouldUseLocation(false);
+        useDashboardConfigStore().config.shouldUseLocation = false;
         expect(store.currentCoordinates).toBeNull();
         expect(store.predictedJourneyId).toBe(predictedJourney.id);
         expect(geolocation.pause).toHaveBeenCalledOnce();
@@ -171,7 +171,7 @@ describe("useJourneySelectionStore", () => {
         await nextTick();
         expect(store.currentCoordinates).toBeNull();
 
-        useDashboardConfigStore().setShouldUseLocation(true);
+        useDashboardConfigStore().config.shouldUseLocation = true;
         expect(geolocation.resume).toHaveBeenCalledTimes(2);
         geolocation.coords.value = {latitude: 53.5, longitude: -2.2};
         await nextTick();
@@ -181,7 +181,7 @@ describe("useJourneySelectionStore", () => {
     it("remembers disabled location without starting geolocation after reload", () => {
         const store = getJourneySelectionStore();
         store.selectJourney(savedJourney.id);
-        useDashboardConfigStore().setShouldUseLocation(false);
+        useDashboardConfigStore().config.shouldUseLocation = false;
         expect(store.activeJourneyId).toBe(savedJourney.id);
         store.$dispose();
         recreateStores();
@@ -406,7 +406,7 @@ describe("useJourneySelectionStore", () => {
         config.schedules[0]!.journeyId = config.journeys[1]!.id;
         useDashboardConfigStore().saveConfig(config);
 
-        store.clearActiveJourney();
+        store.resetActiveJourneyToPredicted();
 
         expect(store.activeJourney).toEqual({type: "predicted"});
         expect(store.activeJourneyDetails).toEqual(config.journeys[1]);

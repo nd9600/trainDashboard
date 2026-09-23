@@ -78,14 +78,18 @@ self.addEventListener("fetch", (event) => {
                 ignoreSearch: event.request.mode === "navigate",
             });
 
-            if (cachedResponse) return cachedResponse;
+            if (cachedResponse) {
+                return cachedResponse
+            }
 
             try {
                 return await fetch(event.request);
             } catch (error) {
                 if (event.request.mode === "navigate") {
                     const application = await cache.match("./");
-                    if (application) return application;
+                    if (application) {
+                        return application
+                    }
                 }
 
                 throw error;

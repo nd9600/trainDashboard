@@ -79,7 +79,9 @@ export const useTrainServicesStore = defineStore("train-services", () => {
             () => apiStore.settings.consumerKey,
         ],
         (values, previousValues) => {
-            if (values[0] !== previousValues[0] || values[1] !== previousValues[1]) {
+            const activeJourneyHasChanged = values[0] !== previousValues[0];
+            const stationGroupsHaveChanged = values[1] !== previousValues[1];
+            if (activeJourneyHasChanged || stationGroupsHaveChanged) {
                 routes.value = [];
                 journeys.value = [];
             }

@@ -1,4 +1,4 @@
-import {hasSameJourneyFields} from "../journeys/journeyIdentity";
+import {journeysAreTheSame} from "../journeys/journeyIdentity";
 import {describe, expect, it} from "vitest";
 import {createEphemeralJourney} from "./journeySelection.dto";
 
@@ -46,16 +46,16 @@ describe("createEphemeralJourney", () => {
     });
 });
 
-describe("hasSameJourneyFields", () => {
+describe("journeysAreTheSame", () => {
     it("compares route fields without comparing IDs", () => {
         expect(
-            hasSameJourneyFields(
+            journeysAreTheSame(
                 {id: "saved", ...manchesterToLiverpool},
                 {id: "temporary", ...manchesterToLiverpool}
             )
         ).toBe(true);
         expect(
-            hasSameJourneyFields(
+            journeysAreTheSame(
                 {id: "saved", ...manchesterToLiverpool},
                 {
                     id: "temporary",

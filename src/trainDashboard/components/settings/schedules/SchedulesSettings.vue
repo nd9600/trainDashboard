@@ -139,7 +139,9 @@ async function addSchedule(): Promise<void> {
 function moveSchedule(index: number, direction: -1 | 1): void {
     const nextIndex = index + direction;
     const schedule = schedules.value[index];
-    if (!schedule || nextIndex < 0 || nextIndex >= schedules.value.length) return;
+    if (!schedule || nextIndex < 0 || nextIndex >= schedules.value.length) {
+        return
+    }
 
     const reordered = [...schedules.value];
     reordered.splice(index, 1);
