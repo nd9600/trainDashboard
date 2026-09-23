@@ -171,8 +171,11 @@ function selectJourney(journeyId: string): void {
 }
 
 function submitJourney(journey: JourneyFields): void {
-    if (formMode.value === "edit") journeySelectionStore.editActiveJourney(journey);
-    else journeySelectionStore.selectEphemeralJourney(journey);
+    if (formMode.value === "edit") {
+        journeySelectionStore.editActiveJourney(journey)
+    } else {
+        journeySelectionStore.addEphemeralJourney(journey)
+    }
     formMode.value = undefined;
 }
 </script>

@@ -33,6 +33,7 @@ export function getNewJourneyId(
     return id;
 }
 
+//todo: is this really "journey starts and ends at either a bare station or one of these groups"? think of a better name
 export function hasJourneyEndpoints(journey: Journey, stationGroups: StationGroup[]): boolean {
     return [journey.origin, journey.destination].every(
         (location) =>

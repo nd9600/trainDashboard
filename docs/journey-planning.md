@@ -65,7 +65,7 @@ flowchart TD
     prediction --> nearby
     nearby --> closest[findClosestPoint]
     nearby --> distance[distanceBetweenCoordinatesKm]
-    manual[selectEphemeralJourney: station or group endpoints] -->|Active journey changes| refresh
+    manual[addEphemeralJourney: station or group endpoints] -->|Active journey changes| refresh
     selection -->|Active journey changes| refresh
     refresh --> dashboard
     dashboard --> routes

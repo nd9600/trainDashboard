@@ -20,13 +20,13 @@ it("lists every recent journey and protects a scheduled saved journey", async ()
     });
     const pinia = createPinia();
     setActivePinia(pinia);
-    const selection = useJourneySelectionStore();
-    selection.ephemeralJourneys = ["ANL", "PTK", "HYN", "GLQ"].map((crs) => ({
+    const journeySelectionStore = useJourneySelectionStore();
+    journeySelectionStore.recentEphemeralJourneys = ["ANL", "PTK", "HYN", "GLQ"].map((crs) => ({
         id: crs,
         origin: {type: "station", crs},
         destination: {type: "station", crs: "CHC"},
     }));
-    const journeys: Journey[] = [selection.ephemeralJourneys[0]!];
+    const journeys: Journey[] = [journeySelectionStore.recentEphemeralJourneys[0]!];
     const recentJourneyIds = ["ANL", "PTK", "HYN", "GLQ"];
     const app = createSSRApp(SavedJourneysSettings, {
         journeys,

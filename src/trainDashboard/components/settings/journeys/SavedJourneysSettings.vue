@@ -128,11 +128,11 @@ const recentJourneyIds = defineModel<string[]>("recentJourneyIds", {
     required: true,
 });
 const emit = defineEmits<{changed: []}>();
-const selection = useJourneySelectionStore();
+const journeySelectionStore = useJourneySelectionStore();
 const editingJourneyId = ref<string>();
 const recentJourneys = computed(() => {
     const journeysById = new Map<string, Journey>();
-    for (const journey of [...selection.ephemeralJourneys, ...journeys.value]) {
+    for (const journey of [...journeySelectionStore.recentEphemeralJourneys, ...journeys.value]) {
         journeysById.set(journey.id, journey);
     }
     return recentJourneyIds.value.flatMap((id) => {
