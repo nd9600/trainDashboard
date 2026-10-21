@@ -13,6 +13,9 @@
             <template #header>Diagnostic</template>
 
             <div class="space-y-6 p-5">
+                <p class="text-sm text-ink-subtle">
+                    Last built on <time :datetime="builtAt">{{ formattedBuiltAt }}</time>
+                </p>
                 <section v-for="store in stores" :key="store.name">
                     <h2 class="mb-2 text-sm font-semibold">{{ store.name }}</h2>
                     <pre
@@ -35,6 +38,12 @@ import {useRailDataApiStore} from "../store/railDataApi.store";
 import {useTrainServicesStore} from "../store/trainServices.store";
 
 const isOpen = ref(false);
+const builtAt = __APP_BUILT_AT__;
+const formattedBuiltAt = new Date(builtAt).toLocaleString("en-GB", {
+    dateStyle: "long",
+    timeStyle: "long",
+    timeZone: "UTC",
+});
 const stores = [
     {name: "dashboardClockStore", data: storeToRefs(useDashboardClockStore())},
     {name: "dashboardConfigStore", data: storeToRefs(useDashboardConfigStore())},

@@ -13,6 +13,9 @@ if (!basePath.startsWith("/") || !basePath.endsWith("/")) {
 
 export default defineConfig(({mode}) => ({
     base: basePath,
+    define: {
+        __APP_BUILT_AT__: JSON.stringify(new Date().toISOString()),
+    },
     plugins: [
         vue(),
         tailwindcss(),
