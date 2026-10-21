@@ -16,6 +16,9 @@
                     v-model="draft.consumerKey"
                     class="appInput pr-11"
                     autocomplete="off"
+                    pattern="[A-Za-z0-9]*"
+                    :aria-invalid="!!error"
+                    :aria-describedby="error ? 'consumer-key-error' : undefined"
                     placeholder="Enter your Consumer key"
                     :type="isConsumerKeyVisible ? 'text' : 'password'"
                     @input="handleChange"
@@ -31,6 +34,9 @@
                 />
             </span>
         </label>
+        <p v-if="error" id="consumer-key-error" class="mt-2 text-sm text-danger-dark" role="alert">
+            {{ error }}
+        </p>
 
         <p class="mt-3 text-xs text-ink-subtle">
             Requests use
@@ -43,8 +49,11 @@
 
 <script setup lang="ts">
 import AppIconButton from "@/components/AppIconButton.vue";
-import {ref} from "vue";
-import type {RailDataApiSettings} from "../../../dto/railDataApiSettings.dto";
+import {computed, ref, watch} from "vue";
+import {
+    RailDataApiSettingsSchema,
+    type RailDataApiSettings,
+} from "../../../dto/railDataApiSettings.dto";
 import {useRailDataApiStore} from "../../../store/railDataApi.store";
 
 const apiStore = useRailDataApiStore();
@@ -54,12 +63,23 @@ const consumerKeyInput = ref<HTMLInputElement | null>(null);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
 });
+const emit = defineEmits<{validChange: [isValid: boolean]}>();
+const error = computed(() => {
+    const result = RailDataApiSettingsSchema.safeParse(draft.value);
+    return result.success ? undefined : result.error.issues[0]?.message;
+});
+
+watch(error, (message) => emit("validChange", !message), {immediate: true});
 
 function handleChange(): void {
     hasUnsavedChanges.value = draft.value.consumerKey !== apiStore.settings.consumerKey;
 }
 
 function save(): void {
+    if (error.value) {
+        return;
+    }
+
     apiStore.saveApiSettings(draft.value);
     draft.value = {...apiStore.settings};
     isConsumerKeyVisible.value = false;

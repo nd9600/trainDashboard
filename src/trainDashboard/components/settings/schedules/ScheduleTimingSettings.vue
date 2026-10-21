@@ -43,7 +43,6 @@
                 <input
                     v-model="schedule.startsAt"
                     class="appInput sentenceField__control w-24"
-                    inputmode="numeric"
                     pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
                     placeholder="HH:MM"
                     required
@@ -55,7 +54,6 @@
                 <input
                     v-model="schedule.endsAt"
                     class="appInput sentenceField__control w-24"
-                    inputmode="numeric"
                     pattern="(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|24:00)"
                     placeholder="HH:MM"
                     required

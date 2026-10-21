@@ -36,6 +36,7 @@
                     ref="apiSettings"
                     v-model:hasUnsavedChanges="hasUnsavedApiSettings"
                     class="p-5"
+                    @valid-change="areApiSettingsValid = $event"
                 />
             </div>
 
@@ -52,7 +53,7 @@
                     <button
                         class="appButton appButton--primary px-4"
                         type="button"
-                        :disabled="!hasUnsavedChanges || !isConfigurationValid"
+                        :disabled="!hasUnsavedChanges || !isConfigurationValid || !areApiSettingsValid"
                         @click="saveSettings"
                     >
                         Save configuration
@@ -84,6 +85,7 @@ const isOpen = ref(false);
 const hasUnsavedJourneyConfiguration = ref(false);
 const hasUnsavedApiSettings = ref(false);
 const isConfigurationValid = ref(true);
+const areApiSettingsValid = ref(true);
 const journeySettings = ref<SettingsHandle | null>(null);
 const apiSettings = ref<ApiSettingsHandle | null>(null);
 const activeSection = ref("journeys");
