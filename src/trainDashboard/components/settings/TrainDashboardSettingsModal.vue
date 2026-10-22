@@ -20,7 +20,7 @@
                 role="tabpanel"
             >
                 <JourneySettings
-                    ref="journeySettings"
+                    ref="journeySettingsRef"
                     v-model:hasUnsavedChanges="hasUnsavedJourneyConfiguration"
                     class="p-5"
                     @valid-change="isConfigurationValid = $event"
@@ -33,7 +33,7 @@
                 role="tabpanel"
             >
                 <ApiSettings
-                    ref="apiSettings"
+                    ref="apiSettingsRef"
                     v-model:hasUnsavedChanges="hasUnsavedApiSettings"
                     class="p-5"
                     @valid-change="areApiSettingsValid = $event"
@@ -86,8 +86,8 @@ const hasUnsavedJourneyConfiguration = ref(false);
 const hasUnsavedApiSettings = ref(false);
 const isConfigurationValid = ref(true);
 const areApiSettingsValid = ref(true);
-const journeySettings = ref<SettingsHandle | null>(null);
-const apiSettings = ref<ApiSettingsHandle | null>(null);
+const journeySettingsRef = ref<SettingsHandle | null>(null);
+const apiSettingsRef = ref<ApiSettingsHandle | null>(null);
 const activeSection = ref("journeys");
 const hasUnsavedChanges = computed(
     () => hasUnsavedJourneyConfiguration.value || hasUnsavedApiSettings.value
@@ -105,27 +105,27 @@ async function openApiSettings(): Promise<void> {
     activeSection.value = "api";
     openSettings();
     await nextTick();
-    apiSettings.value?.focusConsumerKey();
+    apiSettingsRef.value?.focusConsumerKey();
 }
 
 function saveSettings(): void {
     if (hasUnsavedJourneyConfiguration.value) {
-        journeySettings.value?.save();
+        journeySettingsRef.value?.save();
     }
 
     if (hasUnsavedApiSettings.value) {
-        apiSettings.value?.save();
+        apiSettingsRef.value?.save();
     }
 }
 
 function cancelSettings(): void {
-    journeySettings.value?.cancel();
-    apiSettings.value?.cancel();
+    journeySettingsRef.value?.cancel();
+    apiSettingsRef.value?.cancel();
 }
 
 function closeSettings(): void {
-    journeySettings.value?.cancel();
-    apiSettings.value?.cancel();
+    journeySettingsRef.value?.cancel();
+    apiSettingsRef.value?.cancel();
     isOpen.value = false;
 }
 

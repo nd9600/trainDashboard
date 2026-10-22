@@ -44,7 +44,7 @@
                         </header>
 
                         <div
-                            ref="body"
+                            ref="bodyRef"
                             class="min-h-0 grow overflow-y-auto"
                             :tabindex="isBodyOverflowing ? 0 : -1"
                             role="region"
@@ -75,11 +75,11 @@ const emit = defineEmits<{
     close: [];
 }>();
 
-const body = ref<HTMLDivElement | null>(null);
+const bodyRef = ref<HTMLDivElement | null>(null);
 const isBodyOverflowing = ref(false);
 let resizeObserver: ResizeObserver | undefined;
 
-watch(body, observeBody);
+watch(bodyRef, observeBody);
 
 function observeBody(element: HTMLDivElement | null): void {
     resizeObserver?.disconnect();

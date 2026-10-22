@@ -5,21 +5,21 @@ export function getRoutesWithoutTimetabledJourneys(
     routes: JourneyRoute[],
     timetabledJourneys: TimetabledJourney[]
 ): JourneyRoute[] {
-    const timetabledRoutes = new Set(
+    const timetabledStationPairs = new Set(
         timetabledJourneys.map((journey) => `${journey.origin}-${journey.destination}`)
     );
 
-    const missingRouteKeys = new Set<string>();
+    const missingStationPairs = new Set<string>();
     const missingRoutes: JourneyRoute[] = [];
 
     for (const route of routes) {
         const routeKey = `${route.origin.crs}-${route.destination.crs}`;
 
-        if (timetabledRoutes.has(routeKey) || missingRouteKeys.has(routeKey)) {
+        if (timetabledStationPairs.has(routeKey) || missingStationPairs.has(routeKey)) {
             continue;
         }
 
-        missingRouteKeys.add(routeKey);
+        missingStationPairs.add(routeKey);
         missingRoutes.push(route);
     }
 

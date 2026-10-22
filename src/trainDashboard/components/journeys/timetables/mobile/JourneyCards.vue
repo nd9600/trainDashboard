@@ -5,7 +5,7 @@
             :key="journey.id"
             class="rounded-lg border-l-4 py-3"
             :class="[journey.recommended ? 'bg-highlight' : 'bg-surface', 'rounded-none px-4']"
-            :style="{borderLeftColor: stationColour(journey.origin)}"
+            :style="{borderLeftColor: getStationColour(journey.origin)}"
         >
             <h3 class="sr-only">
                 {{ getJourneyLabelText(getTimetabledJourneyLabelDetails(journey)) }}
@@ -33,7 +33,7 @@ import {
     getTimetabledJourneyLabelDetails,
 } from "../../../../journeys/journeyLabels";
 import {getMustLeaveMessage} from "../../../../journeys/journeyTimes";
-import {stationColour} from "../../../../stations/stationColours";
+import {getStationColour} from "../../../../stations/stationColours";
 import JourneyItinerary from "./JourneyItinerary.vue";
 
 defineProps<{

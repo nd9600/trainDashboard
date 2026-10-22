@@ -57,7 +57,7 @@ function getTrainLeg(
         destination: destinationCrs,
         platform: service.platform,
         departure,
-        // Keep the scheduled date when a delay moves departure past midnight.
+        // A train due before midnight can leave after midnight. Keep its scheduled date.
         scheduledDeparture: getMinutesOnOrAfter(service.std, departure - 720),
         arrival,
     };
@@ -69,13 +69,13 @@ function getMinutesOnOrAfter(time: string, referenceMinutes: number): number | u
     }
 
     const [hours, minutes] = time.split(":").map(Number);
-    let result = hours! * 60 + minutes! + Math.floor(referenceMinutes / 1440) * 1440;
+    let minutesOnOrAfterReference = hours! * 60 + minutes! + Math.floor(referenceMinutes / 1440) * 1440;
 
-    while (result < referenceMinutes) {
-        result += 1440;
+    while (minutesOnOrAfterReference < referenceMinutes) {
+        minutesOnOrAfterReference += 1440;
     }
 
-    return result;
+    return minutesOnOrAfterReference;
 }
 
 function getLiveOrScheduledTime(

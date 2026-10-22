@@ -14,8 +14,9 @@ export function useJourneyLocation(
     watch(
         shouldUseLocation,
         (value) => {
-            if (value) resume();
-            else {
+            if (value) {
+                resume();
+            } else {
                 pause();
                 update(null);
             }

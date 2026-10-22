@@ -27,7 +27,6 @@ export interface TimetabledJourney {
     railArrivalTime: string;
     arrivalLabel?: string;
     arrivalTime?: string;
-    boldArrivalTime?: boolean;
     walkingTimesKnown: boolean;
     recommended?: boolean;
     segments: Segment[];

@@ -79,7 +79,7 @@ self.addEventListener("fetch", (event) => {
             });
 
             if (cachedResponse) {
-                return cachedResponse
+                return cachedResponse;
             }
 
             try {
@@ -88,7 +88,7 @@ self.addEventListener("fetch", (event) => {
                 if (event.request.mode === "navigate") {
                     const application = await cache.match("./");
                     if (application) {
-                        return application
+                        return application;
                     }
                 }
 

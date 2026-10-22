@@ -5,7 +5,7 @@
         :destinationCrs="trainLeg.destination"
         :departureMinutes="scheduledDeparture"
         :label="formatTime(scheduledDeparture)"
-        :ariaLabel="`${formatTime(scheduledDeparture)} ${stationName(trainLeg.origin)} to ${stationName(trainLeg.destination)}${delayMinutes > 0 ? `. ${delayDescription}` : ''}. View on National Rail Enquiries`"
+        :ariaLabel="`${formatTime(scheduledDeparture)} ${getStationName(trainLeg.origin)} to ${getStationName(trainLeg.destination)}${delayMinutes > 0 ? `. ${delayDescription}` : ''}. View on National Rail Enquiries`"
     >
         {{ formatTime(scheduledDeparture) }}
         <span v-if="delayMinutes > 0" class="ml-1 text-amber-700 text-xs">
@@ -25,7 +25,7 @@
 import {computed} from "vue";
 import {formatTime} from "@/utilities/time.utility";
 import type {TrainLeg} from "../../../dto/timetabledJourney.dto";
-import {stationName} from "../../../stations/stations";
+import {getStationName} from "../../../stations/stations";
 import NationalRailLink from "./NationalRailLink.vue";
 
 const props = defineProps<{trainLeg: TrainLeg}>();

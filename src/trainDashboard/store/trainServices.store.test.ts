@@ -93,13 +93,14 @@ describe("useTrainServicesStore", () => {
             await nextTick();
             expect(useJourneySelectionStore().activeJourneyId).toBe("liverpool-to-heaton-chapel");
 
-            if (outcome === "success") first.resolve(getResult(0));
-            else first.reject(new Error("Old request failed"));
+            if (outcome === "success") {
+                first.resolve(getResult(0));
+            } else {first.reject(new Error("Old request failed"));}
             await nextTick();
 
             expect(store.journeys).toEqual([]);
             expect(store.routes).toEqual([]);
-            expect(store.journeyLoadError).toBeUndefined();
+            expect(store.journeyLoadError).toBeNull();
             expect(store.isLoadingJourneys).toBe(true);
 
             second.resolve(getResult(3));
@@ -125,13 +126,14 @@ describe("useTrainServicesStore", () => {
             await nextTick();
             await nextTick();
 
-            if (outcome === "success") first.resolve(getResult(0));
-            else first.reject(new Error("Old request failed"));
+            if (outcome === "success") {
+                first.resolve(getResult(0));
+            } else {first.reject(new Error("Old request failed"));}
             await nextTick();
 
             expect(store.journeys).toEqual(getResult(3).journeys);
             expect(store.routes).toEqual(getResult(3).routes);
-            expect(store.journeyLoadError).toBeUndefined();
+            expect(store.journeyLoadError).toBeNull();
             expect(store.isLoadingJourneys).toBe(false);
         }
     );

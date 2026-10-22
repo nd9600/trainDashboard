@@ -8,8 +8,8 @@ import {
     type LocationReference,
 } from "./journey.dto";
 
-// can't start and end at the same place
-const EphemeralJourneyFieldsSchema = JourneyFieldsSchema.refine(
+// The journey must start and end at different locations.
+export const EphemeralJourneyFieldsSchema = JourneyFieldsSchema.refine(
     (journey) => getLocationKey(journey.origin) !== getLocationKey(journey.destination)
 );
 export type EphemeralJourney = Journey;
@@ -19,7 +19,7 @@ export const JourneyMemorySchema = z.object({
     ephemeralJourneys: z.array(JourneySchema),
 });
 
-export type ActiveJourney =
+export type ActiveJourneySelection =
     | {type: "predicted"}
     | {type: "saved"; id: string}
     | {type: "ephemeral"; journey: EphemeralJourney};

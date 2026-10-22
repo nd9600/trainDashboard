@@ -59,8 +59,8 @@ import AppIcon from "@/components/AppIcon.vue";
 import {computed, ref, watch} from "vue";
 import {
     findStationOptions,
-    stationCodeFromInput,
-    stationDisplayName,
+    getStationCodeFromInput,
+    getStationDisplayName,
 } from "../../stations/stations";
 import {stationNames} from "../../stations/stationNames";
 
@@ -95,12 +95,12 @@ watch(
 );
 
 function displayStation(code: unknown): string {
-    return typeof code === "string" ? stationDisplayName(code) : "";
+    return typeof code === "string" ? getStationDisplayName(code) : "";
 }
 
 function updateQuery(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    const code = stationCodeFromInput(value);
+    const code = getStationCodeFromInput(value);
 
     query.value = value;
     selectedCode.value = stationNames[code] ? code : null;

@@ -1,6 +1,6 @@
 import type {Journey, LocationReference} from "../../dto/journey.dto";
 import type {StationGroup} from "../../dto/stationGroup.dto";
-import {stationName} from "../../stations/stations";
+import {getStationName} from "../../stations/stations";
 
 interface StationEndpoint {
     crs: string;
@@ -70,7 +70,7 @@ function getStationsForLocation(
     stationGroupsById: Map<string, StationGroup>
 ): StationEndpoint[] {
     if (location.type === "station" && location.groupId === undefined) {
-        return [{crs: location.crs, locationName: stationName(location.crs)}];
+        return [{crs: location.crs, locationName: getStationName(location.crs)}];
     }
     const group = stationGroupsById.get(location.groupId!);
     return (group?.stations ?? [])

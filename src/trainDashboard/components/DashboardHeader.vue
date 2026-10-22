@@ -1,6 +1,6 @@
 <template>
     <header class="min-w-0">
-        <JourneySwitcher v-if="activeJourneyDetails" />
+        <JourneySwitcher v-if="activeJourney" />
         <h1
             class="mt-8 mb-1 font-display text-4xl"
             :class="isLoadingJourneys ? 'text-surface' : ''"
@@ -16,10 +16,10 @@
                 <span
                     class="font-semibold"
                     :style="{
-                        color: stationColour(headerJourney.origin),
+                        color: getStationColour(headerJourney.origin),
                     }"
                 >
-                    {{ stationName(headerJourney.origin) }}
+                    {{ getStationName(headerJourney.origin) }}
                 </span>
             </span>
             <span> · train {{ formatTime(headerJourney.trainLegs[0]!.departure) }} </span>
@@ -28,10 +28,10 @@
                 <span
                     class="font-semibold"
                     :style="{
-                        color: stationColour(headerJourney.destination),
+                        color: getStationColour(headerJourney.destination),
                     }"
                 >
-                    {{ stationName(headerJourney.destination) }}
+                    {{ getStationName(headerJourney.destination) }}
                 </span>
                 {{ headerJourney.arrivalTime ?? headerJourney.railArrivalTime }}
             </span>
@@ -47,8 +47,8 @@
 import {storeToRefs} from "pinia";
 import {computed} from "vue";
 import {formatTime} from "@/utilities/time.utility";
-import {stationColour} from "../stations/stationColours";
-import {stationName} from "../stations/stations";
+import {getStationColour} from "../stations/stationColours";
+import {getStationName} from "../stations/stations";
 import {useDashboardClockStore} from "../store/dashboardClock.store";
 import {useTrainServicesStore} from "../store/trainServices.store";
 import {useJourneySelectionStore} from "../store/journeySelection.store";
@@ -58,7 +58,7 @@ const trainServicesStore = useTrainServicesStore();
 const dashboardClockStore = useDashboardClockStore();
 const journeySelectionStore = useJourneySelectionStore();
 const {isLoadingJourneys, journeys, recommendedJourney} = storeToRefs(trainServicesStore);
-const {activeJourney, activeJourneyDetails, activeJourneyId} = storeToRefs(journeySelectionStore);
+const {activeSelection, activeJourney, activeJourneyId} = storeToRefs(journeySelectionStore);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 
 const headerJourney = computed(() => recommendedJourney.value ?? journeys.value.at(0));
@@ -73,8 +73,8 @@ const leaveInString = computed(() => {
         return "Finding trains…";
     }
     if (
-        activeJourney.value.type === "ephemeral"
-        && activeJourneyDetails.value?.origin.groupId === undefined
+        activeSelection.value.type === "ephemeral"
+        && activeJourney.value?.origin.groupId === undefined
     ) {
         if (!headerJourney.value) {
             return "No trains found";

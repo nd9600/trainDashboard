@@ -32,11 +32,11 @@ export async function loadFirstTrainsForRoutes(
             const request = requests[index]!;
             let board = boards[index]!;
             let firstTrainLegs = getCatchableTrainLegs(board, request, currentMinutes);
-            if (
-                route.viaCrs &&
-                firstTrainLegs.length < minimumFirstTrainCount &&
-                request.timeOffsetMinutes < maximumTimeOffsetMinutes
-            ) {
+            const needsMoreFirstTrains = route.viaCrs !== undefined
+                && firstTrainLegs.length < minimumFirstTrainCount
+                && request.timeOffsetMinutes < maximumTimeOffsetMinutes;
+
+            if (needsMoreFirstTrains) {
                 const laterBoard = await loadDepartureBoard({
                     ...request,
                     timeOffsetMinutes: maximumTimeOffsetMinutes,

@@ -12,7 +12,7 @@
             <span class="mb-1 block text-xs text-ink-subtle"> Consumer key </span>
             <span class="relative block">
                 <input
-                    ref="consumerKeyInput"
+                    ref="consumerKeyInputRef"
                     v-model="draft.consumerKey"
                     class="appInput pr-11"
                     autocomplete="off"
@@ -56,10 +56,10 @@ import {
 } from "../../../dto/railDataApiSettings.dto";
 import {useRailDataApiStore} from "../../../store/railDataApi.store";
 
-const apiStore = useRailDataApiStore();
-const draft = ref<RailDataApiSettings>({...apiStore.settings});
+const railDataApiStore = useRailDataApiStore();
+const draft = ref<RailDataApiSettings>({...railDataApiStore.settings});
 const isConsumerKeyVisible = ref(false);
-const consumerKeyInput = ref<HTMLInputElement | null>(null);
+const consumerKeyInputRef = ref<HTMLInputElement | null>(null);
 const hasUnsavedChanges = defineModel<boolean>("hasUnsavedChanges", {
     default: false,
 });
@@ -72,7 +72,7 @@ const error = computed(() => {
 watch(error, (message) => emit("validChange", !message), {immediate: true});
 
 function handleChange(): void {
-    hasUnsavedChanges.value = draft.value.consumerKey !== apiStore.settings.consumerKey;
+    hasUnsavedChanges.value = draft.value.consumerKey !== railDataApiStore.settings.consumerKey;
 }
 
 function save(): void {
@@ -80,20 +80,20 @@ function save(): void {
         return;
     }
 
-    apiStore.saveApiSettings(draft.value);
-    draft.value = {...apiStore.settings};
+    railDataApiStore.saveApiSettings(draft.value);
+    draft.value = {...railDataApiStore.settings};
     isConsumerKeyVisible.value = false;
     hasUnsavedChanges.value = false;
 }
 
 function cancel(): void {
-    draft.value = {...apiStore.settings};
+    draft.value = {...railDataApiStore.settings};
     isConsumerKeyVisible.value = false;
     hasUnsavedChanges.value = false;
 }
 
 function focusConsumerKey(): void {
-    consumerKeyInput.value?.focus();
+    consumerKeyInputRef.value?.focus();
 }
 
 defineExpose({

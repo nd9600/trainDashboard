@@ -18,25 +18,25 @@
                 />
                 <strong
                     class="min-w-0 truncate"
-                    :style="{color: stationColour(leg.origin)}"
-                    :title="stationName(leg.origin)"
+                    :style="{color: getStationColour(leg.origin)}"
+                    :title="getStationName(leg.origin)"
                 >
-                    {{ stationName(leg.origin) }}
+                    {{ getStationName(leg.origin) }}
                 </strong>
                 <span
                     v-if="leg.platform !== undefined"
                     class="shrink-0 text-xs font-semibold"
-                    :style="{color: stationColour(leg.origin)}"
+                    :style="{color: getStationColour(leg.origin)}"
                 >
                     p{{ leg.platform ?? "_" }}
                 </span>
                 <span class="shrink-0">→</span>
                 <strong
                     class="min-w-0 truncate"
-                    :style="{color: stationColour(leg.destination)}"
-                    :title="stationName(leg.destination)"
+                    :style="{color: getStationColour(leg.destination)}"
+                    :title="getStationName(leg.destination)"
                 >
-                    {{ stationName(leg.destination) }}
+                    {{ getStationName(leg.destination) }}
                 </strong>
                 <time class="shrink-0 font-semibold text-ink">
                     {{ formatTime(leg.arrival) }}
@@ -57,8 +57,8 @@
 <script setup lang="ts">
 import {formatTime} from "@/utilities/time.utility.ts";
 import type {TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
-import {stationColour} from "../../../../stations/stationColours";
-import {stationName} from "../../../../stations/stations";
+import {getStationColour} from "../../../../stations/stationColours";
+import {getStationName} from "../../../../stations/stations";
 import AlternativeTrains from "../AlternativeTrains.vue";
 import TrainDepartureLink from "../TrainDepartureLink.vue";
 

@@ -6,9 +6,7 @@ import {planTimetabledJourneys} from "./planTimetabledJourneys";
 
 describe("planTimetabledJourneys", () => {
     it("plans a connected journey and keeps the slower options as alternatives", () => {
-        // Now 10:00. Walk 5 minutes to the station.
-        // First: A 10:10-10:30, B 10:20-10:35.
-        // Onward: C 10:40-11:20, D 10:45-11:15.
+        // The current time is 10:00. The walk to the station takes five minutes.
         const routeTimetable: RouteTimetable = {
             route: connectedRoute,
             firstTrainLegs: [

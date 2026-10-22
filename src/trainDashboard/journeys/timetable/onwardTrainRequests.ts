@@ -47,6 +47,8 @@ export async function loadOnwardDepartureBoard(
             latestOnwardDeparture ?? nextTransferReadyTime
         );
 
+        // If a first train is ready to change after the last onward departure,
+        // request another board.
         nextTransferReadyTime = transferReadyTimes.find(
             (transferReadyTime) => transferReadyTime > coveredUntil
         );

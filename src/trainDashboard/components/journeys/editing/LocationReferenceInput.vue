@@ -2,7 +2,7 @@
     <label class="sentenceField">
         {{ label }}
         <select
-            ref="select"
+            ref="selectRef"
             v-model="selectedLocationKey"
             class="appInput sentenceField__control min-w-52 grow"
             required
@@ -22,7 +22,7 @@
 import {computed, ref} from "vue";
 import type {LocationReference} from "../../../dto/journey.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
-import {stationDisplayName} from "../../../stations/stations";
+import {getStationDisplayName} from "../../../stations/stations";
 import {getLocationKey} from "../../../journeys/journeyIdentity";
 
 const props = defineProps<{
@@ -33,20 +33,22 @@ const props = defineProps<{
     label: string;
 }>();
 const location = defineModel<LocationReference>({required: true});
-const select = ref<HTMLSelectElement>();
+const selectRef = ref<HTMLSelectElement>();
 const selectedLocationKey = computed({
     get: () => getLocationKey(location.value, props.stationGroups),
     set: (key: string) => {
         const option = locationOptions.value.find((option) => option.key === key);
-        if (option) location.value = option.value;
+        if (option) {
+            location.value = option.value;
+        }
     },
 });
 const locationOptions = computed(() => {
     const options = props.stationGroups
         .flatMap((group) => {
-            const values: LocationReference[] = [{type: "group", groupId: group.id}];
+            const locations: LocationReference[] = [{type: "group", groupId: group.id}];
             if (group.stations.length > 1) {
-                values.push(
+                locations.push(
                     ...group.stations.map(({crs}) => ({
                         type: "station" as const,
                         groupId: group.id,
@@ -54,13 +56,13 @@ const locationOptions = computed(() => {
                     }))
                 );
             }
-            return values.map((value) => ({
+            return locations.map((value) => ({
                 value,
                 key: getLocationKey(value),
                 label:
                     value.type === "group"
                         ? group.name
-                        : `${group.name} - from ${stationDisplayName(value.crs)}`,
+                        : `${group.name} - from ${getStationDisplayName(value.crs)}`,
                 crs:
                     value.type === "station"
                         ? value.crs
@@ -81,11 +83,11 @@ const locationOptions = computed(() => {
         options.unshift({
             value,
             key: getLocationKey(value),
-            label: stationDisplayName(value.crs),
+            label: getStationDisplayName(value.crs),
             crs: value.crs,
         });
     }
     return options;
 });
-defineExpose({focus: () => select.value?.focus()});
+defineExpose({focus: () => selectRef.value?.focus()});
 </script>
