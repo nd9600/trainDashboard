@@ -6,6 +6,8 @@
                 <TrainDashboardSettingsModal ref="settingsModalRef" />
             </div>
 
+            <AppUpdateNotice class="mx-2 mt-4 sm:mx-0" />
+
             <section
                 v-if="!hasFinishedSetup"
                 class="mx-2 mt-8 rounded-lg border border-line bg-surface p-5 sm:mx-0"
@@ -86,6 +88,7 @@
 import {storeToRefs} from "pinia";
 import {computed, ref} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
+import AppUpdateNotice from "@/components/AppUpdateNotice.vue";
 import NoJourneysFound from "./journeys/timetables/NoJourneysFound.vue";
 import JourneyTimelines from "./journeys/timetables/JourneyTimelines.vue";
 import TrainDashboardSettingsModal from "./settings/TrainDashboardSettingsModal.vue";

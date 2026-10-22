@@ -1,5 +1,6 @@
 import {createHash} from "node:crypto";
 import {readdir, readFile, writeFile} from "node:fs/promises";
+import {createServiceWorker} from "./service-worker.mjs";
 
 const outputDirectory = new URL("../dist/", import.meta.url);
 
@@ -35,68 +36,6 @@ const cachedUrls = filePaths.map((filePath) =>
     filePath === "index.html" ? "./" : `./${filePath}`
 );
 
-const serviceWorker = `const CACHE_PREFIX = "train-dashboard-";
-const CACHE_NAME = ${JSON.stringify(cacheName)};
-const CACHED_URLS = ${JSON.stringify(cachedUrls, null, 4)};
-
-self.addEventListener("install", (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(CACHED_URLS))
-    );
-});
-
-self.addEventListener("activate", (event) => {
-    event.waitUntil(
-        caches
-            .keys()
-            .then((cacheNames) =>
-                Promise.all(
-                    cacheNames
-                        .filter(
-                            (cacheName) =>
-                                cacheName.startsWith(CACHE_PREFIX) &&
-                                cacheName !== CACHE_NAME
-                        )
-                        .map((cacheName) => caches.delete(cacheName))
-                )
-            )
-            .then(() => self.clients.claim())
-    );
-});
-
-self.addEventListener("fetch", (event) => {
-    if (
-        event.request.method !== "GET" ||
-        new URL(event.request.url).origin !== self.location.origin
-    ) {
-        return;
-    }
-
-    event.respondWith(
-        caches.open(CACHE_NAME).then(async (cache) => {
-            const cachedResponse = await cache.match(event.request, {
-                ignoreSearch: event.request.mode === "navigate",
-            });
-
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-
-            try {
-                return await fetch(event.request);
-            } catch (error) {
-                if (event.request.mode === "navigate") {
-                    const application = await cache.match("./");
-                    if (application) {
-                        return application;
-                    }
-                }
-
-                throw error;
-            }
-        })
-    );
-});
-`;
+const serviceWorker = createServiceWorker(cacheName, cachedUrls);
 
 await writeFile(new URL("sw.js", outputDirectory), serviceWorker);

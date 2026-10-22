@@ -22,6 +22,12 @@ npm run build
 
 The production build includes a web app manifest and a service worker. The service worker caches the application files. It does not cache live departure data.
 
+When you open or refresh the app, the service worker requests the latest HTML from the server. It stores a copy for offline use. JavaScript and CSS filenames contain content hashes. Cached assets load without another network request.
+
+The app checks for a new service worker when it starts, regains focus, or comes back online. If an update is ready, select **Update available — reload**. The new worker takes control before the page reloads. Other open tabs do not reload automatically.
+
+For the first deployment of this update feature, close all existing app tabs and installed app windows once, then reopen the app. The previous version does not have the update button.
+
 ### Deploy below a Zola site path
 
 Set `VITE_BASE_PATH` to the public directory that will contain the application. The value must start and end with `/`.
