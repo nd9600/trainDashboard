@@ -13,7 +13,7 @@
                     schedule.endsAt
                 }}
             </span>
-            <span v-if="selectedJourneyIsComplete" class="mt-2 block truncate text-sm">
+            <span v-if="selectedJourneyReferencesExistingGroups" class="mt-2 block truncate text-sm">
                 <JourneyLabel :details="getJourneyLabelDetails(selectedJourney!, stationGroups)" />
             </span>
             <span v-else class="mt-2 block text-sm text-danger-dark"> Choose a journey. </span>
@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import {hasJourneyEndpoints} from "../../../journeys/journeyIdentity";
+import {journeyReferencesExistingGroups} from "../../../journeys/journeyIdentity";
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
@@ -47,9 +47,9 @@ const emit = defineEmits<{
 const selectedJourney = computed(() =>
     props.journeys.find((journey) => journey.id === props.schedule.journeyId)
 );
-const selectedJourneyIsComplete = computed(
+const selectedJourneyReferencesExistingGroups = computed(
     () =>
         selectedJourney.value !== undefined &&
-        hasJourneyEndpoints(selectedJourney.value, props.stationGroups)
+        journeyReferencesExistingGroups(selectedJourney.value, props.stationGroups)
 );
 </script>

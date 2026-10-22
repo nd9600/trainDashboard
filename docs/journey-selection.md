@@ -25,13 +25,13 @@ Location can override the time-based prediction. The nearest group must have coo
 
 A journey with an explicit origin group matches that group. A station-only origin matches when its station belongs to the nearby group.
 
-Matching schedules take precedence over unscheduled journeys. An active schedule comes first, followed by the next start across the weekly schedule. Overlapping active schedules and equal upcoming start times use configuration order. Repeated schedules for one journey produce one candidate.
+Put matching scheduled journeys before journeys that have no schedule. An active schedule comes first, followed by the next start across the weekly schedule. If schedules are active at the same time, use their order in settings. Use the same order if their next start dates and times are equal. Include each journey only once, even if several schedules select it.
 
 Unscheduled saved journeys from the nearby group follow the scheduled candidates in configuration order.
 
 If no schedules match the group, saved journeys use configuration order. The first candidate becomes the prediction; the others become alternatives. If no journeys match, the result contains only the nearby group and its explanation.
 
-Without a nearby group, active schedules use configuration order. The first journey becomes the prediction; other distinct journeys become alternatives. Recent history does not affect prediction. The prediction reason identifies the selected schedule.
+Without a nearby group, use active schedules in the order shown in settings. The first journey becomes the prediction; other distinct journeys become alternatives. Recent history does not affect prediction. The prediction reason identifies the selected schedule.
 
 Schedules can overlap. Use Move up and Move down in settings to put preferred schedules first. Save configuration applies the order; Cancel discards the change.
 
@@ -78,7 +78,7 @@ stateDiagram-v2
     Ephemeral --> Ephemeral: Select another ephemeral journey
 ```
 
-The active selection has one of these shapes:
+`activeSelection` stores how the journey was selected. The `activeJourney` getter resolves the complete journey. The selection has one of these shapes:
 
 - `{type: "predicted"}` resolves the current predicted journey ID.
 - `{type: "saved", id}` resolves one configured journey.
@@ -118,13 +118,15 @@ flowchart TD
     removeSaved --> config[Update configuration]
 ```
 
+`JourneyForm` and `createEphemeralJourney` use `EphemeralJourneyFieldsSchema` to check the same rules. Both locations must be set, and the journey must start and end at different locations. The form uses one validation result for the submit button and the submitted fields.
+
 The switcher searches individual stations and configured groups for both endpoints. Connecting stations remain individual stations.
 
-Temporary journeys retain group references, so route expansion uses the group stations and their walking times. Journeys with removed groups are hidden.
+Temporary journeys retain group references, so route expansion uses the group stations and their walking times. `journeyReferencesExistingGroups` checks that those groups still exist. Journeys with removed groups are hidden and cannot be saved from the switcher.
 
 Selecting a temporary journey adds its ID to recent history. The switcher shows at most three recent journeys.
 
-Recent history contains journey IDs. Ephemeral definitions remain in journey memory while a recent or active selection refers to them.
+Recent history contains at most 50 journey IDs. `recentEphemeralJourneys` stores temporary definitions for these IDs. `persistRecentJourneys` removes definitions that are no longer in history, then writes both arrays to localStorage before the action returns. An active temporary journey remains in `activeSelection` after its recent entry is removed, but does not persist across a reload.
 
 Saving an ephemeral journey adds it to the configuration. The active selection then becomes saved.
 

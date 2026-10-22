@@ -34,7 +34,7 @@
                     </div>
                 </div>
             </section>
-            <div v-else-if="!activeJourneyDetails" class="mx-2 mt-8 sm:mx-0">
+            <div v-else-if="!activeJourney" class="mx-2 mt-8 sm:mx-0">
                 <JourneySwitcher />
             </div>
             <div
@@ -55,7 +55,7 @@
                     v-if="journeyLoadError"
                     class="rounded-lg border border-line bg-surface p-4 text-ink-muted"
                 >
-                    {{ journeyLoadErrorString }}
+                    {{ journeyLoadErrorMessage }}
                     <button
                         v-if="journeyLoadError === JourneyLoadError.NoConsumerKey"
                         class="appButton appButton--secondary ml-3 py-1"
@@ -111,7 +111,7 @@ const settingsModalRef = ref<{
 const {isLoadingJourneys, journeyLoadError, journeys, routes} = storeToRefs(trainServicesStore);
 const {currentMinutes} = storeToRefs(dashboardClockStore);
 const {config: dashboardConfig} = storeToRefs(dashboardConfigStore);
-const {activeJourneyDetails} = storeToRefs(journeySelectionStore);
+const {activeJourney} = storeToRefs(journeySelectionStore);
 
 const hasJourneyData = computed(() => journeys.value.length > 0);
 const hasFinishedSetup = computed(
@@ -123,13 +123,11 @@ const routesWithoutTimetabledJourneys = computed(() =>
     getRoutesWithoutTimetabledJourneys(routes.value, journeys.value)
 );
 
-const journeyLoadErrorString = computed(() => {
-    if (!journeyLoadError.value) {
-        return null;
-    }
-    if (journeyLoadError.value === JourneyLoadError.NoConsumerKey) {
-        return "Add your Consumer key in Settings → API.";
-    }
-    return "Train data could not be loaded. Try again later."
-});
+const journeyLoadErrorMessages: Record<JourneyLoadError, string> = {
+    [JourneyLoadError.NoConsumerKey]: "Add your Consumer key in Settings → API.",
+    [JourneyLoadError.DataCouldntBeLoaded]: "Train data could not be loaded. Try again later.",
+};
+const journeyLoadErrorMessage = computed(() =>
+    journeyLoadError.value ? journeyLoadErrorMessages[journeyLoadError.value] : null
+);
 </script>

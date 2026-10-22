@@ -8,7 +8,7 @@ const stationColours = [
     "var(--color-station-olive)",
 ] as const;
 
-export function stationColour(crs: string): string {
+export function getStationColour(crs: string): string {
     const hash = [...crs].reduce((total, character) => total + character.charCodeAt(0), 0);
 
     return stationColours[hash % stationColours.length]!;

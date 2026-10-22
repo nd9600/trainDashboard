@@ -23,10 +23,10 @@ export default defineConfig(({mode}) => ({
             name: "station-names",
             enforce: "pre",
             load(id) {
-                if (!id.endsWith("/stations.csv?names")) return;
+                if (!id.endsWith("/stations.csv?names")) {return;}
                 const file = id.slice(0, -"?names".length);
                 this.addWatchFile(file);
-                // The catalogue has unquoted fields. Only names and codes enter the browser bundle.
+                // The CSV fields have no quotes. Include only station names and codes in the app.
                 const rows = readFileSync(file, "utf8").trim().split(/\r?\n/).slice(1);
                 const names = Object.fromEntries(
                     rows.map((row) => {

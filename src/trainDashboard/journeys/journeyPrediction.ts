@@ -23,25 +23,27 @@ export interface JourneyPrediction {
     reason: JourneyPredictionReason | undefined;
 }
 
-// Nearby journeys take precedence. Otherwise, only active schedules are candidates.
-// Array order breaks ties; duplicate journeys retain their first position.
 export function getJourneyPrediction(
     config: DashboardConfig,
     currentClock: CurrentClock,
     currentCoordinates: Coordinates | null
 ): JourneyPrediction {
     const nearbyGroup = getNearbyStationGroup(config.stationGroups, currentCoordinates);
-    
+
+    // If a station group is nearby, use journeys that start at that group.
     const journeys = nearbyGroup
         ? config.journeys.filter((journey) => journeyStartsAtGroup(journey, nearbyGroup))
         : [];
     const journeyIds = new Set(journeys.map((journey) => journey.id));
-    
+
+    // Without a nearby group, use only schedules that are active now.
     const schedules = config.schedules.filter((schedule) =>
         nearbyGroup ? journeyIds.has(schedule.journeyId) : isScheduleActive(schedule, currentClock)
     );
-    
-    // Active schedules rank first, then the next start in the weekly cycle.
+
+    // Put active schedules first.
+    // Then put other schedules in order of their next start date and time.
+    // If schedules have the same priority, use their order in settings.
     if (nearbyGroup) {
         schedules.sort(
             (first, second) =>
@@ -49,13 +51,14 @@ export function getJourneyPrediction(
                 getMinutesUntilSchedule(second, currentClock)
         );
     }
-    
+
+    // Put scheduled journeys before other saved journeys. Include each journey only once.
     const [predictedJourneyId, ...alternativeJourneyIds] = new Set([
         ...schedules.map((schedule) => schedule.journeyId),
         ...journeyIds,
     ]);
-    
-    // get reason for prediction
+
+    // Get the reason for this prediction.
     const schedule = schedules[0];
     let reason: JourneyPredictionReason | undefined;
     if (schedule) {
@@ -69,7 +72,7 @@ export function getJourneyPrediction(
             ? {type: "saved", onlyJourney: journeys.length === 1}
             : {type: "nearby"};
     }
-    
+
     return {
         predictedJourneyId,
         alternativeJourneyIds,
@@ -83,7 +86,7 @@ function journeyStartsAtGroup(journey: Journey, group: StationGroup): boolean {
     if (origin.groupId !== undefined) {
         return origin.groupId === group.id;
     }
-    return origin.type === "station" 
+    return origin.type === "station"
         && group.stations.some((station) => station.crs === origin.crs)
     ;
 }

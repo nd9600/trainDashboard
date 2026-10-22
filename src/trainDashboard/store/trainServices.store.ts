@@ -17,7 +17,7 @@ export const useTrainServicesStore = defineStore("train-services", () => {
     const journeySelectionStore = useJourneySelectionStore();
     const dashboardClockStore = useDashboardClockStore();
     const dashboardConfigStore = useDashboardConfigStore();
-    const apiStore = useRailDataApiStore();
+    const railDataApiStore = useRailDataApiStore();
     journeySelectionStore.initialise();
 
     const routes = ref<JourneyRoute[]>([]);
@@ -38,11 +38,11 @@ export const useTrainServicesStore = defineStore("train-services", () => {
         isLoadingJourneys.value = true;
         journeyLoadError.value = null;
 
-        const consumerKey = apiStore.settings.consumerKey;
+        const consumerKey = railDataApiStore.settings.consumerKey;
 
         try {
             const dashboardJourneys = await getDashboardJourneys(
-                journeySelectionStore.activeJourneyDetails,
+                journeySelectionStore.activeJourney,
                 dashboardConfigStore.config.stationGroups,
                 dashboardClockStore.currentMinutes,
                 consumerKey
@@ -73,14 +73,14 @@ export const useTrainServicesStore = defineStore("train-services", () => {
 
     watch(
         [
-            () => journeySelectionStore.activeJourneyDetails,
+            () => journeySelectionStore.activeJourney,
             () => dashboardConfigStore.config.stationGroups,
             () => dashboardClockStore.currentMinutes,
-            () => apiStore.settings.consumerKey,
+            () => railDataApiStore.settings.consumerKey,
         ],
-        (values, previousValues) => {
-            const activeJourneyHasChanged = values[0] !== previousValues[0];
-            const stationGroupsHaveChanged = values[1] !== previousValues[1];
+        ([activeJourney, stationGroups], [previousActiveJourney, previousStationGroups]) => {
+            const activeJourneyHasChanged = activeJourney !== previousActiveJourney;
+            const stationGroupsHaveChanged = stationGroups !== previousStationGroups;
             if (activeJourneyHasChanged || stationGroupsHaveChanged) {
                 routes.value = [];
                 journeys.value = [];

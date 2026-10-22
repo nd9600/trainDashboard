@@ -1,13 +1,13 @@
 <template>
     <div class="space-y-6">
         <section
-            v-if="selectedJourneyIsComplete || isEditingJourney"
+            v-if="selectedJourneyReferencesExistingGroups || isEditingJourney"
             class="space-y-3 border-t border-line pt-5"
         >
             <h3 class="font-semibold text-primary">Change current journey</h3>
 
             <div
-                v-if="selectedJourneyIsComplete"
+                v-if="selectedJourneyReferencesExistingGroups"
                 class="flex items-center justify-between gap-3 rounded-lg bg-surface-muted p-3"
             >
                 <span class="min-w-0 grow truncate">
@@ -16,7 +16,7 @@
                     />
                 </span>
                 <button
-                    v-if="selectedJourney && selectedJourneyIsComplete"
+                    v-if="selectedJourney && selectedJourneyReferencesExistingGroups"
                     class="appButton appButton--secondary shrink-0 py-1"
                     type="button"
                     @click="toggleJourneyEditor"
@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import {hasJourneyEndpoints} from "../../../journeys/journeyIdentity";
+import {journeyReferencesExistingGroups} from "../../../journeys/journeyIdentity";
 import {computed, ref} from "vue";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {Journey} from "../../../dto/journey.dto";
@@ -119,10 +119,10 @@ const emit = defineEmits<{
 const selectedJourney = computed(() =>
     journeys.value.find((journey) => journey.id === schedule.value.journeyId)
 );
-const selectedJourneyIsComplete = computed(
+const selectedJourneyReferencesExistingGroups = computed(
     () =>
         selectedJourney.value !== undefined &&
-        hasJourneyEndpoints(selectedJourney.value, props.stationGroups)
+        journeyReferencesExistingGroups(selectedJourney.value, props.stationGroups)
 );
 const selectedJourneyIndex = computed(() =>
     journeys.value.findIndex((journey) => journey.id === schedule.value.journeyId)
@@ -131,7 +131,7 @@ const selectableJourneys = computed(() =>
     journeys.value.filter(
         (journey) =>
             journey.id !== schedule.value.journeyId &&
-            hasJourneyEndpoints(journey, props.stationGroups)
+            journeyReferencesExistingGroups(journey, props.stationGroups)
     )
 );
 
@@ -167,7 +167,7 @@ function toggleJourneyEditor(): void {
 function removeUnusedIncompleteJourney(journey: Journey | undefined): void {
     if (
         !journey ||
-        hasJourneyEndpoints(journey, props.stationGroups) ||
+        journeyReferencesExistingGroups(journey, props.stationGroups) ||
         props.schedules.some(
             (candidate) => candidate.id !== schedule.value.id && candidate.journeyId === journey.id
         )

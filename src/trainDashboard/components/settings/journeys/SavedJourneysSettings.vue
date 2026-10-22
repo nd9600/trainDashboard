@@ -16,7 +16,7 @@
             >
                 <div class="flex items-start justify-between gap-2">
                     <JourneyLabel
-                        v-if="hasJourneyEndpoints(journey, stationGroups)"
+                        v-if="journeyReferencesExistingGroups(journey, stationGroups)"
                         :details="getJourneyLabelDetails(journey, stationGroups)"
                     />
                     <span v-else>Choose journey stations</span>
@@ -25,8 +25,8 @@
                             class="appButton appButton--icon text-ink hover:text-paper hover:bg-ink"
                             @click="
                                 editingJourneyId =
-                                    editingJourneyId === journey.id 
-                                        ? undefined 
+                                    editingJourneyId === journey.id
+                                        ? undefined
                                         : journey.id
                             "
                             :label="editingJourneyId === journey.id ? 'Done editing' : 'Edit journey'"
@@ -73,7 +73,7 @@
                 data-test="recent-journey"
             >
                 <JourneyLabel
-                    v-if="hasJourneyEndpoints(journey, stationGroups)"
+                    v-if="journeyReferencesExistingGroups(journey, stationGroups)"
                     :details="getJourneyLabelDetails(journey, stationGroups)"
                 />
                 <span v-else>Choose journey stations</span>
@@ -109,7 +109,7 @@
 import AppIconButton from "@/components/AppIconButton.vue";
 import AppIcon from "@/components/AppIcon.vue";
 import {computed, ref} from "vue";
-import {hasJourneyEndpoints, journeysAreTheSame} from "../../../journeys/journeyIdentity";
+import {journeyReferencesExistingGroups, journeysAreTheSame} from "../../../journeys/journeyIdentity";
 import type {Journey} from "../../../dto/journey.dto";
 import type {DisplaySchedule} from "../../../dto/displaySchedule.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
@@ -137,7 +137,9 @@ const recentJourneys = computed(() => {
     }
     return recentJourneyIds.value.flatMap((id) => {
         const journey = journeysById.get(id);
-        return journey && hasJourneyEndpoints(journey, props.stationGroups) ? [journey] : [];
+        return journey && journeyReferencesExistingGroups(journey, props.stationGroups)
+            ? [journey]
+            : [];
     });
 });
 
@@ -148,7 +150,9 @@ function isSaved(journey: Journey): boolean {
 }
 
 function saveRecentJourney(journey: Journey): void {
-    if (isSaved(journey)) return;
+    if (isSaved(journey)) {
+        return;
+    }
     journeys.value.push(JSON.parse(JSON.stringify(journey)));
     emit("changed");
 }

@@ -70,7 +70,7 @@
         <label class="mt-3 block text-sm text-ink-muted">
             Coordinates <span class="text-[10px]">(optional)</span>
             <input
-                ref="coordinatesInput"
+                ref="coordinatesInputRef"
                 v-model="coordinatesText"
                 class="appInput mt-1"
                 placeholder="53.9605, -1.0963"
@@ -114,7 +114,7 @@ function updateWalkMinutes(stationIndex: number, event: Event): void {
     station.walkMinutes = value === "" ? undefined : Number(value);
 }
 
-const coordinatesInput = ref<HTMLInputElement | null>(null);
+const coordinatesInputRef = ref<HTMLInputElement | null>(null);
 const coordinatesText = ref("");
 
 watch(
@@ -124,7 +124,7 @@ watch(
         coordinatesText.value = coordinates
             ? `${coordinates.latitude}, ${coordinates.longitude}`
             : "";
-        coordinatesInput.value?.setCustomValidity("");
+        coordinatesInputRef.value?.setCustomValidity("");
     },
     {immediate: true}
 );

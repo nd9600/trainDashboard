@@ -1,16 +1,16 @@
 <template>
     <div
-        v-if="explanation || location || !configStore.config.shouldUseLocation"
+        v-if="explanation || location || !dashboardConfigStore.config.shouldUseLocation"
         class="text-xs text-ink-subtle"
         data-test="prediction-explanation"
     >
         <div
-            v-if="location || !configStore.config.shouldUseLocation"
+            v-if="location || !dashboardConfigStore.config.shouldUseLocation"
             class="flex gap-2 items-start mb-1"
         >
             <p class="my-0">
                 {{
-                    configStore.config.shouldUseLocation
+                    dashboardConfigStore.config.shouldUseLocation
                         ? `We think you are near ${location}.`
                         : "Your location is not being used for predictions."
                 }}
@@ -37,7 +37,7 @@
         <template #header>Location</template>
 
         <div class="px-5 py-4 flex flex-col gap-2 items-start">
-            <p v-if="!configStore.config.shouldUseLocation">
+            <p v-if="!dashboardConfigStore.config.shouldUseLocation">
                 Your location is not being used for predictions.
             </p>
             <p v-else-if="location">We think you are near {{ location }}.</p>
@@ -59,7 +59,7 @@
                     type="checkbox"
                     role="switch"
                     class="size-4 accent-primary"
-                    v-model="configStore.config.shouldUseLocation"
+                    v-model="dashboardConfigStore.config.shouldUseLocation"
                     data-test="location-predictions-toggle"
                 />
                 Use location for predictions
@@ -80,14 +80,14 @@ const props = defineProps<{
     prediction: JourneyPrediction;
     isPredicted: boolean;
 }>();
-const configStore = useDashboardConfigStore();
+const dashboardConfigStore = useDashboardConfigStore();
 const journeySelectionStore = useJourneySelectionStore();
 
 const shouldShowSettingsPopup = ref(false);
 
 const location = computed(() => {
     const {nearbyStationGroupId} = props.prediction;
-    const group = configStore.config.stationGroups.find(
+    const group = dashboardConfigStore.config.stationGroups.find(
         (group) => group.id === nearbyStationGroupId
     );
 
@@ -111,7 +111,7 @@ const explanation = computed(() => {
             : null;
     }
 
-    const schedule = configStore.config.schedules.find(
+    const schedule = dashboardConfigStore.config.schedules.find(
         (schedule) => schedule.id === reason.scheduleId
     );
 

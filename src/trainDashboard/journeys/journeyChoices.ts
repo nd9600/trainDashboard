@@ -3,22 +3,22 @@ import type {JourneyChoices} from "../dto/journeySelection.dto";
 import type {JourneyPrediction} from "./journeyPrediction";
 
 export function getJourneyChoices(
-    journeys: Map<string, Journey>,
+    journeysById: Map<string, Journey>,
     prediction: JourneyPrediction,
-    recentIds: string[],
-    saved: Journey[]
+    recentJourneyIds: string[],
+    savedJourneys: Journey[]
 ): JourneyChoices[] {
     const alreadyListedJourneyIds = new Set<string>();
-    function take(ids: (string | undefined)[], limit = Infinity): Journey[] {
+    function takeUnlistedJourneys(journeyIds: (string | undefined)[], limit = Infinity): Journey[] {
         const choices: Journey[] = [];
-        for (const id of ids) {
-            const journey = id 
-                ? journeys.get(id) 
+        for (const id of journeyIds) {
+            const journey = id
+                ? journeysById.get(id)
                 : undefined;
             if (!journey || alreadyListedJourneyIds.has(journey.id)) {
                 continue
             }
-            
+
             alreadyListedJourneyIds.add(journey.id);
             choices.push(journey);
             if (choices.length === limit) {
@@ -28,10 +28,10 @@ export function getJourneyChoices(
         return choices;
     }
     const groups: JourneyChoices[] = [
-        {name: "Predicted", journeys: take([prediction.predictedJourneyId])},
-        {name: "Alternatives", journeys: take(prediction.alternativeJourneyIds)},
-        {name: "Recent", journeys: take(recentIds, 3)},
-        {name: "Saved", journeys: take(saved.map((journey) => journey.id))},
+        {name: "Predicted", journeys: takeUnlistedJourneys([prediction.predictedJourneyId])},
+        {name: "Alternatives", journeys: takeUnlistedJourneys(prediction.alternativeJourneyIds)},
+        {name: "Recent", journeys: takeUnlistedJourneys(recentJourneyIds, 3)},
+        {name: "Saved", journeys: takeUnlistedJourneys(savedJourneys.map((journey) => journey.id))},
     ];
-    return groups.filter((group) => group.journeys.length);
+    return groups.filter((group) => group.journeys.length > 0);
 }

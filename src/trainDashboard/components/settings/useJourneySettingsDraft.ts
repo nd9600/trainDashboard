@@ -17,7 +17,8 @@ export function useJourneySettingsDraft(
     const isValid = ref(true);
 
     function getConfigDraft(): DashboardConfig {
-        // The stored configuration is JSON data. Its reactive proxies cannot use structuredClone.
+        // Copy the JSON data so changes to the draft do not change the stored configuration.
+        // structuredClone cannot copy the Vue objects in the store.
         return JSON.parse(JSON.stringify(dashboardConfigStore.config));
     }
 
@@ -52,7 +53,7 @@ export function useJourneySettingsDraft(
         if (activeJourneyId && removedJourneyIds.includes(activeJourneyId)) {
             journeySelectionStore.resetActiveJourneyToPredicted();
         } else if (
-            journeySelectionStore.activeJourney.type === "ephemeral" &&
+            journeySelectionStore.activeSelection.type === "ephemeral" &&
             config.journeys.some((journey) => journey.id === activeJourneyId)
         ) {
             journeySelectionStore.selectJourney(activeJourneyId!);
@@ -78,7 +79,8 @@ export function useJourneySettingsDraft(
         const result = DashboardConfigSchema.safeParse(draft.value);
         errors.value = result.success ? [] : dashboardConfigErrorMessages(result.error, draft.value);
 
-        // Incomplete numbers have an empty value, but are not optional blank fields.
+        // A number input can be empty because the user has not finished entering a number.
+        // Show an error in this case, even if the field is optional.
         for (const input of form.value?.querySelectorAll("input") ?? []) {
             if (input.validity.customError) {
                 errors.value.push(input.validationMessage);
@@ -129,7 +131,9 @@ export function useJourneySettingsDraft(
             (journey) => !removedJourneyIds.includes(journey.id)
         );
         for (const schedule of draft.value.schedules) {
-            if (removedJourneyIds.includes(schedule.journeyId)) schedule.journeyId = "";
+            if (removedJourneyIds.includes(schedule.journeyId)) {
+                schedule.journeyId = "";
+            }
         }
         handleChange();
     }

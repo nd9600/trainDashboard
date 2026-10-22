@@ -1,7 +1,6 @@
 import {stationNames} from "./stationNames";
 
-// These helpers provide the app-specific view of the static station mapping.
-export function stationName(code: string): string {
+export function getStationName(code: string): string {
     return stationNames[code] ?? code;
 }
 
@@ -23,14 +22,14 @@ const stationCodesByName = Object.fromEntries(
     Object.entries(stationNames).map(([code, name]) => [name.toLowerCase(), code])
 );
 
-export function stationDisplayName(code: string): string {
+export function getStationDisplayName(code: string): string {
     const normalisedCode = code.trim().toUpperCase();
     const name = stationNames[normalisedCode];
 
     return name ? `${name} (${normalisedCode})` : code;
 }
 
-export function stationCodeFromInput(value: string): string {
+export function getStationCodeFromInput(value: string): string {
     const trimmedValue = value.trim();
     const codeFromLabel = trimmedValue.match(/\(([A-Z]{3})\)$/i)?.[1];
 
@@ -61,14 +60,14 @@ export function findStationOptions(query: string, limit: number = 10): StationOp
         )
         .sort(
             (first, second) =>
-                stationMatchRank(first, normalisedQuery) -
-                    stationMatchRank(second, normalisedQuery) ||
+                getStationMatchRank(first, normalisedQuery) -
+                    getStationMatchRank(second, normalisedQuery) ||
                 first.name.localeCompare(second.name)
         )
         .slice(0, limit);
 }
 
-function stationMatchRank(station: StationOption, normalisedQuery: string): number {
+function getStationMatchRank(station: StationOption, normalisedQuery: string): number {
     const code = station.code.toLowerCase();
     const name = station.name.toLowerCase();
 

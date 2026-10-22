@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import {hasJourneyEndpoints} from "../../../journeys/journeyIdentity";
+import {journeyReferencesExistingGroups} from "../../../journeys/journeyIdentity";
 import {newId} from "../../../dto/id.dto";
 
 import {computed, nextTick, ref} from "vue";
@@ -166,7 +166,7 @@ function removeSchedule(scheduleIndex: number): void {
     const journey = journeys.value.find((candidate) => candidate.id === schedule.journeyId);
     const deleteIncompleteJourney =
         journey !== undefined &&
-        !hasJourneyEndpoints(journey, props.stationGroups) &&
+        !journeyReferencesExistingGroups(journey, props.stationGroups) &&
         !otherSchedules.some((candidate) => candidate.journeyId === journey.id);
 
     if (!window.confirm(`Remove schedule “${schedule.name}”?`)) {

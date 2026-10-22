@@ -2,7 +2,9 @@
 
 Journey planning starts with one resolved active journey. See [journey selection](journey-selection.md) for how the app selects that journey.
 
-Prediction alternatives include saved journeys from the nearby group, with scheduled journeys first. Without a nearby group, overlapping active schedules supply candidates in preference order. Alternatives do not load timetables until selected.
+The journey-selection store keeps the selection mode in `activeSelection` and resolves the complete journey through `activeJourney`. `journeyReferencesExistingGroups` excludes journeys that refer to removed groups before route planning.
+
+Prediction alternatives include saved journeys from the nearby group, with scheduled journeys first. Without a nearby group, active schedules select journeys in the order shown in settings. Alternatives do not load timetables until selected.
 
 ## Planning flow
 
@@ -38,7 +40,7 @@ See [departure-board requests](departure-boards.md) for how the app loads direct
 
 Each route timetable contains its station route and parsed train legs. A direct route contains first-train legs only. A connected route also contains onward-train legs.
 
-`planTimetabledJourneys` accepts route timetables. It hides train matching, connection rules, section construction, filtering, sorting, and recommendation.
+`planTimetabledJourneys` accepts route timetables. It matches trains, checks connections, adds journey sections, removes journeys that have already started, sorts the remaining journeys, and selects a recommendation.
 
 ## Call graph
 
@@ -104,6 +106,8 @@ flowchart TD
     exists -->|Yes| alternative
 ```
 
+`getTrainPlans` first finds catchable first trains. It then checks onward trains in order of arrival time. If several onward trains use the same first train, the earliest arrival becomes the main option. The other onward trains become alternatives.
+
 A catchable first train must meet all these rules:
 
 - The passenger can complete the origin walk before departure.
@@ -143,6 +147,8 @@ flowchart LR
     mobile --> departure
     desktop --> departure
 ```
+
+The desktop chart uses bold text for arrival at a location named “Home” when the destination walk time is known. The chart makes this display decision; the planner supplies the arrival details.
 
 The planner returns all sorted journeys. `JourneyTimelines` applies the six-journey display limit.
 

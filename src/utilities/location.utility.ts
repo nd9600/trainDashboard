@@ -13,7 +13,7 @@ export function distanceBetweenCoordinatesKm(from: Coordinates, to: Coordinates)
     const latitudeDifference = toRadians(to.latitude - from.latitude);
     const longitudeDifference = toRadians(to.longitude - from.longitude);
 
-    // Use the Haversine formula for distance on a sphere.
+    // Calculate the distance over the Earth's surface with the Haversine formula.
     const score =
         Math.sin(latitudeDifference / 2) ** 2 +
         Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(longitudeDifference / 2) ** 2;

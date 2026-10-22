@@ -11,7 +11,6 @@ export const useRailDataApiStore = defineStore("rail-data-api", () => {
     const settings = ref<RailDataApiSettings>(storage.loadFromLocalStorage());
 
     function saveApiSettings(candidate: RailDataApiSettings): void {
-        //todo: do we need to parse the candidate (maybe so its not actually the same object as in the store?), or can we just do settings.value = candidate
         const parsedSettings = RailDataApiSettingsSchema.parse(candidate);
         settings.value = parsedSettings;
         storage.saveToLocalStorage(parsedSettings);

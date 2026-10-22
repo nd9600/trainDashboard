@@ -4,7 +4,7 @@
         @submit.prevent="submit"
     >
         <JourneyMaker
-            ref="journeyMaker"
+            ref="journeyMakerRef"
             v-model:journey="journey"
             endpointMode="search"
             :stationGroups="stationGroups"
@@ -16,7 +16,7 @@
             <button
                 class="appButton appButton--primary py-1.5"
                 type="submit"
-                :disabled="!validJourney"
+                :disabled="!journeyValidation.success"
             >
                 {{ submitLabel }}
             </button>
@@ -29,8 +29,8 @@
 
 <script setup lang="ts">
 import {computed, onMounted, ref, toRaw} from "vue";
-import {JourneyFieldsSchema, type Journey, type JourneyFields} from "../../../dto/journey.dto";
-import {getLocationKey} from "../../../journeys/journeyIdentity";
+import type {Journey, JourneyFields} from "../../../dto/journey.dto";
+import {EphemeralJourneyFieldsSchema} from "../../../dto/journeySelection.dto";
 import type {StationGroup} from "../../../dto/stationGroup.dto";
 import JourneyMaker from "../editing/JourneyMaker.vue";
 
@@ -53,7 +53,7 @@ const emit = defineEmits<{
     cancel: [];
     submit: [journey: JourneyFields];
 }>();
-const journeyMaker = ref<InstanceType<typeof JourneyMaker>>();
+const journeyMakerRef = ref<InstanceType<typeof JourneyMaker>>();
 
 const journey = ref<Journey>(
     props.initialJourney
@@ -64,20 +64,16 @@ const journey = ref<Journey>(
               destination: {type: "station", crs: ""},
           }
 );
-const validJourney = computed(
-    () =>
-        JourneyFieldsSchema.safeParse(journey.value).success &&
-        getLocationKey(journey.value.origin) !== getLocationKey(journey.value.destination)
-);
+const journeyValidation = computed(() => EphemeralJourneyFieldsSchema.safeParse(journey.value));
 
 onMounted(() => {
-    journeyMaker.value?.focusOrigin();
+    journeyMakerRef.value?.focusOrigin();
 });
 
 function submit(): void {
-    const result = JourneyFieldsSchema.safeParse(journey.value);
+    const result = journeyValidation.value;
 
-    if (!result.success || !validJourney.value) {
+    if (!result.success) {
         return;
     }
 

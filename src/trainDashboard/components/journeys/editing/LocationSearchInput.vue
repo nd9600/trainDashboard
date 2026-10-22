@@ -61,8 +61,8 @@ import type {StationGroup} from "../../../dto/stationGroup.dto";
 import {getLocationKey} from "../../../journeys/journeyIdentity";
 import {
     findStationOptions,
-    stationCodeFromInput,
-    stationDisplayName,
+    getStationCodeFromInput,
+    getStationDisplayName,
 } from "../../../stations/stations";
 
 const props = defineProps<{
@@ -98,7 +98,7 @@ function displayLocation(value: unknown): string {
     const endpoint = value as LocationReference;
     const group = props.stationGroups.find((group) => group.id === endpoint.groupId);
     if (endpoint.type === "station") {
-        const station = stationDisplayName(endpoint.crs);
+        const station = getStationDisplayName(endpoint.crs);
         return group ? `${group.name} - ${station}` : station;
     }
     return group?.name ?? "";
@@ -106,7 +106,7 @@ function displayLocation(value: unknown): string {
 
 function updateQuery(event: Event): void {
     query.value = (event.target as HTMLInputElement).value;
-    location.value = {type: "station", crs: stationCodeFromInput(query.value)};
+    location.value = {type: "station", crs: getStationCodeFromInput(query.value)};
 }
 
 defineExpose({focus: () => root.value?.querySelector("input")?.focus()});

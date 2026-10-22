@@ -63,8 +63,8 @@ describe("useJourneySelectionStore", () => {
             isInitialised: false,
             currentCoordinates: null,
             recentJourneyIds: [],
-            ephemeralJourneys: [],
-            activeJourney: {type: "predicted"},
+            recentEphemeralJourneys: [],
+            activeSelection: {type: "predicted"},
         });
 
         store.initialise();
@@ -77,8 +77,8 @@ describe("useJourneySelectionStore", () => {
         const store = getJourneySelectionStore();
 
         expect(store.predictedJourneyId).toBe(predictedJourney.id);
-        expect(store.activeJourney).toEqual({type: "predicted"});
-        expect(store.activeJourneyDetails).toEqual(predictedJourney);
+        expect(store.activeSelection).toEqual({type: "predicted"});
+        expect(store.activeJourney).toEqual(predictedJourney);
     });
 
     it("records a saved override as one recent journey ID", () => {
@@ -87,7 +87,7 @@ describe("useJourneySelectionStore", () => {
         store.selectJourney(savedJourney.id);
         store.selectJourney(savedJourney.id);
 
-        expect(store.activeJourney).toEqual({
+        expect(store.activeSelection).toEqual({
             type: "saved",
             id: savedJourney.id,
         });
@@ -95,7 +95,7 @@ describe("useJourneySelectionStore", () => {
 
         store.selectJourney(predictedJourney.id);
 
-        expect(store.activeJourney).toEqual({type: "predicted"});
+        expect(store.activeSelection).toEqual({type: "predicted"});
         expect(store.recentJourneyIds).toEqual([savedJourney.id]);
     });
 
@@ -200,7 +200,7 @@ describe("useJourneySelectionStore", () => {
         recreateStores();
         const restoredStore = getJourneySelectionStore();
 
-        expect(restoredStore.activeJourney).toEqual({type: "predicted"});
+        expect(restoredStore.activeSelection).toEqual({type: "predicted"});
         expect(restoredStore.recentJourneyIds).toEqual([savedJourney.id]);
     });
 
@@ -209,12 +209,12 @@ describe("useJourneySelectionStore", () => {
 
         store.addEphemeralJourney(manchesterToLiverpool);
 
-        expect(store.activeJourney.type).toBe("ephemeral");
+        expect(store.activeSelection.type).toBe("ephemeral");
         expect(store.currentEphemeralJourney).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
         });
-        expect(store.activeJourneyDetails).toEqual({
+        expect(store.activeJourney).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
         });
@@ -228,12 +228,12 @@ describe("useJourneySelectionStore", () => {
             destination: {type: "station", crs: "MAN"},
         };
         store.addEphemeralJourney(fields);
-        expect(store.activeJourneyDetails).toEqual({id: "heaton-chapel-to-man", ...fields});
+        expect(store.activeJourney).toEqual({id: "heaton-chapel-to-man", ...fields});
 
         recreateStores();
         const restored = getJourneySelectionStore();
         restored.selectJourney("heaton-chapel-to-man");
-        expect(restored.activeJourneyDetails).toEqual({id: "heaton-chapel-to-man", ...fields});
+        expect(restored.activeJourney).toEqual({id: "heaton-chapel-to-man", ...fields});
 
         const edited: JourneyFields = {
             ...fields,
@@ -241,7 +241,7 @@ describe("useJourneySelectionStore", () => {
         };
         restored.editSavedOrEphemeralJourney(edited);
         restored.saveEphemeralJourney();
-        expect(restored.activeJourney.type).toBe("saved");
+        expect(restored.activeSelection.type).toBe("saved");
         expect(useDashboardConfigStore().config.journeys).toContainEqual({
             id: "heaton-chapel-to-man",
             ...edited,
@@ -258,7 +258,7 @@ describe("useJourneySelectionStore", () => {
             ...useDashboardConfigStore().config,
             stationGroups: [],
         });
-        expect(store.activeJourneyDetails).toBeUndefined();
+        expect(store.activeJourney).toBeUndefined();
         expect(store.journeyChoices.flatMap((section) => section.journeys)).toEqual([]);
         store.saveEphemeralJourney();
         expect(
@@ -276,9 +276,9 @@ describe("useJourneySelectionStore", () => {
         recreateStores();
         const restoredStore = getJourneySelectionStore();
 
-        expect(restoredStore.activeJourney).toEqual({type: "predicted"});
+        expect(restoredStore.activeSelection).toEqual({type: "predicted"});
         expect(restoredStore.predictedJourneyId).toBeUndefined();
-        expect(restoredStore.activeJourneyDetails).toBeUndefined();
+        expect(restoredStore.activeJourney).toBeUndefined();
         expect(restoredStore.recentJourneyIds).toEqual(["man-to-liv"]);
         expect(restoredStore.journeyChoices[0]).toEqual({
             name: "Recent",
@@ -292,12 +292,12 @@ describe("useJourneySelectionStore", () => {
 
         store.saveEphemeralJourney();
 
-        expect(store.activeJourney).toEqual({
+        expect(store.activeSelection).toEqual({
             type: "saved",
             id: "man-to-liv",
         });
         expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
-        expect(store.activeJourney.type).toBe("saved");
+        expect(store.activeSelection.type).toBe("saved");
         expect(store.currentEphemeralJourney).toBeUndefined();
         expect(
             useDashboardConfigStore().config.journeys.find((journey) => journey.id === "man-to-liv")
@@ -312,7 +312,7 @@ describe("useJourneySelectionStore", () => {
 
         store.selectJourney("man-to-liv");
 
-        expect(store.activeJourney.type).toBe("ephemeral");
+        expect(store.activeSelection.type).toBe("ephemeral");
         expect(store.currentEphemeralJourney).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
@@ -340,7 +340,7 @@ describe("useJourneySelectionStore", () => {
         store.removeRecentJourney("man-to-liv");
 
         expect(store.recentJourneyIds).toEqual([]);
-        expect(store.activeJourneyDetails).toEqual({
+        expect(store.activeJourney).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
         });
@@ -370,7 +370,7 @@ describe("useJourneySelectionStore", () => {
         store.selectJourney(unscheduledJourney.id);
 
         store.editSavedOrEphemeralJourney({...unscheduledJourney, viaCrs: "CRE"});
-        expect(store.activeJourneyDetails).toEqual({
+        expect(store.activeJourney).toEqual({
             ...unscheduledJourney,
             viaCrs: "CRE",
         });
@@ -381,7 +381,7 @@ describe("useJourneySelectionStore", () => {
         store.selectJourney(savedJourney.id);
 
         store.editSavedOrEphemeralJourney({...savedJourney, viaCrs: "CRE"});
-        expect(store.activeJourneyDetails).toEqual(savedJourney);
+        expect(store.activeJourney).toEqual(savedJourney);
     });
 
     it("edits an active ephemeral journey", () => {
@@ -392,7 +392,7 @@ describe("useJourneySelectionStore", () => {
             ...manchesterToLiverpool,
             viaCrs: "CRE",
         });
-        expect(store.activeJourneyDetails).toEqual({
+        expect(store.activeJourney).toEqual({
             id: "man-to-liv",
             ...manchesterToLiverpool,
             viaCrs: "CRE",
@@ -408,8 +408,8 @@ describe("useJourneySelectionStore", () => {
 
         store.resetActiveJourneyToPredicted();
 
-        expect(store.activeJourney).toEqual({type: "predicted"});
-        expect(store.activeJourneyDetails).toEqual(config.journeys[1]);
+        expect(store.activeSelection).toEqual({type: "predicted"});
+        expect(store.activeJourney).toEqual(config.journeys[1]);
         expect(store.currentEphemeralJourney).toBeUndefined();
         expect(store.recentJourneyIds).toEqual(["man-to-liv"]);
     });

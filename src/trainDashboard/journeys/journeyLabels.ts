@@ -2,7 +2,7 @@ import type {Journey, LocationReference} from "../dto/journey.dto";
 import type {StationGroup} from "../dto/stationGroup.dto";
 import type {TimetabledJourney} from "../dto/timetabledJourney.dto";
 import type {JourneyRoute} from "./planning/journeyRoutes";
-import {stationName} from "../stations/stations";
+import {getStationName} from "../stations/stations";
 
 export type JourneyLabelEndpoint =
     {type: "location"; name: string; stationCrs?: string} | {type: "station"; stationCrs: string};
@@ -58,7 +58,7 @@ export function getJourneyLabelText(details: JourneyLabelDetails): string {
     const origin = getEndpointText(details.origin, "origin");
     const destination = getEndpointText(details.destination, "destination");
     const connection = details.connectingStationCrs
-        ? `, possibly connecting through ${stationName(details.connectingStationCrs)}`
+        ? `, possibly connecting through ${getStationName(details.connectingStationCrs)}`
         : "";
 
     return `${origin} → ${destination}${connection}`;
@@ -93,14 +93,14 @@ function getEndpointText(
     position: "origin" | "destination"
 ): string {
     if (endpoint.type === "station") {
-        return stationName(endpoint.stationCrs);
+        return getStationName(endpoint.stationCrs);
     }
 
     if (!endpoint.stationCrs) {
         return endpoint.name;
     }
 
-    const station = stationName(endpoint.stationCrs);
+    const station = getStationName(endpoint.stationCrs);
 
     return position === "origin"
         ? `${endpoint.name}, from ${station}`

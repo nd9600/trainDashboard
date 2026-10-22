@@ -9,7 +9,7 @@
             <ListboxButton
                 class="appButton appButton--secondary min-w-0 max-w-full justify-start whitespace-normal border-none p-1 text-left"
                 :class="
-                    activeJourneyDetails
+                    activeJourney
                         ? undefined
                         : 'sr-only focus:not-sr-only focus:relative focus:m-1'
                 "
@@ -17,16 +17,16 @@
                 :disabled="!!formMode"
             >
                 <JourneyLabel
-                    v-if="activeJourneyDetails"
+                    v-if="activeJourney"
                     class="text-xs"
-                    :details="getJourneyLabelDetails(activeJourneyDetails, stationGroups)"
+                    :details="getJourneyLabelDetails(activeJourney, stationGroups)"
                     :shouldSayWhenDirect="false"
                 />
                 <span v-else>Choose a journey</span>
                 <AppIcon class="size-3 rotate-90" name="chevron" />
             </ListboxButton>
             <AppIconButton
-                v-if="activeJourney.type !== 'predicted' && !formMode"
+                v-if="activeSelection.type !== 'predicted' && !formMode"
                 class="appButton appButton--quiet appButton--icon size-7 shrink-0 text-ink-subtle"
                 @click="journeySelectionStore.resetActiveJourneyToPredicted"
                 label="Clear temporary journey"
@@ -37,13 +37,13 @@
 
         <JourneyPredictionExplanation
             :prediction="currentJourneyPrediction"
-            :isPredicted="activeJourney.type === 'predicted'"
+            :isPredicted="activeSelection.type === 'predicted'"
         />
 
         <ListboxOptions
-            :static="!activeJourneyDetails && !formMode"
+            :static="!activeJourney && !formMode"
             class="z-20 max-h-[80vh] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-line-strong bg-paper shadow-lg focus:outline-none"
-            :class="activeJourneyDetails ? 'absolute top-full left-0 mt-1' : undefined"
+            :class="activeJourney ? 'absolute top-full left-0 mt-1' : undefined"
         >
             <template v-for="section in journeyChoices" :key="section.name">
                 <li
@@ -71,14 +71,14 @@
 
         <div
             v-if="
-                activeJourney.type !== 'predicted'
+                activeSelection.type !== 'predicted'
                 && !formMode
-                && (activeJourney.type === 'ephemeral' || canEditActiveJourney)
+                && (activeSelection.type === 'ephemeral' || canEditActiveJourney)
             "
             class="flex items-center gap-2"
         >
             <button
-                v-if="activeJourney.type === 'ephemeral'"
+                v-if="activeSelection.type === 'ephemeral'"
                 class="appButton appButton--primary px-2 py-1 text-xs"
                 type="button"
                 @click="journeySelectionStore.saveEphemeralJourney"
@@ -100,7 +100,7 @@
         <JourneyForm
             v-if="formMode"
             :key="`${formMode}-${activeJourneyId}`"
-            :initialJourney="formMode === 'edit' ? activeJourneyDetails : undefined"
+            :initialJourney="formMode === 'edit' ? activeJourney : undefined"
             :stationGroups="stationGroups"
             :journeys="config.journeys"
             :submitLabel="formMode === 'edit' ? 'Save' : 'Use journey'"
@@ -131,8 +131,8 @@ const journeySelectionStore = useJourneySelectionStore();
 const dashboardConfigStore = useDashboardConfigStore();
 const {
     activeJourneyId,
+    activeSelection,
     activeJourney,
-    activeJourneyDetails,
     currentJourneyPrediction,
     journeyChoices,
 } = storeToRefs(journeySelectionStore);
@@ -145,16 +145,16 @@ const scheduledJourneyIds = computed(
 );
 const canEditActiveJourney = computed(
     () =>
-        activeJourneyDetails.value !== undefined &&
-        !scheduledJourneyIds.value.has(activeJourneyDetails.value.id)
+        activeJourney.value !== undefined &&
+        !scheduledJourneyIds.value.has(activeJourney.value.id)
 );
 const switcherButtonLabel = computed(() => {
-    if (!activeJourneyDetails.value) {
+    if (!activeJourney.value) {
         return "Choose a journey";
     }
 
     const label = getJourneyLabelText(
-        getJourneyLabelDetails(activeJourneyDetails.value, stationGroups.value)
+        getJourneyLabelDetails(activeJourney.value, stationGroups.value)
     );
 
     return `Change journey. Current journey: ${label}`;

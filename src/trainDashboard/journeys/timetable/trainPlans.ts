@@ -16,33 +16,38 @@ export function getTrainPlans(
         return firstTrainLegs.map((leg) => ({route, trainLegs: [leg]}))
     }
 
-    const plans = new Map<string, TrainPlan>();
-    const feeders = firstTrainLegs
+    const plansByFirstTrain = new Map<string, TrainPlan>();
+    const catchableFirstTrainLegs = firstTrainLegs
         .filter((leg) => leg.departure - (route.origin.walkMinutes ?? 0) >= currentMinutes)
         .sort((first, second) => second.departure - first.departure);
-    // Earliest arrival wins. Later onward trains sharing its feeder become alternatives.
-    for (const onward of [...onwardTrainLegs].sort(
+    // Choose the onward train that arrives first.
+    const onwardTrainLegsByArrival = [...onwardTrainLegs].sort(
         (first, second) => first.arrival - second.arrival
-    )) {
-        const [first, ...alternatives] = feeders.filter(
+    );
+
+    for (const onwardTrainLeg of onwardTrainLegsByArrival) {
+        const [firstTrainLeg, ...alternativeFirstTrainLegs] = catchableFirstTrainLegs.filter(
             (leg) =>
-                leg.arrival + minimumTransferMinutes <= onward.departure &&
-                leg.serviceId !== onward.serviceId
+                leg.arrival + minimumTransferMinutes <= onwardTrainLeg.departure &&
+                leg.serviceId !== onwardTrainLeg.serviceId
         );
-        if (!first) continue;
-        const key = `${first.serviceId}:${first.departure}`;
-        const existing = plans.get(key);
-        if (existing) {
-            existing.trainLegs[1]!.alternativeTrainLegs!.push(onward);
+        if (!firstTrainLeg) {
+            continue;
+        }
+        const firstTrainKey = `${firstTrainLeg.serviceId}:${firstTrainLeg.departure}`;
+        const existingPlan = plansByFirstTrain.get(firstTrainKey);
+        if (existingPlan) {
+            // Keep later arrivals as alternatives when they use the same first train.
+            existingPlan.trainLegs[1]!.alternativeTrainLegs!.push(onwardTrainLeg);
         } else {
-            plans.set(key, {
+            plansByFirstTrain.set(firstTrainKey, {
                 route,
                 trainLegs: [
-                    {...first, alternativeTrainLegs: alternatives},
-                    {...onward, alternativeTrainLegs: []},
+                    {...firstTrainLeg, alternativeTrainLegs: alternativeFirstTrainLegs},
+                    {...onwardTrainLeg, alternativeTrainLegs: []},
                 ],
             });
         }
     }
-    return [...plans.values()];
+    return [...plansByFirstTrain.values()];
 }

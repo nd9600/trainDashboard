@@ -5,12 +5,12 @@
             :key="`${leg.origin}-${leg.destination}-${leg.departure}`"
             class="text-ink-subtle"
         >
-            <span class="font-semibold" :style="{color: stationColour(leg.origin)}">
-                {{ stationName(leg.origin) }}
+            <span class="font-semibold" :style="{color: getStationColour(leg.origin)}">
+                {{ getStationName(leg.origin) }}
             </span>
             →
-            <span class="font-semibold" :style="{color: stationColour(leg.destination)}">
-                {{ stationName(leg.destination) }}
+            <span class="font-semibold" :style="{color: getStationColour(leg.destination)}">
+                {{ getStationName(leg.destination) }}
             </span>
             <span>· {{ formatTime(leg.departure) }}</span>
         </p>
@@ -19,8 +19,8 @@
 
 <script setup lang="ts">
 import type {TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
-import {stationColour} from "../../../../stations/stationColours";
-import {stationName} from "../../../../stations/stations";
+import {getStationColour} from "../../../../stations/stationColours";
+import {getStationName} from "../../../../stations/stations";
 import {formatTime} from "@/utilities/time.utility.ts";
 
 defineProps<{

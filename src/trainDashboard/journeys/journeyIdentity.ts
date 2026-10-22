@@ -1,12 +1,12 @@
 import type {Journey, LocationReference} from "../dto/journey.dto";
 import type {StationGroup} from "../dto/stationGroup.dto";
 
-export function getLocationKey(location: LocationReference, groups: StationGroup[] = []): string {
+export function getLocationKey(location: LocationReference, stationGroups: StationGroup[] = []): string {
     if (location.groupId === "") {
         return ""
     }
 
-    const group = groups.find((group) => group.id === location.groupId);
+    const group = stationGroups.find((group) => group.id === location.groupId);
     if (location.type === "group" || group?.stations.length === 1) {
         return `group:${location.groupId}`;
     }
@@ -33,8 +33,7 @@ export function getNewJourneyId(
     return id;
 }
 
-//todo: is this really "journey starts and ends at either a bare station or one of these groups"? think of a better name
-export function hasJourneyEndpoints(journey: Journey, stationGroups: StationGroup[]): boolean {
+export function journeyReferencesExistingGroups(journey: Journey, stationGroups: StationGroup[]): boolean {
     return [journey.origin, journey.destination].every(
         (location) =>
             (location.type === "station" && location.groupId === undefined)

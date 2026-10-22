@@ -27,15 +27,15 @@
                         {{ step.label }}
                         <strong
                             v-if="step.stationCrs"
-                            :style="{color: stationColour(step.stationCrs)}"
+                            :style="{color: getStationColour(step.stationCrs)}"
                         >
-                            {{ stationName(step.stationCrs) }}
+                            {{ getStationName(step.stationCrs) }}
                         </strong>
                         <span
                             v-if="step.kind === 'train' && step.trainLeg?.platform !== undefined"
                             class="ml-1 whitespace-nowrap text-xs font-semibold"
                             :style="{
-                                color: stationColour(step.trainLeg.origin),
+                                color: getStationColour(step.trainLeg.origin),
                             }"
                         >
                             p{{ step.trainLeg.platform ?? "_" }}
@@ -53,10 +53,11 @@
 <script setup lang="ts">
 import {computed} from "vue";
 import AppIcon from "@/components/AppIcon.vue";
+import type {IconName} from "@/components/icons";
 import {formatTime} from "@/utilities/time.utility.ts";
 import type {TimetabledJourney, TrainLeg} from "../../../../dto/timetabledJourney.dto";
-import {stationColour} from "../../../../stations/stationColours";
-import {stationName} from "../../../../stations/stations";
+import {getStationColour} from "../../../../stations/stationColours";
+import {getStationName} from "../../../../stations/stations";
 import AlternativeTrains from "../AlternativeTrains.vue";
 import TrainDepartureLink from "../TrainDepartureLink.vue";
 
@@ -155,5 +156,10 @@ function formatDuration(start: number, end: number): string {
     return `${minutes} minute${minutes === 1 ? "" : "s"}`;
 }
 
-const stepIcons = {arrival: "map-pin", change: "clock", train: "train", walk: "walk"} as const;
+const stepIcons = {
+    arrival: "map-pin",
+    change: "clock",
+    train: "train",
+    walk: "walk",
+} satisfies Record<ItineraryStepKind, IconName>;
 </script>

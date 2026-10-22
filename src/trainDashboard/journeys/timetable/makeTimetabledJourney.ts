@@ -42,9 +42,6 @@ export function makeTimetabledJourney(trainPlan: TrainPlan): TimetabledJourney {
                 ? undefined
                 : route.destination.locationName,
         arrivalTime: route.destination.walkMinutes === undefined ? undefined : formatTime(finish),
-        boldArrivalTime:
-            route.destination.walkMinutes !== undefined &&
-            route.destination.locationName.toLowerCase() === "home",
         walkingTimesKnown,
         segments,
         trainLegs,

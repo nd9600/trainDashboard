@@ -1,6 +1,6 @@
 import {getNewJourneyId, journeysAreTheSame} from "../journeys/journeyIdentity";
 import {defineStore} from "pinia";
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import {useLocalStorageTyped} from "@/composables/useLocalStorageTyped";
 import {DashboardConfigSchema, type DashboardConfig} from "../dto/dashboardConfig.dto";
 import type {Journey} from "../dto/journey.dto";
@@ -15,6 +15,12 @@ const storage = useLocalStorageTyped("train-dashboard-config-v3", DashboardConfi
 
 export const useDashboardConfigStore = defineStore("dashboard-config", () => {
     const config = ref<DashboardConfig>(storage.loadFromLocalStorage());
+
+    watch(
+        () => config.value.shouldUseLocation,
+        () => storage.saveToLocalStorage(config.value),
+        {flush: "sync"}
+    );
 
     function saveConfig(candidate: DashboardConfig): void {
         config.value = candidate;
@@ -56,7 +62,6 @@ export const useDashboardConfigStore = defineStore("dashboard-config", () => {
         saveConfig({
             ...config.value,
 
-            // overwrite this journey only
             journeys: config.value.journeys.map((journey) =>
                 journey.id === candidate.id
                     ? candidate

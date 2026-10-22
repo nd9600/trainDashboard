@@ -35,7 +35,7 @@
                 :transform="`translate(0 ${rowStart + index * rowGap})`"
             >
                 <line
-                    v-for="(segment, segmentIndex) in orderedSegments(journey)"
+                    v-for="(segment, segmentIndex) in getSegmentsInDrawOrder(journey)"
                     :key="segmentIndex"
                     :class="segmentClasses[segment.kind]"
                     :style="{
@@ -82,7 +82,7 @@
                         y2="-7"
                     />
                     <text
-                        :class="timelineLabelClasses(journey)"
+                        :class="getTimelineLabelClasses(journey)"
                         :x="xAt(leg.arrival)"
                         y="-32"
                         text-anchor="middle"
@@ -90,7 +90,7 @@
                         {{ formatTime(leg.arrival) }}a
                     </text>
                     <text
-                        :class="timelineLabelClasses(journey)"
+                        :class="getTimelineLabelClasses(journey)"
                         :x="xAt(journey.trainLegs[legIndex + 1]!.departure)"
                         y="-14"
                         text-anchor="middle"
@@ -99,7 +99,7 @@
                     </text>
                 </template>
                 <text
-                    :class="timelineLabelClasses(journey)"
+                    :class="getTimelineLabelClasses(journey)"
                     :x="xAt(journey.segments.at(-1)!.end)"
                     dx="10"
                     y="5"
@@ -109,7 +109,7 @@
                             ? journey.arrivalLabel
                             : "Train arrives"
                     }}
-                    <tspan dx="4" :class="journey.boldArrivalTime ? 'font-bold' : undefined">
+                    <tspan dx="4" :class="journey.arrivalLabel?.toLowerCase() === 'home' ? 'font-bold' : undefined">
                         {{ journey.arrivalTime ?? journey.railArrivalTime }}
                     </tspan>
                 </text>
@@ -129,8 +129,8 @@
             <li v-for="journey in journeys" :key="`description-${journey.id}`">
                 <JourneyRouteLabel :journey="journey" />. Leave
                 {{ formatTime(journey.trainLegs[0]!.departure) }} from
-                {{ stationName(journey.origin) }}. Arrive at
-                {{ stationName(journey.destination) }}
+                {{ getStationName(journey.origin) }}. Arrive at
+                {{ getStationName(journey.destination) }}
                 {{ journey.arrivalTime ?? journey.railArrivalTime }}.
                 <span v-if="journey.trainLegs.length === 1">Direct train.</span>
                 <span v-else>
@@ -149,8 +149,8 @@ import {getTimelineTicks} from "../../../../journeys/journeyTimes";
 import {computed, useId} from "vue";
 import {formatTime} from "@/utilities/time.utility.ts";
 import type {SegmentKind, TimetabledJourney} from "../../../../dto/timetabledJourney.dto";
-import {stationColour} from "../../../../stations/stationColours";
-import {stationName} from "../../../../stations/stations";
+import {getStationColour} from "../../../../stations/stationColours";
+import {getStationName} from "../../../../stations/stations";
 import JourneyRouteLabel from "./JourneyRouteLabel.vue";
 
 const props = defineProps<{
@@ -179,7 +179,7 @@ function xAt(minutes: number): string {
     return `${(85 * (minutes - props.windowStart)) / (props.windowEnd - props.windowStart)}%`;
 }
 
-function timelineLabelClasses(journey: TimetabledJourney): string[] {
+function getTimelineLabelClasses(journey: TimetabledJourney): string[] {
     return [
         "fill-ink text-xs font-medium [paint-order:stroke] [stroke-linejoin:round] [stroke-width:6]",
         journey.recommended ? "stroke-highlight" : "stroke-canvas",
@@ -197,10 +197,10 @@ function getSegmentColour(
               )?.origin
             : journey.trainLegs.find((leg) => leg.arrival === segment.start)?.destination;
 
-    return stationColour(stationCrs ?? journey.origin);
+    return getStationColour(stationCrs ?? journey.origin);
 }
 
-function orderedSegments(journey: TimetabledJourney): TimetabledJourney["segments"] {
+function getSegmentsInDrawOrder(journey: TimetabledJourney): TimetabledJourney["segments"] {
     return [
         ...journey.segments.filter((segment) => segment.kind === "walk"),
         ...journey.segments.filter((segment) => segment.kind === "wait"),
