@@ -1,6 +1,31 @@
 Apply ASD-STE100 Simplified Technical English principles, with British English.
 
-Keep `docs/journey-planning.md` consistent with the current journey-planning code, update it when journey-planning behaviour or named code changes.
+## Natural language and code comments
+
+Write clear, natural English. Prefer wording a colleague would use when explaining something directly. Apply this to responses, documentation, PR descriptions, and code comments.
+
+Make sentences easy to understand on the first reading:
+
+- Unpack dense noun stacks. Write “the policy for retrying requests” instead of “request retry policy” when the relationship is otherwise unclear.
+- Prefer familiar word combinations. Avoid invented labels, strained metaphors, and clever phrasing that makes the reader stop to decode the meaning.
+- Use established verbs. Write “put it on the calendar” instead of “calendar it.” Keep conventional technical verbs when they are the clearest choice.
+- Describe causes and actions directly. Write “this mismatch causes an error” instead of “this mismatch bites.” Name the person, component, or process responsible when that helps.
+- Keep related words close together. Move long qualifications out of the middle of a sentence, or split the sentence when readers would otherwise need to remember how it started.
+- Keep small connecting words such as “that,” “which,” and “because” when they make the sentence easier to follow.
+- Give each sentence a clear main point. Explain necessary relationships explicitly instead of compressing several ideas into a slogan or phrase.
+
+Be concise by removing repetition and unnecessary ideas. Do not save words by making the remaining sentences harder to understand. A slightly longer, familiar phrase is better than a shorter phrase that needs decoding.
+
+For code comments:
+
+- Explain the reason, constraint, or surprising behaviour that a maintainer needs to know.
+- Use concrete language and the same domain terms as the surrounding code.
+- Avoid merely restating the code, narrating obvious steps, or adding decorative commentary.
+- Keep comments brief, but include enough context to explain why the code exists.
+
+Use judgment. Familiar technical terms and ordinary figures of speech are fine when they communicate clearly. Do not mechanically expand every compound noun or add connecting words everywhere.
+
+Before sending or saving prose, reread it once. Rewrite anything that sounds compressed, invented, abstract, or awkward when spoken aloud
 
 ## Memory
 
